@@ -13,3 +13,11 @@ export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 export const initials = name => (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 export const firstName = name => (name || '').trim().split(/\s+/)[0];
 export const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+/* A restaurant's monogram for its logo badge: "Forno Sette" -> FS, "Bao & Broth" -> B&B, "The Sweet Spot" -> SS. */
+export function monogram(name) {
+  const words = (name || '').replace(/^the\s+/i, '').split(/\s+/).filter(w => /\w/.test(w) && !/^(and|of)$/i.test(w));
+  const letters = words.slice(0, 2).map(w => w[0].toUpperCase());
+  return /&/.test(name) && letters.length === 2 ? letters.join('&') : letters.join('');
+}
+export const logoBadge = (r, cls = '') => `<span class="logo-badge ${cls}" style="--lb-bg:${esc(r.color)};--lb-ink:${esc(r.ink)}" aria-hidden="true">${esc(monogram(r.name))}</span>`;

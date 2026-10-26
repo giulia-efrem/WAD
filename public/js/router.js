@@ -7,10 +7,10 @@ import { renderRestaurant } from './views/restaurant.js';
 import { renderCheckout } from './views/checkout.js';
 import { renderOrder } from './views/order.js';
 import { renderAccount } from './views/account.js';
-import { renderCredits } from './views/pages.js';
+import { renderCredits, renderPage, renderNotFound } from './views/pages.js';
 
 /* Views that have their own address (served by the server as index.html). */
-export const PATH_VIEWS = { '/credits': 'credits' };
+export const PATH_VIEWS = { '/credits': 'credits', '/about': 'about', '/help': 'help', '/terms': 'terms', '/privacy': 'privacy' };
 const pathOf = view => Object.keys(PATH_VIEWS).find(p => PATH_VIEWS[p] === view) || '/';
 
 export const app = () => $('#app');
@@ -19,7 +19,10 @@ export const app = () => $('#app');
 let cleanups = [];
 export const onLeave = fn => cleanups.push(fn);
 
+const TITLES = { home: 'Morsel, food delivery', credits: 'Photo credits · Morsel', checkout: 'Checkout · Morsel', account: 'Your account · Morsel' };
+
 export function render(keepScroll) {
+  document.title = TITLES[state.view] || 'Morsel, food delivery';
   cleanups.forEach(fn => fn());
   cleanups = [];
   const y = window.scrollY;
@@ -29,6 +32,8 @@ export function render(keepScroll) {
     case 'order': renderOrder(state.params.id); break;
     case 'account': renderAccount(); break;
     case 'credits': renderCredits(); break;
+    case 'about': case 'help': case 'terms': case 'privacy': renderPage(state.view); break;
+    case 'notfound': renderNotFound(); break;
     default: renderHome();
   }
   updateCartbar();
@@ -40,7 +45,7 @@ export function go(view, params = {}) {
   state.view = view;
   state.params = params;
   const path = pathOf(view);
-  if (location.pathname !== path) history.pushState(null, '', path);
+  if (view !== 'notfound' && location.pathname !== path) history.pushState(null, '', path);
   render();
   window.scrollTo(0, 0);
   app().focus({ preventScroll: true });

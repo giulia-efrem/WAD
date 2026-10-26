@@ -8,7 +8,7 @@ import { onCartChange, addToCart } from './views/bag.js';
 import { updateHeader } from './views/header.js';
 import { openAuth, requireAuth } from './views/auth.js';
 import { openAddressForm, openAddressPicker } from './views/addresses.js';
-import { renderHome, updateResults } from './views/home.js';
+import { renderHome, renderHomeSkeleton, updateResults } from './views/home.js';
 import { openItem } from './views/restaurant.js';
 import { renderCheckout, applyPromo, placeOrder } from './views/checkout.js';
 
@@ -38,6 +38,29 @@ async function reorder(id) {
   openDrawer();
 }
 
+/* Works out which view a URL shows: /credits and friends by path, the rest by hash as before. */
+function routeOf(url) {
+  if (PATH_VIEWS[url.pathname]) return { view: PATH_VIEWS[url.pathname], params: {} };
+  if (url.pathname !== '/' && url.pathname !== '/index.html') return { view: 'notfound', params: {} };
+  const hash = (url.hash || '').slice(1);
+  if (hash.startsWith('r-')) return { view: 'restaurant', params: { id: hash.slice(2) } };
+  if (hash.startsWith('order-')) return { view: 'order', params: { id: hash.slice(6) } };
+  if (['checkout', 'account'].includes(hash)) return { view: hash, params: {} };
+  return { view: 'home', params: {} };
+}
+
+/* In-app links (footer, help page) switch views without reloading the page. */
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[href]');
+  if (!a || a.target || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const url = new URL(a.href, location.href);
+  if (url.origin !== location.origin || url.pathname.startsWith('/admin') || url.pathname.startsWith('/api')) return;
+  const route = routeOf(url);
+  e.preventDefault();
+  closeAllModals();
+  go(route.view, route.params);
+});
+
 /* ================= Events ================= */
 document.addEventListener('click', async e => {
   const el = e.target.closest('[data-act]');
@@ -48,6 +71,18 @@ document.addEventListener('click', async e => {
     switch (act) {
       case 'reload': location.reload(); break;
       case 'home': go('home'); break;
+      case 'see-all': {
+        Object.assign(state, { q: '', cat: 'all', openNow: false, freeDel: false, topRated: false, sort: 'recommended' }, JSON.parse(el.dataset.see));
+        renderHome();
+        const t = document.getElementById('all-restaurants');
+        if (t) t.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
+        break;
+      }
+      case 'row-scroll': {
+        const sc = el.closest('.row-sec').querySelector('.row-scroll');
+        sc.scrollBy({ left: Number(el.dataset.d) * sc.clientWidth * 0.85, behavior: reduced() ? 'auto' : 'smooth' });
+        break;
+      }
       case 'open-r': go('restaurant', { id }); break;
       case 'cat': state.cat = id; $$('.cat').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.id === id))); updateResults(); break;
       case 'filter': state[el.dataset.f] = !state[el.dataset.f]; el.setAttribute('aria-pressed', String(state[el.dataset.f])); updateResults(); break;
@@ -135,8 +170,9 @@ document.addEventListener('change', e => {
 
 /* Back and forward between pages that have their own address, such as /credits. */
 window.addEventListener('popstate', () => {
-  state.view = PATH_VIEWS[location.pathname] || 'home';
-  state.params = {};
+  const route = routeOf(new URL(location.href));
+  state.view = route.view;
+  state.params = route.params;
   closeAllModals();
   closeDrawer(true);
   render();
@@ -155,6 +191,8 @@ window.addEventListener('morsel:signed-out', () => {
 /* ================= Start ================= */
 (async () => {
   updateHeader();
+  const route = routeOf(new URL(location.href));
+  if (route.view === 'home') renderHomeSkeleton();
   try {
     const [user] = await Promise.all([api.me(), loadRestaurants()]);
     state.user = user;
@@ -170,10 +208,7 @@ window.addEventListener('morsel:signed-out', () => {
   if (state.cart.restaurantSlug && !R(state.cart.restaurantSlug)) { state.cart.lines = []; saveCart(); }
   updateHeader();
   onCartChange();
-  const hash = (location.hash || '').slice(1);
-  if (PATH_VIEWS[location.pathname]) state.view = PATH_VIEWS[location.pathname];
-  else if (hash.startsWith('r-') && R(hash.slice(2))) { state.view = 'restaurant'; state.params = { id: hash.slice(2) }; }
-  else if (hash.startsWith('order-')) { state.view = 'order'; state.params = { id: hash.slice(6) }; }
-  else if (['checkout', 'account'].includes(hash)) state.view = hash;
+  state.view = route.view;
+  state.params = route.params;
   render();
 })();

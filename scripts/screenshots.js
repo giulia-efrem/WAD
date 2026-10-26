@@ -67,7 +67,7 @@ async function setup() {
   await User.deleteMany({ email: TEMP_ADMIN });
   const admin = await User.create({ name: 'Screenshot Admin', email: TEMP_ADMIN, role: 'admin', passwordHash: await bcrypt.hash(crypto.randomBytes(24).toString('hex'), 4) });
   const adminToken = jwt.sign({ sub: String(admin._id) }, config.jwtSecret, { expiresIn: '1h', algorithm: 'HS256' });
-  return { demoToken, adminToken, orderId: order._id, cart };
+  return { demoToken, adminToken, orderId: order._id, etaMin: order.etaMin, cart };
 }
 
 async function teardown(ctx) {
@@ -102,7 +102,10 @@ const VIEW_STEPS = {
   },
   async bag(page) { await page.goto(BASE + '/'); await page.waitForSelector('.card'); await page.click('#cart-btn'); await page.waitForSelector('#drawer.open .line'); return false; },
   async checkout(page) { await page.goto(BASE + '/#checkout'); await page.waitForSelector('#place-btn'); return true; },
-  async order(page, ctx) { await page.goto(`${BASE}/#order-${ctx.orderId}`); await page.waitForSelector('#tr-title:not(:empty)'); await page.waitForTimeout(800); return true; },
+  async order(page, ctx) {
+    /* Put the order back to “on the way” for every shot, since demo time keeps running. */
+    await Order.updateOne({ _id: ctx.orderId }, { $set: { startAt: new Date(Date.now() - (ctx.etaMin - 6) * config.simMinuteMs) } });
+    await page.goto(`${BASE}/#order-${ctx.orderId}`); await page.waitForSelector('#tr-title:not(:empty)'); await page.waitForTimeout(800); return true; },
   async account(page) { await page.goto(BASE + '/#account'); await page.waitForSelector('.order-row'); return true; },
   async 'admin-photos'(page) { await page.goto(BASE + '/admin/photos'); await page.waitForSelector('.rv'); return true; },
   async credits(page) { await page.goto(BASE + '/credits'); await page.waitForSelector('.credit-list, .credit-group, #credits-list p'); return true; }

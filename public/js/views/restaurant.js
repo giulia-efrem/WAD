@@ -1,18 +1,26 @@
-import { $, $$, esc, eur, clamp } from '../util.js';
+import { $, $$, esc, eur, clamp, logoBadge } from '../util.js';
 import { ic, art } from '../art.js';
 import { state, R, menuOf, loadMenu, findItem, isOpen, opensAt, closesAt, is247, hoursText, etaText, isFav, qtyOfItem, selectedOptions, lineKey, MAX_QTY } from '../state.js';
 import { hasPhoto, photoImg, photoStyle, creditHTML } from '../photos.js';
 import { openModal, closeModal, toast } from '../ui.js';
 import { addToCart } from './bag.js';
-import { app, go, onLeave } from '../router.js';
+import { app, onLeave } from '../router.js';
+import { renderNotFound } from './pages.js';
 
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
+/* Shown while a menu loads. */
+function skeleton() {
+  return `<div aria-busy="true" aria-label="Loading menu"><div class="sk sk-hero"></div>
+    <div class="wrap"><div class="sk sk-title"></div><div class="sk sk-text w40" style="margin-top:14px"></div><div class="sk sk-text w60"></div>
+      <div class="items" style="margin-top:40px">${'<div class="sk sk-item"></div>'.repeat(4)}</div></div></div>`;
+}
+
 export function renderRestaurant(id) {
-  if (!R(id)) { go('home'); return; }
+  if (!R(id)) { renderNotFound(); return; }
   const detail = menuOf(id);
   if (detail) { drawRestaurant(detail); return; }
-  app().innerHTML = `<div class="wrap"><div class="empty"><span class="spinner" style="margin:0 auto"></span></div></div>`;
+  app().innerHTML = skeleton();
   loadMenu(id).then(d => {
     if (state.view === 'restaurant' && state.params.id === id) drawRestaurant(d);
   }).catch(err => {
@@ -22,28 +30,30 @@ export function renderRestaurant(id) {
 }
 
 function drawRestaurant(r) {
+  document.title = r.name + ' · Morsel';
   const open = isOpen(r);
   const fav = isFav(r);
+  const openText = open ? (is247(r) ? 'Open 24 hours' : `Open until ${closesAt(r)}`) : `Closed, opens at ${opensAt(r)}`;
   app().innerHTML = `
-    <div class="wrap">
-      <div class="r-cover ${hasPhoto(r) ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink};${photoStyle(r)}">
-        <div class="art">${art(r.illustration)}</div>${photoImg(r, { size: 'cover', eager: true })}${creditHTML(r, 'on-photo')}
+    <div class="r-hero ${hasPhoto(r) ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink};${photoStyle(r)}">
+      <div class="art">${art(r.illustration)}</div>${photoImg(r, { size: 'cover', eager: true })}${creditHTML(r, 'on-photo')}
+      <div class="wrap r-hero-bar">
         <button class="round-btn back" type="button" data-act="home" aria-label="Back to all restaurants">${ic('back')}</button>
         <button class="fav" type="button" data-act="fav" data-id="${esc(r._id)}" aria-pressed="${fav}" aria-label="${fav ? 'Remove' : 'Save'} ${esc(r.name)} ${fav ? 'from' : 'to'} favourites">${ic('heart')}</button>
       </div>
+    </div>
+    <div class="wrap">
       <div class="r-head">
+        ${logoBadge(r, 'xl')}
         <h1>${esc(r.name)}</h1>
-        <p class="r-tag">${esc(r.tagline)}</p>
-        <p class="r-sub">
-          <span class="rating">${ic('star', 'fill')}${r.rating.toFixed(1)} <small>(${r.reviewCount.toLocaleString('en-GB')} ratings)</small></span>
-          <span class="open-state ${open ? '' : 'closed'}"><span class="dot" aria-hidden="true"></span>${open ? (is247(r) ? 'Open 24 hours' : `Open until ${closesAt(r)}`) : `Closed, opens at ${opensAt(r)}`}</span>
-        </p>
-      </div>
-      <div class="r-stats">
-        <div class="stat"><small>Delivery time</small><strong>${etaText(r)}</strong></div>
-        <div class="stat"><small>Delivery fee</small><strong class="${r.deliveryFee ? '' : 'free'}">${r.deliveryFee ? eur(r.deliveryFee) : 'Free'}</strong></div>
-        <div class="stat"><small>Minimum order</small><strong>${eur(r.minOrder)}</strong></div>
-        <div class="stat"><small>Hours</small><strong>${hoursText(r)}</strong></div>
+        <p class="r-tag">${esc(r.label)} · ${esc(r.priceLevel)} · ${esc(r.tagline)}</p>
+        <ul class="r-facts" aria-label="About ${esc(r.name)}">
+          <li><span class="rating">${ic('star', 'fill')}${r.rating.toFixed(1)}</span><small>(${r.reviewCount.toLocaleString('en-GB')})</small></li>
+          <li>${ic('clock')}<strong>${etaText(r)}</strong></li>
+          <li>${ic('bike')}<strong class="${r.deliveryFee ? '' : 'free'}">${r.deliveryFee ? `${eur(r.deliveryFee)} delivery` : 'Free delivery'}</strong></li>
+          <li>${ic('bag')}<span>Min. <strong>${eur(r.minOrder)}</strong></span></li>
+          <li class="r-open"><span class="open-state ${open ? '' : 'closed'}"><span class="dot" aria-hidden="true"></span>${openText}</span>${is247(r) ? '' : `<small>${hoursText(r)}</small>`}</li>
+        </ul>
       </div>
       ${open ? '' : `<p class="notice">${esc(r.name)} is closed right now. Have a look at the menu, and order from ${opensAt(r)}.</p>`}
     </div>
@@ -74,16 +84,16 @@ function drawRestaurant(r) {
   }
 }
 
+/* Every dish card has a square picture: its photo, or the restaurant's illustration. */
 function itemHTML(r, it) {
-  const img = hasPhoto(it);
   return `
-          <button class="item ${img ? 'has-photo' : ''}" type="button" data-act="open-item" data-r="${esc(r.slug)}" data-i="${esc(it.slug)}">
+          <button class="item" type="button" data-act="open-item" data-r="${esc(r.slug)}" data-i="${esc(it.slug)}">
             <span class="item-main">
               <span class="item-name">${esc(it.name)}${it.popular ? '<span class="tag-pop">Popular</span>' : ''}</span>
               <span class="item-desc">${esc(it.description)}</span>
               <span class="item-price">${eur(it.price)}${it.optionGroups.length ? '<span class="muted" style="font-weight:500"> and up</span>' : ''}</span>
             </span>
-            ${img ? `<span class="item-thumb" style="${photoStyle(it)}">${photoImg(it, { size: 'square' })}<span class="add" aria-hidden="true">${ic('plus')}</span></span>` : `<span class="add" aria-hidden="true">${ic('plus')}</span>`}
+            <span class="item-media ${hasPhoto(it) ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink};${photoStyle(it)}"><span class="art">${art(r.illustration)}</span>${photoImg(it, { size: 'square' })}<span class="add" aria-hidden="true">${ic('plus')}</span></span>
           </button>`;
 }
 

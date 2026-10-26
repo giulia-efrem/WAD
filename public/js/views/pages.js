@@ -34,3 +34,59 @@ export async function renderCredits() {
       </section>`;
     }).join('') : '<p class="muted">No Unsplash photos are in use yet.</p>'}`;
 }
+
+/* ================= Simple content pages ================= */
+const PAGES = {
+  about: {
+    title: 'About Morsel',
+    lead: 'Morsel brings food from the best local kitchens to your door, and shows you exactly where it is on the way.',
+    body: `<h2>What we do</h2><p>We work with independent restaurants, from wood-fired pizza to slow-cooked curries, and deliver their food with our own couriers. You can follow every order live, from the kitchen to your door.</p>
+      <h2>A demo app</h2><p>Morsel is a demonstration project. The restaurants, prices, couriers and orders are fictional, and no payment is ever taken.</p>`
+  },
+  help: {
+    title: 'Help',
+    lead: 'Answers to the questions people ask most.',
+    body: `<h2>Where is my order?</h2><p>Open <a href="/#account">your account</a> and choose the order to see it live on the map, with an estimated arrival time.</p>
+      <h2>Can I change my delivery address?</h2><p>Use the address button at the top of any page to pick a saved address or add a new one before you check out.</p>
+      <h2>How do promo codes work?</h2><p>Enter a code at checkout. WELCOME20 takes 20% off your first order, up to €8. FREEDEL makes delivery free where there is a delivery fee.</p>
+      <h2>Something else?</h2><p>This is a demo, so there is no support team yet. In a real app, this is where you would contact us.</p>`
+  },
+  terms: {
+    title: 'Terms of use',
+    lead: 'The rules for using Morsel.',
+    body: `<h2>Using Morsel</h2><p>Morsel is a demonstration app. Orders are not real and are never delivered or charged.</p>
+      <h2>Your account</h2><p>Keep your password to yourself. You are responsible for what happens in your account.</p>
+      <h2>Photos</h2><p>Food photos come from Unsplash and belong to their photographers, who are credited on the <a href="/credits">credits page</a>.</p>`
+  },
+  privacy: {
+    title: 'Privacy',
+    lead: 'What Morsel stores about you, and why.',
+    body: `<h2>What we store</h2><p>Your name, email address, a secure hash of your password, your saved addresses, your favourite restaurants and your orders. We use them only to run the app.</p>
+      <h2>In your browser</h2><p>Your bag and dismissed messages are kept in your browser so they survive a reload. A login cookie keeps you signed in; it can't be read by scripts on the page.</p>
+      <h2>Photos</h2><p>Photos are shown directly from Unsplash, so your browser loads them from Unsplash's servers.</p>`
+  }
+};
+
+export function renderPage(key) {
+  const p = PAGES[key];
+  if (!p) { renderNotFound(); return; }
+  document.title = `${p.title} · Morsel`;
+  app().innerHTML = `<div class="wrap page prose">
+    <h1 class="page-title">${esc(p.title)}</h1>
+    <span class="placeholder-note">Placeholder page</span>
+    <p class="lead">${esc(p.lead)}</p>
+    ${p.body}
+  </div>`;
+}
+
+/* ================= 404 ================= */
+export function renderNotFound() {
+  document.title = 'Page not found · Morsel';
+  app().innerHTML = `<div class="wrap not-found">
+    <div class="empty-art">${art('cupcake')}</div>
+    <p class="code">404</p>
+    <h1>We couldn’t find that page</h1>
+    <p>The link may be old, or the page may have moved. Everything on the menu is still one tap away.</p>
+    <div class="actions"><button class="btn btn-primary" type="button" data-act="home">Browse restaurants</button><a class="btn btn-outline" href="/help">Get help</a></div>
+  </div>`;
+}

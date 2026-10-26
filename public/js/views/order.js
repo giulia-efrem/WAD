@@ -78,6 +78,7 @@ export async function renderOrder(id) {
     app().innerHTML = `<div class="wrap"><div class="empty"><h3>Log in to see this order</h3><p>Orders are linked to your account.</p><button class="btn btn-primary" type="button" data-act="login">Log in</button></div></div>`;
     return;
   }
+  app().innerHTML = `<div class="wrap" aria-busy="true" aria-label="Loading order"><div class="track" style="padding-top:28px"><div><div class="sk sk-text w40"></div><div class="sk sk-title"></div><div class="sk sk-text w60" style="margin-top:18px"></div><div class="sk sk-item" style="margin-top:28px"></div></div><div class="sk" style="aspect-ratio:5/4;border-radius:24px"></div></div></div>`;
   let o;
   try { o = await api.getOrder(id); }
   catch (err) {

@@ -63,24 +63,42 @@ Each restaurant and dish has an `image` field plus its colour, alt text and phot
 
 Sign up or log in with `ADMIN_EMAIL` to use the admin pages (or the **Photos** button in the header).
 
+## Pages
+
+| Address | What it is |
+|---|---|
+| `/` | Home: search, cuisines, the "Popular right now", "Under 25 minutes" and "Free delivery" rows, then every restaurant |
+| `/#r-forno-sette` | A restaurant and its menu (`#checkout`, `#account` and `#order-<id>` work the same way) |
+| `/about`, `/help`, `/terms`, `/privacy` | Placeholder content pages |
+| `/credits` | Every Unsplash photo with its photographer |
+| `/admin`, `/admin/photos` | Admin only: set photos by URL or upload, and review Unsplash photos |
+
+Any other address shows a "page not found" view with a 404 status.
+
 ## Project layout
 
 ```
 server/
-  app.js            Express app: security headers, static files, API routes, errors
+  app.js            Express app: security headers, static files, page routes, API routes, errors
   config.js  db.js
   models/           User, Restaurant, Order (Mongoose)
-  routes/           auth, addresses, favorites, restaurants, promo, orders, admin
+  routes/           auth, addresses, favorites, restaurants, promo, orders, admin, credits
   middleware/       auth (JWT cookie), validate (zod), rate limits, uploads (multer), errors
-  lib/              pricing, orderStatus, hours, response shaping
+  lib/              pricing, orderStatus, hours, response shaping, unsplash, photos, photoPick
 public/
-  index.html  admin.html
-  css/              styles.css (from the reference), admin.css
-  js/               main.js, router.js, api.js, state.js, ui.js, ... and views/
-seed/               seed.js, catalog.js (restaurants and option groups), images.json
+  index.html  admin.html  admin-photos.html
+  css/              styles.css, admin.css
+  js/               main.js, router.js, api.js, state.js, ui.js, photos.js, ... and views/
+scripts/            fetch-photos.js and photo-queries.js (npm run photos), screenshots.js
+seed/               seed.js, catalog.js, images.json, photo-candidates.json
+screenshots/        the latest npm run screenshots output
 uploads/            admin uploads (not committed)
 reference/          the original single-file app
 ```
+
+### Screenshots
+
+With the server running, `npm run screenshots` saves home, a restaurant, the dish window, the bag, checkout, order tracking, the account page, `/admin/photos` and `/credits` at 375, 768 and 1440 px in light and dark mode to `screenshots/`. It uses the Microsoft Edge already installed (set `PW_CHANNEL=chrome` for Chrome), logs in as the demo account, and creates a temporary admin user and order that it deletes again. Options: `--views=home,restaurant`, `--widths=375,1440`, `--themes=dark`, `--out=folder`.
 
 ## How the server keeps orders honest
 

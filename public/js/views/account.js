@@ -24,6 +24,7 @@ export async function renderAccount() {
     </div>`;
   const panel = document.getElementById('acct-panel');
   if (tab === 'orders') {
+    panel.innerHTML = '<div aria-busy="true" aria-label="Loading orders">' + '<div class="sk sk-order"></div>'.repeat(3) + '</div>';
     let orders;
     try { orders = await api.listOrders(); }
     catch (err) { if (panel.isConnected) panel.innerHTML = `<p class="muted" style="margin:18px 0">${esc(err.message)}</p>`; return; }

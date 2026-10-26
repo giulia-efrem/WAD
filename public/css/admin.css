@@ -37,10 +37,12 @@
 
 /* Admin navigation */
 .admin-nav { display: flex; gap: 4px; margin-left: 8px; }
-.admin-nav a { padding: 8px 12px; border-radius: 999px; color: var(--muted); font-weight: 600; font-size: 0.92rem; text-decoration: none; }
+.admin-nav a { white-space: nowrap; padding: 8px 12px; border-radius: 999px; color: var(--muted); font-weight: 600; font-size: 0.92rem; text-decoration: none; }
 .admin-nav a:hover { color: var(--ink); background: var(--surface-2); }
 .admin-nav a[aria-current="page"] { color: var(--ink); background: var(--surface-2); }
-@media (max-width: 720px) { .admin-nav a { padding: 8px; font-size: 0.85rem; } .admin-tag { display: none; } }
+@media (max-width: 1100px) { .admin-who { display: none; } }
+@media (max-width: 900px) { .admin-tag { display: none; } .top-actions .icon-btn .lbl { display: none; } }
+@media (max-width: 520px) { .admin-nav a { padding: 8px 6px; font-size: 0.82rem; } .admin-nav { margin-left: 0; } .wordmark { display: none; } }
 
 /* Unsplash review (/admin/photos) */
 .quota { margin: 0 0 6px; font-size: 0.9rem; font-weight: 600; }

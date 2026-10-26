@@ -1,0 +1,35 @@
+'use strict';
+
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env'), quiet: true });
+
+const ROOT = path.join(__dirname, '..');
+
+function required(name) {
+  const v = process.env[name];
+  if (!v || !v.trim()) {
+    console.error(`Missing ${name}. Copy .env.example to .env and fill it in.`);
+    process.exit(1);
+  }
+  return v.trim();
+}
+
+const demoSpeed = Number(process.env.DEMO_SPEED || 30);
+
+const config = {
+  root: ROOT,
+  publicDir: path.join(ROOT, 'public'),
+  uploadsDir: path.join(ROOT, 'uploads'),
+  mongoUri: required('MONGODB_URI'),
+  jwtSecret: required('JWT_SECRET'),
+  port: Number(process.env.PORT || 3000),
+  adminEmail: (process.env.ADMIN_EMAIL || '').trim().toLowerCase(),
+  demoSpeed: Number.isFinite(demoSpeed) && demoSpeed > 0 ? demoSpeed : 30,
+  isProduction: process.env.NODE_ENV === 'production',
+  cookieName: 'morsel_session',
+  sessionDays: 7
+};
+/* One simulated minute of order progress lasts this many real milliseconds. */
+config.simMinuteMs = 60000 / config.demoSpeed;
+
+module.exports = config;

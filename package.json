@@ -1,0 +1,27 @@
+{
+  "name": "morsel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Morsel food delivery: Express + MongoDB back end with a plain HTML, CSS and JavaScript front end",
+  "main": "server/app.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node --watch server/app.js",
+    "start": "node server/app.js",
+    "seed": "node seed/seed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.11.4",
+    "multer": "^2.5.0",
+    "zod": "^4.6.7"
+  }
+}

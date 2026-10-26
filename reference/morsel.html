@@ -1,0 +1,2438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Morsel, food delivery</title>
+<meta name="description" content="Order from the best local restaurants and track your delivery live.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+  --bg: #FBFAFD;
+  --surface: #FFFFFF;
+  --surface-2: #F4F1F8;
+  --surface-3: #E9E3F1;
+  --line: rgba(40, 22, 70, 0.11);
+  --line-strong: rgba(40, 22, 70, 0.22);
+  --ink: #1D1428;
+  --muted: #6A6178;
+  --brand: #4B1E78;
+  --brand-ink: #FFFFFF;
+  --brand-text: #4B1E78;
+  --brand-soft: #F1E9FB;
+  --accent: #FF6A1A;
+  --accent-ink: #1D1428;
+  --accent-text: #A84208;
+  --accent-soft: #FFEBDD;
+  --ok: #17784A;
+  --ok-soft: #E2F4EA;
+  --danger: #BE2530;
+  --danger-soft: #FCE8E9;
+  --star: #E8930A;
+  --header-bg: rgba(251, 250, 253, 0.88);
+  --overlay: rgba(22, 12, 34, 0.48);
+  --veil: rgba(22, 12, 34, 0.58);
+  --veil-ink: #FFFFFF;
+  --shadow: 0 1px 2px rgba(29, 20, 40, 0.06), 0 12px 32px rgba(29, 20, 40, 0.14);
+  --map-bg: #EEE9F4;
+  --map-block: #E1D9EB;
+  --map-road: #FFFFFF;
+  --map-park: #D2EAD6;
+  --map-water: #CFE2F4;
+  --font: "Schibsted Grotesk", "Helvetica Neue", Arial, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #110B18;
+    --surface: #1A1324;
+    --surface-2: #231A30;
+    --surface-3: #30253F;
+    --line: rgba(230, 215, 255, 0.12);
+    --line-strong: rgba(230, 215, 255, 0.24);
+    --ink: #F3EFF8;
+    --muted: #ABA1BA;
+    --brand: #7C4DDB;
+    --brand-ink: #FFFFFF;
+    --brand-text: #C9AEFF;
+    --brand-soft: #2A1E42;
+    --accent: #FF7A2E;
+    --accent-ink: #1D1428;
+    --accent-text: #FFA56E;
+    --accent-soft: #3A2414;
+    --ok: #53C98D;
+    --ok-soft: #16301F;
+    --danger: #FF7D84;
+    --danger-soft: #3A1418;
+    --star: #FFB43D;
+    --header-bg: rgba(17, 11, 24, 0.86);
+    --overlay: rgba(0, 0, 0, 0.6);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 14px 36px rgba(0, 0, 0, 0.5);
+    --map-bg: #1B1426;
+    --map-block: #251C33;
+    --map-road: #3A2E52;
+    --map-park: #1D3327;
+    --map-water: #1B2B42;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #110B18;
+  --surface: #1A1324;
+  --surface-2: #231A30;
+  --surface-3: #30253F;
+  --line: rgba(230, 215, 255, 0.12);
+  --line-strong: rgba(230, 215, 255, 0.24);
+  --ink: #F3EFF8;
+  --muted: #ABA1BA;
+  --brand: #7C4DDB;
+  --brand-ink: #FFFFFF;
+  --brand-text: #C9AEFF;
+  --brand-soft: #2A1E42;
+  --accent: #FF7A2E;
+  --accent-ink: #1D1428;
+  --accent-text: #FFA56E;
+  --accent-soft: #3A2414;
+  --ok: #53C98D;
+  --ok-soft: #16301F;
+  --danger: #FF7D84;
+  --danger-soft: #3A1418;
+  --star: #FFB43D;
+  --header-bg: rgba(17, 11, 24, 0.86);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 14px 36px rgba(0, 0, 0, 0.5);
+  --map-bg: #1B1426;
+  --map-block: #251C33;
+  --map-road: #3A2E52;
+  --map-park: #1D3327;
+  --map-water: #1B2B42;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+html { background: var(--bg); scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 84px); -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 1rem; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10;
+  background: var(--header-bg); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4);
+}
+body.locked { overflow: hidden; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 2px; }
+img, svg { max-width: 100%; }
+h1, h2, h3 { text-wrap: balance; }
+.wrap { max-width: 1240px; margin-left: auto; margin-right: auto; padding-left: clamp(16px, 4vw, 40px); padding-right: clamp(16px, 4vw, 40px); }
+#app { min-height: 72vh; }
+#app:focus { outline: none; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.muted { color: var(--muted); }
+[hidden] { display: none !important; }
+.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.i.fill { fill: currentColor; stroke: none; }
+
+/* Header */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30;
+  background: var(--header-bg); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border-bottom: 1px solid var(--line);
+}
+.topbar-inner { display: flex; align-items: center; gap: 14px; height: 68px; }
+.logo { display: inline-flex; align-items: center; gap: 9px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--ink); flex: none; }
+.logo-mark { width: 36px; height: 36px; display: block; }
+.wordmark { font-weight: 800; font-size: 1.55rem; letter-spacing: -0.05em; line-height: 1; }
+.addr-btn {
+  display: inline-flex; align-items: center; gap: 10px; min-width: 0; max-width: 340px; margin-left: 18px;
+  padding: 6px 14px 6px 6px; border: 0; border-radius: 999px; background: var(--surface-2); cursor: pointer; text-align: left;
+}
+.addr-btn:hover { background: var(--surface-3); }
+.addr-btn .pin { width: 32px; height: 32px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; color: var(--brand-text); flex: none; }
+.addr-btn .pin .i { width: 17px; height: 17px; }
+.addr-text { min-width: 0; display: block; }
+.addr-text small { display: block; font-size: 0.74rem; line-height: 1.2; color: var(--muted); }
+.addr-text strong { display: block; font-weight: 600; font-size: 0.92rem; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.addr-btn > .i { width: 16px; height: 16px; color: var(--muted); }
+.top-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
+.icon-btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 44px; min-width: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); cursor: pointer; font-weight: 600; font-size: 0.95rem; color: var(--ink);
+}
+.icon-btn:hover { border-color: var(--line-strong); }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); display: grid; place-items: center; font-size: 0.8rem; font-weight: 700; flex: none; }
+.icon-btn.has-avatar { padding-left: 6px; }
+.badge { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 0.78rem; font-weight: 800; display: inline-grid; place-items: center; }
+.badge[hidden] { display: none; }
+@media (max-width: 720px) {
+  .addr-btn { flex: 1; margin-left: 4px; }
+  .icon-btn .lbl { display: none; }
+  .icon-btn { padding: 0 10px; }
+  .icon-btn.has-avatar { padding: 0 6px; }
+}
+@media (max-width: 480px) { .wordmark { display: none; } .addr-text small { display: none; } }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 0 22px; border-radius: 14px; border: 1px solid transparent;
+  font-weight: 700; font-size: 1rem; cursor: pointer; text-decoration: none; white-space: nowrap;
+  transition: filter .15s, background-color .15s, border-color .15s, transform .1s;
+}
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn-primary { background: var(--brand); color: var(--brand-ink); }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.12); }
+.btn-secondary { background: var(--surface-2); color: var(--ink); }
+.btn-secondary:hover:not(:disabled) { background: var(--surface-3); }
+.btn-outline { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+.btn-outline:hover:not(:disabled) { border-color: var(--ink); }
+.btn-block { width: 100%; }
+.btn-split { justify-content: space-between; }
+.btn-sm { min-height: 38px; padding: 0 14px; border-radius: 11px; font-size: 0.9rem; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.link-btn { padding: 0; border: 0; background: none; color: var(--brand-text); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.round-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+/* Home */
+.home-hero { padding-top: clamp(28px, 5vw, 56px); }
+.kicker { margin: 0 0 6px; color: var(--muted); font-weight: 500; font-size: 1.05rem; }
+.home-hero h1 { margin: 0 0 22px; font-size: clamp(2.1rem, 4.8vw, 3.6rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; max-width: 16ch; }
+.search { position: relative; max-width: 660px; }
+.search > .i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+.search input {
+  width: 100%; height: 58px; padding: 0 52px; border-radius: 16px; border: 1px solid var(--line-strong);
+  background: var(--surface); font-size: 1.05rem; color: var(--ink);
+}
+.search input::-webkit-search-cancel-button { display: none; }
+.search input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 18%, transparent); }
+.search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--surface-2); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.search-clear[hidden] { display: none; }
+.search-clear .i { width: 16px; height: 16px; }
+
+.banner {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 22px; max-width: 900px;
+  padding: 16px 18px; border-radius: 18px; background: var(--brand); color: var(--brand-ink);
+}
+.banner p { margin: 0; flex: 1 1 260px; font-weight: 500; }
+.banner strong { font-weight: 800; }
+.banner .code { font-weight: 800; letter-spacing: 0.04em; padding: 2px 8px; border-radius: 8px; border: 1.5px dashed currentColor; }
+.banner .btn { background: var(--surface); color: var(--ink); min-height: 40px; padding: 0 16px; border-radius: 11px; font-size: 0.92rem; }
+.banner .x { background: transparent; border: 0; color: inherit; cursor: pointer; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; opacity: 0.8; }
+.banner .x:hover { opacity: 1; }
+.live-banner {
+  display: flex; align-items: center; gap: 14px; margin-top: 22px; max-width: 900px; padding: 14px 16px;
+  border-radius: 18px; background: var(--accent-soft); color: var(--ink); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.live-banner p { margin: 0; flex: 1; font-weight: 500; }
+.pulse { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); flex: none; box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); animation: pulse 1.8s infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+.cats { display: flex; gap: 6px; margin-top: 32px; padding-bottom: 6px; overflow-x: auto; scrollbar-width: none; }
+.cats::-webkit-scrollbar { display: none; }
+.cat {
+  flex: none; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 96px; padding: 10px 4px 12px;
+  border-radius: 18px; border: 1.5px solid transparent; background: transparent; cursor: pointer; font-weight: 600; font-size: 0.88rem; color: var(--ink);
+}
+.cat:hover { background: var(--surface-2); }
+.cat .ic { width: 62px; height: 62px; border-radius: 50%; background: var(--cv, var(--surface-2)); display: grid; place-items: center; overflow: hidden; }
+.cat .ic svg { width: 46px; height: 46px; }
+.cat .ic .i { width: 24px; height: 24px; color: var(--brand-text); }
+.cat[aria-pressed="true"] { background: var(--brand-soft); border-color: color-mix(in srgb, var(--brand) 40%, transparent); }
+
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin: 22px 0 20px; }
+.toolbar h2 { margin: 0; font-size: 1.45rem; font-weight: 800; letter-spacing: -0.025em; }
+.toolbar .count { margin-left: 6px; color: var(--muted); font-weight: 500; font-size: 1.05rem; letter-spacing: 0; }
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pill {
+  height: 40px; padding: 0 15px; border-radius: 999px; border: 1px solid var(--line-strong);
+  background: var(--surface); font-size: 0.92rem; font-weight: 600; cursor: pointer; color: var(--ink);
+}
+.pill:hover { border-color: var(--ink); }
+.pill[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.select-wrap { position: relative; display: inline-flex; }
+.select-wrap select {
+  appearance: none; -webkit-appearance: none; height: 40px; padding: 0 38px 0 15px; border-radius: 999px;
+  border: 1px solid var(--line-strong); background: var(--surface); font-size: 0.92rem; font-weight: 600; color: var(--ink); cursor: pointer;
+}
+.select-wrap .i { position: absolute; right: 12px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); pointer-events: none; color: var(--muted); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 30px 22px; padding-bottom: 110px; }
+.card { position: relative; }
+.cover { position: relative; aspect-ratio: 16 / 10; border-radius: 20px; overflow: hidden; background: var(--cv); }
+.cover::before, .r-cover::before, .item-band::before {
+  content: ""; position: absolute; inset: 0; opacity: 0.16;
+  background-image: radial-gradient(var(--cvi) 1.5px, transparent 1.8px); background-size: 18px 18px;
+}
+.cover .art { position: absolute; right: 5%; bottom: -10%; width: 54%; transform: rotate(-8deg); transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.cover .art svg, .r-cover .art svg, .item-band .art svg { display: block; width: 100%; height: auto; }
+.card:hover .cover .art { transform: rotate(-3deg) scale(1.05); }
+.eta {
+  position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px 5px 8px; border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 0.82rem; font-weight: 700;
+}
+.eta .i { width: 15px; height: 15px; }
+.veil { position: absolute; inset: 0; background: var(--veil); color: var(--veil-ink); display: grid; place-items: center; font-weight: 700; text-align: center; padding: 16px; }
+.card-link { position: absolute; inset: 0; z-index: 1; border: 0; border-radius: 20px; background: transparent; cursor: pointer; }
+.card-link:focus-visible { outline: 3px solid var(--brand); outline-offset: 4px; }
+.fav {
+  position: absolute; top: 10px; right: 10px; z-index: 2; width: 40px; height: 40px; border-radius: 50%; border: 0;
+  background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; transition: transform .15s;
+}
+.fav:hover { transform: scale(1.08); }
+.fav .i { width: 19px; height: 19px; }
+.fav[aria-pressed="true"] .i { fill: var(--accent); stroke: var(--accent); }
+.card-body { padding: 12px 2px 0; }
+.card-title { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.card h3 { margin: 0; font-size: 1.14rem; font-weight: 700; letter-spacing: -0.015em; }
+.rating { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 0.92rem; white-space: nowrap; }
+.rating .i { width: 15px; height: 15px; color: var(--star); }
+.rating small { color: var(--muted); font-weight: 500; font-size: 0.85rem; }
+.card-meta { margin: 2px 0 0; color: var(--muted); font-size: 0.93rem; }
+.free { color: var(--ok); font-weight: 600; }
+.match { margin: 6px 0 0; font-size: 0.88rem; color: var(--brand-text); font-weight: 600; }
+.card.is-closed .card-body { opacity: 0.7; }
+.empty { padding: 56px 0 120px; text-align: center; max-width: 440px; margin: 0 auto; }
+.empty h3 { font-size: 1.3rem; margin: 0 0 8px; }
+.empty p { color: var(--muted); margin: 0 0 20px; }
+.empty-art { width: 120px; height: 120px; margin: 0 auto 16px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; }
+.empty-art svg { width: 84px; }
+
+/* Restaurant */
+.r-cover { position: relative; height: clamp(170px, 24vw, 270px); margin-top: 20px; border-radius: 26px; overflow: hidden; background: var(--cv); }
+.r-cover .art { position: absolute; right: 7%; bottom: -16%; width: min(40%, 290px); transform: rotate(-8deg); }
+.r-cover .back { position: absolute; top: 14px; left: 14px; z-index: 2; }
+.r-cover .fav { top: 14px; right: 14px; width: 44px; height: 44px; }
+.r-head { margin: 22px 0 0; }
+.r-head h1 { margin: 0; font-size: clamp(2rem, 4.2vw, 3.1rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.04; }
+.r-tag { margin: 6px 0 0; color: var(--muted); font-size: 1.08rem; }
+.r-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: 12px 0 0; }
+.open-state { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 0.93rem; }
+.open-state .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.open-state.closed .dot { background: var(--danger); }
+.r-stats { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 0; }
+.stat { padding: 11px 15px; border-radius: 14px; background: var(--surface-2); min-width: 128px; }
+.stat small { display: block; color: var(--muted); font-size: 0.8rem; }
+.stat strong { font-weight: 700; }
+.notice { margin: 18px 0 0; padding: 14px 16px; border-radius: 14px; background: var(--danger-soft); color: var(--ink); font-weight: 500; }
+.menu-tabs-bar { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 68px); z-index: 20; margin-top: 26px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.menu-tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+.menu-tabs::-webkit-scrollbar { display: none; }
+.menu-tabs button { position: relative; flex: none; padding: 15px 14px; border: 0; background: none; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.menu-tabs button:hover { color: var(--ink); }
+.menu-tabs button[aria-current="true"] { color: var(--ink); }
+.menu-tabs button[aria-current="true"]::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: -1px; height: 3px; border-radius: 3px; background: var(--brand); }
+.menu { padding-bottom: 120px; }
+.menu-sec { padding-top: 32px; scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 128px); }
+.menu-sec h2 { margin: 0 0 14px; font-size: 1.45rem; font-weight: 800; letter-spacing: -0.025em; }
+.items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.item {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; width: 100%;
+  padding: 18px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface);
+  text-align: left; cursor: pointer; color: var(--ink); transition: border-color .15s, transform .15s;
+}
+.item:hover { border-color: var(--line-strong); }
+.item-main { display: block; min-width: 0; }
+.item-name { display: block; font-size: 1.05rem; font-weight: 700; }
+.tag-pop { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: 0.74rem; font-weight: 700; vertical-align: 2px; }
+.item-desc { display: -webkit-box; margin: 4px 0 10px; color: var(--muted); font-size: 0.92rem; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.item-price { font-weight: 600; }
+.add { align-self: end; width: 42px; height: 42px; border-radius: 12px; background: var(--surface-2); color: var(--brand-text); display: grid; place-items: center; font-weight: 800; }
+.item.in-cart { border-color: color-mix(in srgb, var(--brand) 45%, transparent); }
+.item.in-cart .add { background: var(--brand); color: var(--brand-ink); }
+@media (max-width: 760px) { .items { grid-template-columns: 1fr; } }
+
+/* Floating bag bar */
+.cartbar {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); z-index: 25;
+  width: min(560px, calc(100% - 28px)); height: 60px; padding: 0 18px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px; border: 0; border-radius: 18px;
+  background: var(--brand); color: var(--brand-ink); font-weight: 700; font-size: 1.02rem; cursor: pointer; box-shadow: var(--shadow);
+  animation: rise .3s cubic-bezier(.2,.8,.2,1);
+}
+.cartbar[hidden] { display: none; }
+.cartbar .n { min-width: 30px; height: 30px; border-radius: 9px; background: rgba(255, 255, 255, 0.2); display: grid; place-items: center; }
+.cartbar .t { margin-left: auto; }
+@keyframes rise { from { transform: translate(-50%, 20px); opacity: 0; } }
+
+/* Drawer, overlay, modal */
+.overlay { position: fixed; inset: 0; z-index: 40; background: var(--overlay); opacity: 0; pointer-events: none; transition: opacity .25s; }
+.overlay.show { opacity: 1; pointer-events: auto; }
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 41; width: min(440px, 100%);
+  display: flex; flex-direction: column; background: var(--surface); box-shadow: var(--shadow);
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  transform: translateX(105%); visibility: hidden; transition: transform .32s cubic-bezier(.2,.8,.2,1), visibility 0s .32s;
+}
+.drawer.open { transform: none; visibility: visible; transition: transform .32s cubic-bezier(.2,.8,.2,1), visibility 0s; }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.drawer-head h2 { margin: 0; font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; }
+.drawer-head p { margin: 2px 0 0; color: var(--muted); font-size: 0.92rem; }
+.close-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--surface-2); color: var(--ink); display: grid; place-items: center; cursor: pointer; flex: none; }
+.close-btn:hover { background: var(--surface-3); }
+.drawer-body { flex: 1; overflow-y: auto; padding: 4px 20px 20px; }
+.drawer-foot { padding: 16px 20px 20px; border-top: 1px solid var(--line); }
+.line { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.line-name { font-weight: 700; }
+.line-opts { margin: 2px 0 0; color: var(--muted); font-size: 0.88rem; }
+.line-price { font-weight: 600; text-align: right; }
+.qty { display: inline-flex; align-items: center; height: 38px; border: 1px solid var(--line-strong); border-radius: 12px; }
+.qty button { width: 36px; height: 36px; border: 0; background: none; cursor: pointer; display: grid; place-items: center; color: var(--ink); border-radius: 10px; }
+.qty button:hover { background: var(--surface-2); }
+.qty button .i { width: 16px; height: 16px; }
+.qty span { min-width: 24px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+.minbar { margin: 16px 0 6px; padding: 14px; border-radius: 14px; background: var(--surface-2); font-size: 0.9rem; }
+.progress { height: 6px; margin-top: 10px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.progress i { display: block; height: 100%; border-radius: inherit; background: var(--brand); transition: width .35s; }
+.rows { margin: 10px 0 0; }
+.row { display: flex; justify-content: space-between; gap: 16px; padding: 5px 0; color: var(--muted); }
+.row dd, .row dt { margin: 0; }
+.row .neg { color: var(--ok); font-weight: 600; }
+.row.total { margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--ink); font-weight: 800; font-size: 1.15rem; }
+.strike { text-decoration: line-through; margin-right: 6px; }
+
+.modal-wrap { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; background: var(--overlay); animation: fade .2s; }
+.modal {
+  position: relative; width: min(520px, 100%); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow-y: auto;
+  border-radius: 24px; background: var(--surface); box-shadow: var(--shadow); animation: pop .25s cubic-bezier(.2,.8,.2,1);
+}
+.modal.wide { width: min(560px, 100%); }
+.modal-head { padding: 26px 26px 0; }
+.modal-head h2 { margin: 0; font-size: 1.55rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; padding-right: 40px; }
+.modal-head p { margin: 6px 0 0; color: var(--muted); }
+.modal-body { padding: 18px 26px; }
+.modal-foot { position: sticky; bottom: 0; display: flex; gap: 12px; align-items: center; padding: 16px 26px calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line); }
+.modal .close-btn { position: absolute; top: 16px; right: 16px; z-index: 3; }
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { from { transform: translateY(16px) scale(0.98); opacity: 0; } }
+@media (max-width: 600px) {
+  .modal-wrap { place-items: end center; padding: 0; }
+  .modal { border-radius: 24px 24px 0 0; max-height: 94vh; max-height: 94dvh; }
+}
+.item-band { position: relative; height: 150px; overflow: hidden; background: var(--cv); }
+.item-band .art { position: absolute; right: 8%; bottom: -26%; width: 170px; transform: rotate(-8deg); }
+.item-price-lg { margin: 10px 0 0; font-weight: 700; font-size: 1.1rem; }
+.opt-group { padding: 16px 0 6px; border-top: 1px solid var(--line); }
+.opt-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+.opt-head h3 { margin: 0; font-size: 1.02rem; font-weight: 700; }
+.req { padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 0.76rem; font-weight: 700; white-space: nowrap; }
+.choice { display: flex; align-items: center; gap: 12px; padding: 11px 0; cursor: pointer; }
+.choice input { width: 20px; height: 20px; margin: 0; accent-color: var(--brand); flex: none; }
+.choice .cp { margin-left: auto; color: var(--muted); font-size: 0.93rem; }
+
+/* Forms */
+.field { display: grid; gap: 6px; margin-bottom: 14px; }
+.field label, .field .label { font-weight: 600; font-size: 0.93rem; }
+.field label small { color: var(--muted); font-weight: 500; }
+.input {
+  width: 100%; height: 50px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line-strong);
+  background: var(--surface); color: var(--ink); font-size: 1rem;
+}
+textarea.input { height: auto; min-height: 84px; padding: 12px 14px; resize: vertical; }
+select.input { appearance: auto; }
+.input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 18%, transparent); }
+.field.invalid .input { border-color: var(--danger); }
+.err { margin: 0; color: var(--danger); font-size: 0.87rem; }
+.err:empty { display: none; }
+.form-error { margin: 0 0 14px; padding: 12px 14px; border-radius: 12px; background: var(--danger-soft); color: var(--danger); font-size: 0.93rem; font-weight: 500; }
+.form-error:empty { display: none; }
+.pw-wrap { position: relative; }
+.pw-wrap .input { padding-right: 64px; }
+.pw-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); height: 34px; padding: 0 10px; border: 0; border-radius: 8px; background: var(--surface-2); color: var(--ink); font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--surface-2); }
+.seg button { flex: 1; height: 42px; border: 0; border-radius: 10px; background: transparent; font-weight: 600; color: var(--muted); cursor: pointer; }
+.seg button[aria-selected="true"], .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+.divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--muted); font-size: 0.85rem; }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.hint { margin: 12px 0 0; color: var(--muted); font-size: 0.86rem; text-align: center; }
+
+/* Checkout */
+.page-title { margin: 28px 0 22px; font-size: clamp(1.9rem, 3.8vw, 2.8rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; }
+.back-row { margin-top: 22px; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 0; border: 0; background: none; color: var(--muted); font-weight: 600; cursor: pointer; }
+.back-link:hover { color: var(--ink); }
+.back-link .i { width: 18px; height: 18px; }
+.checkout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: 24px; align-items: start; padding-bottom: 90px; }
+.panel { padding: 22px; margin-bottom: 16px; border-radius: 20px; border: 1px solid var(--line); background: var(--surface); }
+.panel h2 { margin: 0 0 14px; font-size: 1.18rem; font-weight: 700; letter-spacing: -0.015em; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+.panel-head h2 { margin: 0; }
+.radio-card { display: flex; gap: 14px; align-items: center; padding: 14px 16px; margin-bottom: 10px; border-radius: 14px; border: 1px solid var(--line-strong); cursor: pointer; transition: border-color .15s, background-color .15s; }
+.radio-card:hover { border-color: var(--ink); }
+.radio-card:has(input:checked) { border-color: var(--brand); background: var(--brand-soft); }
+.radio-card input { width: 19px; height: 19px; margin: 0; accent-color: var(--brand); flex: none; }
+.radio-card .rc-main { flex: 1; min-width: 0; }
+.radio-card strong { display: block; font-weight: 700; }
+.radio-card span.sub { display: block; color: var(--muted); font-size: 0.9rem; }
+.radio-card .rc-ic { width: 38px; height: 38px; border-radius: 11px; background: var(--surface-2); display: grid; place-items: center; color: var(--brand-text); flex: none; }
+.sticky-sum { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 88px); }
+.sum-r { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.thumb { width: 52px; height: 52px; border-radius: 14px; background: var(--cv); display: grid; place-items: center; overflow: hidden; flex: none; }
+.thumb svg { width: 40px; height: 40px; }
+.sum-items { margin: 0 0 12px; padding: 0; list-style: none; }
+.sum-items li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 0.95rem; }
+.sum-items .q { color: var(--muted); margin-right: 6px; font-variant-numeric: tabular-nums; }
+.tips { display: flex; gap: 8px; }
+.tips .pill { flex: 1; padding: 0 6px; }
+.promo-row { display: flex; gap: 8px; }
+.promo-row .input { height: 46px; text-transform: uppercase; }
+.applied { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--ok-soft); color: var(--ok); font-weight: 600; }
+.sub-label { margin: 16px 0 8px; font-weight: 600; font-size: 0.93rem; }
+.fine { margin: 12px 0 0; color: var(--muted); font-size: 0.84rem; text-align: center; }
+.login-card { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; padding: 20px 22px; margin-bottom: 16px; border-radius: 20px; background: var(--brand-soft); border: 1px solid color-mix(in srgb, var(--brand) 25%, transparent); }
+.login-card p { margin: 0; flex: 1 1 220px; }
+.login-card strong { display: block; font-size: 1.08rem; }
+@media (max-width: 920px) { .checkout { grid-template-columns: 1fr; } .sticky-sum { position: static; } }
+
+/* Tracking */
+.track { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); gap: 32px; align-items: start; padding: 10px 0 90px; }
+.track-kicker { margin: 0 0 6px; color: var(--muted); font-weight: 600; }
+.track h1 { margin: 0; font-size: clamp(1.9rem, 3.6vw, 2.7rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.06; }
+.track-sub { margin: 8px 0 0; color: var(--muted); font-size: 1.05rem; }
+.eta-box { display: flex; align-items: flex-end; gap: 18px; margin: 26px 0 0; }
+.eta-big { font-size: clamp(3rem, 7vw, 4.6rem); font-weight: 800; letter-spacing: -0.05em; line-height: 0.9; font-variant-numeric: tabular-nums; }
+.eta-label { padding-bottom: 6px; color: var(--muted); font-size: 0.95rem; line-height: 1.35; }
+.eta-label strong { display: block; color: var(--ink); font-size: 1.05rem; }
+.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 26px 0 0; padding: 0; list-style: none; }
+.steps li { min-width: 0; }
+.steps .bar { display: block; height: 6px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.steps .bar i { display: block; height: 100%; width: 0; background: var(--brand); border-radius: inherit; transition: width .5s linear; }
+.steps .lbl { display: block; margin-top: 8px; font-size: 0.84rem; font-weight: 600; color: var(--muted); }
+.steps li.reached .lbl { color: var(--ink); }
+.demo-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 16px 0 0; font-size: 0.86rem; color: var(--muted); }
+.courier { display: flex; align-items: center; gap: 14px; padding: 16px 18px; margin-top: 24px; border-radius: 18px; background: var(--surface-2); }
+.courier .avatar { width: 46px; height: 46px; font-size: 1rem; background: var(--accent); color: var(--accent-ink); }
+.courier p { margin: 0; }
+.courier small { color: var(--muted); font-size: 0.9rem; }
+.map { position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--line); background: var(--map-bg); }
+.map > svg { display: block; width: 100%; height: auto; }
+.map-label { font-family: var(--font); font-size: 11px; font-weight: 700; fill: var(--ink); paint-order: stroke; stroke: var(--map-bg); stroke-width: 4px; stroke-linejoin: round; }
+.courier-ring { transform-box: fill-box; transform-origin: center; animation: ring 1.8s ease-out infinite; }
+@keyframes ring { from { transform: scale(0.6); opacity: 0.7; } to { transform: scale(1.8); opacity: 0; } }
+.detail-list { margin: 0; padding: 0; list-style: none; }
+.detail-list li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; }
+.rate { margin-top: 24px; }
+.stars { display: flex; gap: 4px; margin: 6px 0 14px; }
+.stars button { width: 46px; height: 46px; border: 0; background: none; cursor: pointer; color: var(--surface-3); display: grid; place-items: center; border-radius: 10px; }
+.stars button .i { width: 34px; height: 34px; }
+.stars button.on { color: var(--star); }
+.stars button:hover { background: var(--surface-2); }
+.rated { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 14px; background: var(--ok-soft); color: var(--ok); font-weight: 600; }
+@media (max-width: 920px) { .track { grid-template-columns: 1fr; } .track .map-col { order: -1; } }
+
+/* Account */
+.acct-head { display: flex; align-items: center; gap: 16px; margin: 30px 0 22px; }
+.avatar-lg { width: 66px; height: 66px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); display: grid; place-items: center; font-weight: 800; font-size: 1.45rem; flex: none; }
+.acct-head h1 { margin: 0; font-size: clamp(1.7rem, 3.4vw, 2.4rem); font-weight: 800; letter-spacing: -0.035em; line-height: 1.1; }
+.acct-head p { margin: 2px 0 0; color: var(--muted); }
+.tabs { display: flex; gap: 4px; margin-bottom: 8px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.tabs button { position: relative; flex: none; padding: 13px 14px; border: 0; background: none; font-weight: 600; color: var(--muted); cursor: pointer; }
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-selected="true"] { color: var(--ink); }
+.tabs button[aria-selected="true"]::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: -1px; height: 3px; border-radius: 3px; background: var(--brand); }
+.tab-panel { padding-bottom: 100px; max-width: 860px; }
+.order-row { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.order-row h3 { margin: 0; font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.order-row p { margin: 2px 0 0; color: var(--muted); font-size: 0.92rem; }
+.order-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.order-actions strong { font-variant-numeric: tabular-nums; }
+.status { padding: 3px 9px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 0.75rem; font-weight: 700; }
+.status.live { background: var(--accent-soft); color: var(--accent-text); }
+.status.done { background: var(--ok-soft); color: var(--ok); }
+.mini-stars { color: var(--star); display: inline-flex; }
+.mini-stars .i { width: 14px; height: 14px; }
+.addr-row { display: flex; align-items: center; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.addr-row .rc-ic { width: 42px; height: 42px; border-radius: 12px; background: var(--surface-2); display: grid; place-items: center; color: var(--brand-text); flex: none; }
+.addr-row .main { flex: 1; min-width: 0; }
+.addr-row strong { display: inline-flex; align-items: center; gap: 8px; }
+.addr-row p { margin: 2px 0 0; color: var(--muted); font-size: 0.92rem; }
+.addr-row .acts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.default-tag { padding: 2px 8px; border-radius: 999px; background: var(--brand-soft); color: var(--brand-text); font-size: 0.74rem; font-weight: 700; }
+.profile-list { margin: 10px 0 24px; }
+.profile-list div { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.profile-list dt { color: var(--muted); }
+.profile-list dd { margin: 0; font-weight: 600; text-align: right; }
+.section-gap { margin-top: 18px; }
+@media (max-width: 600px) { .addr-row { flex-wrap: wrap; } .addr-row .acts { width: 100%; justify-content: flex-start; padding-left: 56px; } }
+
+/* Footer, toast */
+.site-footer { border-top: 1px solid var(--line); padding: 34px 0 calc(110px + env(safe-area-inset-bottom, 0px)); color: var(--muted); font-size: 0.9rem; }
+.site-footer .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 30px; }
+.site-footer .logo { pointer-events: none; }
+.site-footer .wordmark { font-size: 1.25rem; }
+.site-footer .logo-mark { width: 30px; height: 30px; }
+.site-footer p { margin: 0; max-width: 46rem; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 92px); z-index: 60;
+  width: max-content; max-width: min(92vw, 440px); padding: 13px 18px; border-radius: 14px;
+  background: var(--ink); color: var(--bg); font-weight: 500; font-size: 0.95rem;
+  transform: translate(-50%, 12px); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.spinner { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid currentColor; border-right-color: transparent; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Photos */
+.photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover.has-photo::before, .r-cover.has-photo::before, .item-band.has-photo::before, .photo-preview.has-photo::before { display: none; }
+.cover.has-photo .art, .r-cover.has-photo .art, .item-band.has-photo .art, .photo-preview.has-photo .art, .thumb.has-photo svg { visibility: hidden; }
+.cover .photo { transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+.card:hover .cover .photo { transform: scale(1.04); }
+.r-cover.has-photo { height: clamp(210px, 30vw, 360px); }
+.item-band.has-photo { height: 240px; }
+.thumb { position: relative; }
+.item.has-photo { grid-template-columns: minmax(0, 1fr) 116px; align-items: center; }
+.item-thumb { position: relative; width: 116px; height: 116px; border-radius: 14px; overflow: hidden; background: var(--surface-2); }
+.item-thumb .add { position: absolute; right: 7px; bottom: 7px; width: 36px; height: 36px; border-radius: 10px; background: var(--surface); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); }
+.item.in-cart .item-thumb .add { background: var(--brand); color: var(--brand-ink); }
+@media (max-width: 420px) { .item.has-photo { grid-template-columns: minmax(0, 1fr) 96px; } .item-thumb { width: 96px; height: 96px; } }
+.photo-btn {
+  position: absolute; z-index: 3; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px; border-radius: 999px; border: 0;
+  background: var(--ink); color: var(--bg); font-weight: 700; font-size: 0.9rem; cursor: pointer; box-shadow: var(--shadow); white-space: nowrap;
+}
+.photo-btn .i { width: 18px; height: 18px; }
+.photo-hint {
+  position: absolute; top: 10px; right: 10px; z-index: 2; display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: 0.76rem; font-weight: 700;
+}
+.photo-hint .i { width: 14px; height: 14px; }
+.icon-btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.photo-strip { background: var(--ink); color: var(--bg); }
+.photo-strip .wrap { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; min-height: 52px; padding-top: 10px; padding-bottom: 10px; font-size: 0.92rem; }
+.photo-strip p { margin: 0; flex: 1 1 280px; }
+.photo-strip .btn { min-height: 36px; padding: 0 16px; border-radius: 10px; font-size: 0.88rem; background: var(--bg); color: var(--ink); }
+.photo-preview { position: relative; aspect-ratio: 16 / 10; margin-bottom: 16px; border-radius: 16px; overflow: hidden; background: var(--cv); }
+.photo-preview::before { content: ""; position: absolute; inset: 0; opacity: 0.16; background-image: radial-gradient(var(--cvi) 1.5px, transparent 1.8px); background-size: 18px 18px; }
+.photo-preview .art { position: absolute; right: 10%; bottom: -10%; width: 46%; transform: rotate(-8deg); }
+.photo-preview .art svg { display: block; width: 100%; height: auto; }
+.photo-preview.square { aspect-ratio: 1; max-width: 280px; margin-left: auto; margin-right: auto; }
+.file-label { cursor: pointer; }
+.file-label:focus-within { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 2px; }
+.file-label.is-busy { opacity: 0.6; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .courier-ring { display: none; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <mask id="mk-bite" maskUnits="userSpaceOnUse" x="0" y="0" width="40" height="40">
+      <rect width="40" height="40" fill="#fff"/>
+      <circle cx="29" cy="10.5" r="5.6" fill="#000"/>
+      <circle cx="31.8" cy="18" r="4.6" fill="#000"/>
+    </mask>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <button class="logo" type="button" data-act="home" aria-label="Morsel, back to restaurants">
+      <svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" style="fill:var(--brand)"/><circle cx="18.5" cy="21" r="11.5" style="fill:var(--brand-ink)" mask="url(#mk-bite)"/><circle cx="31.4" cy="29.6" r="2.5" style="fill:var(--accent)"/></svg>
+      <span class="wordmark">morsel</span>
+    </button>
+    <button class="addr-btn" type="button" data-act="addr" id="addr-btn">
+      <span class="pin"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
+      <span class="addr-text"><small>Deliver to</small><strong id="addr-label">Add delivery address</strong></span>
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="top-actions">
+      <button class="icon-btn" type="button" id="photo-btn" data-act="photo-mode" aria-pressed="false" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3v11H4z"/><circle cx="12" cy="13.5" r="3.5"/></svg><span class="lbl">Photos</span></button>
+      <button class="icon-btn" type="button" data-act="account-btn" id="acct-btn"></button>
+      <button class="icon-btn" type="button" data-act="cart" id="cart-btn" aria-label="Open your bag">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.1a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>
+        <span class="badge" id="cart-count" hidden>0</span>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="photo-strip" id="photo-strip" hidden></div>
+
+<main id="app" tabindex="-1"></main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span class="logo" aria-hidden="true">
+      <svg class="logo-mark" viewBox="0 0 40 40"><rect width="40" height="40" rx="12" style="fill:var(--brand)"/><circle cx="18.5" cy="21" r="11.5" style="fill:var(--brand-ink)" mask="url(#mk-bite)"/><circle cx="31.4" cy="29.6" r="2.5" style="fill:var(--accent)"/></svg>
+      <span class="wordmark">morsel</span>
+    </span>
+    <p>Morsel is a demo food delivery app. Restaurants, prices, couriers and orders are fictional, and no payment is ever taken. Accounts and orders are saved in this browser only.</p>
+  </div>
+</footer>
+
+<button class="cartbar" id="cartbar" type="button" data-act="cart" hidden></button>
+<div class="overlay" id="overlay" data-act="close-drawer"></div>
+<aside class="drawer" id="drawer" aria-labelledby="drawer-title" role="dialog" aria-modal="true">
+  <div class="drawer-head">
+    <div><h2 id="drawer-title">Your bag</h2><p id="drawer-sub"></p></div>
+    <button class="close-btn" type="button" data-act="close-drawer" aria-label="Close bag"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+  <div class="drawer-foot" id="drawer-foot"></div>
+</aside>
+<div id="modal-root"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ================= Utilities ================= */
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const money = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' });
+  const eur = cents => money.format(cents / 100);
+  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const pad2 = n => String(n).padStart(2, '0');
+  const hhmm = mins => { const m = ((mins % 1440) + 1440) % 1440; return `${pad2(Math.floor(m / 60))}:${pad2(m % 60)}`; };
+  const clock = d => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const dayTime = d => `${d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} at ${clock(d)}`;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const initials = name => (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const firstName = name => (name || '').trim().split(/\s+/)[0];
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const sleep = ms => new Promise(r => setTimeout(r, reduced() ? 0 : ms));
+
+  const ICON = {
+    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>',
+    pin: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+    bag: '<path d="M5 8h14l-1.2 11.1a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    heart: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/>',
+    star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z"/>',
+    back: '<path d="M15 5l-7 7 7 7"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    minus: '<path d="M5 12h14"/>',
+    clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    bike: '<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-7h5l3 7M10 9 8.5 6H7M15 9l-1.5-3H16"/>',
+    home: '<path d="M4 11l8-6.5 8 6.5V20H4z"/><path d="M10 20v-5h4v5"/>',
+    work: '<rect x="3.5" y="7.5" width="17" height="12" rx="2"/><path d="M9 7.5V5.5h6v2M3.5 12.5h17"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    card: '<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18M7 15h4"/>',
+    cash: '<rect x="3" y="6.5" width="18" height="11" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5v5M17.5 9.5v5"/>',
+    bolt: '<path d="M13 3 5.5 13.5H12L11 21l7.5-10.5H12z"/>',
+    calendar: '<rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3.5v4M15 3.5v4"/>',
+    chevron: '<path d="M6 9l6 6 6-6"/>',
+    grid: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
+    tag: '<path d="M3.5 12.5V4h8.5l8.5 8.5-8.5 8.5z"/><circle cx="8" cy="8.5" r="1.5"/>',
+    camera: '<path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3v11H4z"/><circle cx="12" cy="13.5" r="3.5"/>'
+  };
+  const ic = (name, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICON[name]}</svg>`;
+
+  /* ================= Food illustrations ================= */
+  const FOOD = {
+    pizza: '<path d="M60 12 L104 88 Q60 108 16 88 Z" fill="#F7C64F"/><path d="M16 88 Q60 108 104 88 L109 97 Q60 121 11 97 Z" fill="#D9843A"/><path d="M60 12 L104 88 Q60 108 16 88 Z" fill="none" stroke="#E8A83A" stroke-width="2" stroke-linejoin="round"/><circle cx="58" cy="44" r="7.5" fill="#D9442B"/><circle cx="43" cy="72" r="8" fill="#D9442B"/><circle cx="75" cy="76" r="7.5" fill="#D9442B"/><circle cx="62" cy="62" r="4.2" fill="#D9442B"/><circle cx="55.5" cy="41.5" r="2" fill="#F07A5E"/><circle cx="40.5" cy="69.5" r="2.1" fill="#F07A5E"/><circle cx="72.5" cy="73.5" r="2" fill="#F07A5E"/><path d="M47 57 q6 -7 11 0 q-6 6 -11 0z" fill="#3E8E4B"/><path d="M78 60 q5 -8 11 -2 q-6 6 -11 2z" fill="#3E8E4B"/><circle cx="68" cy="50" r="1.6" fill="#FFF5D6"/><circle cx="52" cy="84" r="1.6" fill="#FFF5D6"/><circle cx="34" cy="86" r="1.4" fill="#FFF5D6"/>',
+    burger: '<path d="M18 54 Q18 20 60 20 Q102 20 102 54 Z" fill="#EBA341"/><ellipse cx="44" cy="33" rx="2.8" ry="1.6" fill="#FFF4D9" transform="rotate(-20 44 33)"/><ellipse cx="59" cy="27" rx="2.8" ry="1.6" fill="#FFF4D9"/><ellipse cx="74" cy="32" rx="2.8" ry="1.6" fill="#FFF4D9" transform="rotate(20 74 32)"/><ellipse cx="52" cy="42" rx="2.8" ry="1.6" fill="#FFF4D9" transform="rotate(10 52 42)"/><ellipse cx="68" cy="41" rx="2.8" ry="1.6" fill="#FFF4D9" transform="rotate(-12 68 41)"/><ellipse cx="85" cy="44" rx="2.8" ry="1.6" fill="#FFF4D9" transform="rotate(25 85 44)"/><path d="M12 58 q6 -6 12 0 t12 0 t12 0 t12 0 t12 0 t12 0 t12 0 t12 0 v8 H12 z" fill="#69B84A"/><rect x="14" y="66" width="92" height="18" rx="9" fill="#6E3B21"/><path d="M16 64 H104 L98 75 L90 67 L80 79 L70 67 L58 77 L48 67 L36 75 L28 67 L22 72 Z" fill="#FFC93C"/><path d="M18 88 H102 Q102 104 86 104 H34 Q18 104 18 88 Z" fill="#E09535"/>',
+    ramen: '<path d="M70 6 L100 52" stroke="#C78B4E" stroke-width="4.5" stroke-linecap="round"/><path d="M83 4 L107 50" stroke="#A9733D" stroke-width="4.5" stroke-linecap="round"/><path d="M20 58 Q24 38 44 40 Q56 30 70 38 Q90 34 100 58 Z" fill="#F3D27C"/><path d="M28 53 q8 -8 16 0 t16 0 t16 0 t16 0" fill="none" stroke="#E2B65A" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="42" cy="47" rx="11" ry="8.5" fill="#FFFFFF"/><circle cx="42" cy="47" r="4.8" fill="#F5A623"/><circle cx="65" cy="44" r="7" fill="#FFFFFF"/><path d="M61 44 q4 -5 8 0 q-4 4 -8 0" fill="none" stroke="#F06A8A" stroke-width="2"/><rect x="77" y="30" width="12" height="22" rx="1.5" fill="#1F3A2C" transform="rotate(10 83 41)"/><circle cx="54" cy="52" r="2" fill="#7CC46A"/><circle cx="58" cy="49.5" r="2" fill="#7CC46A"/><circle cx="91" cy="54" r="2" fill="#7CC46A"/><rect x="10" y="56" width="100" height="9" rx="4.5" fill="#3D5FA0"/><path d="M14 63 H106 Q103 98 60 102 Q17 98 14 63 Z" fill="#2E4C86"/><path d="M24 77 H96" stroke="#5B7FC0" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/><rect x="44" y="99" width="32" height="7" rx="3.5" fill="#24406F"/>',
+    bowl: '<circle cx="30" cy="54" r="12" fill="#5FAE58"/><circle cx="44" cy="46" r="12" fill="#4F9E4A"/><circle cx="86" cy="50" r="12" fill="#5FAE58"/><circle cx="97" cy="57" r="9" fill="#4F9E4A"/><rect x="50" y="36" width="13" height="13" rx="3" fill="#FF8B66"/><rect x="63" y="42" width="13" height="13" rx="3" fill="#FF7A52"/><rect x="51" y="49" width="13" height="13" rx="3" fill="#FF8B66"/><path d="M70 54 q10 -16 24 -6 q-12 2 -24 6z" fill="#B9D46C"/><path d="M22 58 q4 -14 18 -10 q-10 4 -18 10z" fill="#B9D46C"/><circle cx="38" cy="58" r="3" fill="#8DCB6A"/><circle cx="45" cy="59" r="3" fill="#8DCB6A"/><circle cx="80" cy="58" r="3" fill="#8DCB6A"/><circle cx="58" cy="40" r="1" fill="#FFFFFF"/><circle cx="68" cy="47" r="1" fill="#FFFFFF"/><path d="M10 60 H110 Q108 100 60 104 Q12 100 10 60 Z" fill="#FFFFFF"/><path d="M10 60 H110" stroke="#E2ECE4" stroke-width="3" stroke-linecap="round"/><path d="M20 76 Q60 86 100 76" stroke="#EAF3EC" stroke-width="3" fill="none" stroke-linecap="round"/>',
+    taco: '<path d="M16 58 q4 -14 12 -7 q4 -13 12 -5 q6 -13 14 -5 q6 -13 14 -5 q6 -13 14 -3 q8 -10 13 4 q4 -1 5 11 Z" fill="#6CBB4D"/><path d="M18 60 Q60 50 102 60 L100 66 H20 Z" fill="#9A4A2B"/><circle cx="34" cy="51" r="4" fill="#E8483B"/><circle cx="56" cy="47" r="4" fill="#E8483B"/><circle cx="79" cy="49" r="4" fill="#E8483B"/><circle cx="94" cy="55" r="3.5" fill="#E8483B"/><rect x="44" y="50" width="5" height="3" rx="1" fill="#FFF2C2"/><rect x="67" y="50" width="5" height="3" rx="1" fill="#FFF2C2"/><path d="M12 62 A48 48 0 0 0 108 62 Z" fill="#F2C04C"/><path d="M12 62 H108" stroke="#E2A93B" stroke-width="3.5" stroke-linecap="round"/><circle cx="40" cy="82" r="2.2" fill="#E0A33A"/><circle cx="60" cy="95" r="2.2" fill="#E0A33A"/><circle cx="78" cy="78" r="2.2" fill="#E0A33A"/><circle cx="52" cy="73" r="2" fill="#E0A33A"/><circle cx="86" cy="91" r="2" fill="#E0A33A"/>',
+    cupcake: '<path d="M30 66 H90 L82 108 H38 Z" fill="#E8577D"/><path d="M42 66 L46 108 M54 66 L56 108 M66 66 L64 108 M78 66 L74 108" stroke="#F48FAA" stroke-width="3"/><ellipse cx="60" cy="64" rx="34" ry="11" fill="#FFF0F5"/><ellipse cx="60" cy="52" rx="27" ry="11" fill="#FFF6F9"/><ellipse cx="60" cy="40" rx="18" ry="9.5" fill="#FFF0F5"/><path d="M28 66 q32 9 64 0" stroke="#F5C9D7" stroke-width="2" fill="none"/><path d="M35 54 q25 8 50 0" stroke="#F5C9D7" stroke-width="2" fill="none"/><rect x="40" y="56" width="6" height="2.4" rx="1.2" fill="#5BC0EB" transform="rotate(-30 43 57)"/><rect x="70" y="58" width="6" height="2.4" rx="1.2" fill="#FDE74C" transform="rotate(25 73 59)"/><rect x="55" y="46" width="6" height="2.4" rx="1.2" fill="#9BC53D" transform="rotate(10 58 47)"/><rect x="46" y="44" width="6" height="2.4" rx="1.2" fill="#7E5BEF" transform="rotate(-50 49 45)"/><rect x="66" y="40" width="6" height="2.4" rx="1.2" fill="#5BC0EB" transform="rotate(40 69 41)"/><path d="M62 22 q2 -10 10 -14" stroke="#5B3A1E" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="61" cy="27" r="7.5" fill="#D7263D"/><circle cx="58.5" cy="24.5" r="2" fill="#F26B7E"/>',
+    breakfast: '<circle cx="60" cy="62" r="48" fill="#FFFFFF"/><circle cx="60" cy="62" r="38" fill="#F6F2EA"/><path d="M30 41 q8 -8 16 0 t16 0 t14 0" fill="none" stroke="#C4573A" stroke-width="8" stroke-linecap="round"/><path d="M30 41 q8 -8 16 0 t16 0 t14 0" fill="none" stroke="#F2B9A6" stroke-width="2.4" stroke-linecap="round"/><path d="M44 58 q-12 10 -3 23 q9 12 23 8 q17 3 18 -11 q4 -15 -10 -21 q-15 -8 -28 1z" fill="#FFFFFF" stroke="#EDE6DA" stroke-width="1.5"/><circle cx="62" cy="72" r="10" fill="#F7A71E"/><circle cx="58.5" cy="68.5" r="3" fill="#FFD27A"/><circle cx="85" cy="56" r="1.4" fill="#4A3B2E"/><circle cx="40" cy="88" r="1.4" fill="#4A3B2E"/><circle cx="88" cy="84" r="1.4" fill="#4A3B2E"/>',
+    curry: '<path d="M44 34 q-6 -8 0 -16 M60 30 q-6 -8 0 -16 M76 34 q-6 -8 0 -16" stroke="#C9895A" stroke-width="3" fill="none" stroke-linecap="round" opacity=".55"/><path d="M12 56 H108 Q105 100 60 104 Q15 100 12 56 Z" fill="#B8612A"/><ellipse cx="60" cy="56" rx="48" ry="10" fill="#D2793A"/><ellipse cx="60" cy="56" rx="43" ry="7.5" fill="#F08C2B"/><path d="M42 56 q16 -8 32 0 q-14 5 -27 1" fill="none" stroke="#FFF3DE" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="36" cy="55" rx="3.5" ry="2" fill="#3E8E4B" transform="rotate(-20 36 55)"/><ellipse cx="82" cy="57" rx="3.5" ry="2" fill="#3E8E4B" transform="rotate(25 82 57)"/><ellipse cx="68" cy="53" rx="3" ry="1.8" fill="#4FA35A"/><path d="M18 72 Q60 84 102 72" stroke="#D88A4E" stroke-width="3" fill="none" stroke-linecap="round"/><rect x="42" y="100" width="36" height="7" rx="3.5" fill="#9A4F22"/>',
+    sushi: '<path d="M8 104 L112 88" stroke="#C78B4E" stroke-width="4.5" stroke-linecap="round"/><path d="M14 113 L114 97" stroke="#A9733D" stroke-width="4.5" stroke-linecap="round"/><rect x="12" y="62" width="50" height="26" rx="13" fill="#FFFFFF" stroke="#E7E2DA" stroke-width="1.5"/><path d="M10 66 q26 -18 54 -3 q-2 11 -9 11 H18 q-8 0 -8 -8z" fill="#FF8A5C"/><path d="M24 59 q6 6 6 14 M38 55 q6 6 6 17 M52 57 q5 6 4 14" stroke="#FFC4A8" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="82" cy="64" r="27" fill="#1E2B26"/><circle cx="82" cy="64" r="22" fill="#FFFFFF"/><circle cx="74" cy="52" r="1.3" fill="#E9E3D7"/><circle cx="95" cy="70" r="1.3" fill="#E9E3D7"/><circle cx="70" cy="74" r="1.3" fill="#E9E3D7"/><circle cx="82" cy="64" r="11" fill="#FF8A5C"/><path d="M76 59 l8 -3 4 7 -7 4z" fill="#9CCB5B"/>'
+  };
+  const art = name => `<svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">${FOOD[name] || ''}</svg>`;
+
+  /* ================= Catalog ================= */
+  const OPTS = {
+    size: { name: 'Size', type: 'one', choices: [['30', '30 cm', 0], ['40', '40 cm', 400]] },
+    pizzaExtras: { name: 'Extras', type: 'many', max: 4, choices: [['moz', 'Extra mozzarella', 150], ['burrata', 'Burrata', 350], ['nduja', 'Spicy nduja', 200], ['chili', 'Chili oil', 50]] },
+    burgerExtras: { name: 'Add to your burger', type: 'many', max: 4, choices: [['patty', 'Extra patty', 250], ['bacon', 'Crispy bacon', 180], ['cheese', 'Extra cheese', 100], ['jala', 'Jalapeños', 80]] },
+    sauce: { name: 'Sauce', type: 'one', choices: [['house', 'House sauce', 0], ['bbq', 'Smoky BBQ', 0], ['garlic', 'Garlic mayo', 0], ['honey', 'Hot honey', 0]] },
+    fries: { name: 'Style', type: 'one', choices: [['classic', 'Classic', 0], ['truffle', 'Truffle and parmesan', 150], ['cheese', 'Cheese sauce', 150]] },
+    spice: { name: 'Spice level', type: 'one', choices: [['mild', 'Mild', 0], ['medium', 'Medium', 0], ['hot', 'Hot', 0]] },
+    ramenExtras: { name: 'Extras', type: 'many', max: 4, choices: [['egg', 'Extra soft egg', 150], ['noodles', 'Extra noodles', 200], ['chashu', 'Chashu pork', 300], ['corn', 'Butter corn', 100]] },
+    base: { name: 'Base', type: 'one', choices: [['sushi', 'Sushi rice', 0], ['brown', 'Brown rice', 0], ['greens', 'Mixed greens', 0]] },
+    bowlExtras: { name: 'Extras', type: 'many', max: 3, choices: [['avo', 'Extra avocado', 150], ['protein', 'Double protein', 300], ['edamame', 'Edamame', 80]] },
+    tortilla: { name: 'Tortilla', type: 'one', choices: [['corn', 'Corn', 0], ['flour', 'Flour', 0]] },
+    salsa: { name: 'Salsa', type: 'one', choices: [['verde', 'Salsa verde', 0], ['roja', 'Salsa roja', 0], ['habanero', 'Habanero', 0]] },
+    gelato: { name: 'Flavour', type: 'one', choices: [['pistachio', 'Pistachio', 0], ['choc', 'Dark chocolate', 0], ['straw', 'Strawberry', 0], ['fior', 'Fior di latte', 0]] },
+    eggs: { name: 'Topping', type: 'one', choices: [['ham', 'Smoked ham', 0], ['salmon', 'Smoked salmon', 200], ['spinach', 'Spinach', 0]] },
+    pancake: { name: 'Topping', type: 'one', choices: [['maple', 'Maple and butter', 0], ['berries', 'Berries and yoghurt', 0], ['choc', 'Chocolate and banana', 100]] },
+    milk: { name: 'Milk', type: 'one', choices: [['whole', 'Whole milk', 0], ['oat', 'Oat', 40], ['almond', 'Almond', 40]] },
+    heat: { name: 'Heat', type: 'one', choices: [['mild', 'Mild', 0], ['medium', 'Medium', 0], ['hot', 'Hot', 0], ['vhot', 'Very hot', 0]] },
+    side: { name: 'Served with', type: 'one', choices: [['rice', 'Basmati rice', 0], ['naan', 'Garlic naan', 50], ['both', 'Rice and naan', 250]] }
+  };
+
+  /* A restaurant or dish can carry an `img` URL (for example from your own storage or MongoDB).
+     It is shown when no photo has been uploaded in photo editing mode. */
+  const RESTAURANTS = [
+    { id: 'forno-sette', name: 'Forno Sette', cats: ['pizza'], label: 'Pizza', tagline: 'Neapolitan pizza, ninety seconds in a wood oven', price: '€€', rating: 4.8, reviews: 2140, eta: [25, 35], fee: 149, min: 1000, hours: [[660, 1500]], color: '#FFE2D1', ink: '#8A3413', art: 'pizza', menu: [
+      { c: 'Pizza', items: [
+        { id: 'margherita', n: 'Margherita', d: 'San Marzano tomato, fior di latte, basil and Ligurian olive oil.', p: 950, pop: 1, o: ['size', 'pizzaExtras'] },
+        { id: 'diavola', n: 'Diavola', d: 'Tomato, mozzarella, spicy salami and a drizzle of hot honey.', p: 1150, pop: 1, o: ['size', 'pizzaExtras'] },
+        { id: 'formaggi', n: 'Quattro formaggi', d: 'Mozzarella, gorgonzola, taleggio and parmesan on a white base.', p: 1200, o: ['size', 'pizzaExtras'] },
+        { id: 'funghi', n: 'Funghi e salsiccia', d: 'Roasted mushrooms, fennel sausage, mozzarella and thyme.', p: 1250, o: ['size', 'pizzaExtras'] },
+        { id: 'marinara', n: 'Marinara', d: 'No cheese. Tomato, garlic, oregano and olive oil. Vegan.', p: 800, o: ['size'] }
+      ] },
+      { c: 'Starters', items: [
+        { id: 'burrata', n: 'Burrata and tomatoes', d: 'Creamy burrata, heritage tomatoes, basil oil and sea salt.', p: 850 },
+        { id: 'focaccia', n: 'Garlic focaccia', d: 'Fresh from the oven with rosemary and garlic butter.', p: 450 }
+      ] },
+      { c: 'Desserts and drinks', items: [
+        { id: 'tiramisu', n: 'Tiramisu', d: 'Mascarpone, espresso-soaked savoiardi, cocoa.', p: 550, pop: 1 },
+        { id: 'pellegrino', n: 'Sparkling water 0.5 l', d: 'San Pellegrino.', p: 250 }
+      ] }
+    ] },
+    { id: 'smash-society', name: 'Smash Society', cats: ['burgers'], label: 'Burgers', tagline: 'Crispy-edged smash burgers, any hour of the day', price: '€€', rating: 4.6, reviews: 3410, eta: [20, 30], fee: 0, min: 1200, hours: [[0, 1440]], color: '#FFE9B8', ink: '#8A5A0B', art: 'burger', menu: [
+      { c: 'Burgers', items: [
+        { id: 'classic', n: 'Classic smash', d: 'Two smashed beef patties, American cheese, pickles, onion and house sauce.', p: 990, pop: 1, o: ['sauce', 'burgerExtras'] },
+        { id: 'double', n: 'Double trouble', d: 'Four patties, four slices of cheese. Not for the faint-hearted.', p: 1290, o: ['sauce', 'burgerExtras'] },
+        { id: 'hothoney', n: 'Hot honey chicken', d: 'Buttermilk fried chicken, hot honey, slaw and pickles.', p: 1090, pop: 1, o: ['burgerExtras'] },
+        { id: 'mushroom', n: 'Mushroom melt', d: 'Crispy portobello, Swiss cheese, caramelised onion. Vegetarian.', p: 1050, o: ['sauce'] }
+      ] },
+      { c: 'Sides', items: [
+        { id: 'fries', n: 'Fries', d: 'Skin-on, double-cooked and salted.', p: 350, pop: 1, o: ['fries'] },
+        { id: 'rings', n: 'Onion rings', d: 'Beer-battered with chipotle dip.', p: 420 }
+      ] },
+      { c: 'Shakes', items: [
+        { id: 'vanilla', n: 'Vanilla shake', d: 'Thick, cold and made with real vanilla.', p: 490 },
+        { id: 'caramel', n: 'Salted caramel shake', d: 'With a drizzle of caramel and flaky salt.', p: 540 }
+      ] }
+    ] },
+    { id: 'bao-and-broth', name: 'Bao & Broth', cats: ['asian'], label: 'Ramen and bao', tagline: '18-hour broths and pillowy steamed buns', price: '€€', rating: 4.9, reviews: 1320, eta: [30, 40], fee: 199, min: 1200, hours: [[720, 1410]], color: '#DCE8FB', ink: '#24406F', art: 'ramen', menu: [
+      { c: 'Ramen', items: [
+        { id: 'tonkotsu', n: 'Tonkotsu ramen', d: 'Rich pork broth, chashu, soft egg, nori and spring onion.', p: 1350, pop: 1, o: ['spice', 'ramenExtras'] },
+        { id: 'miso', n: 'Spicy miso ramen', d: 'Miso and chili broth, minced pork, corn, beansprouts.', p: 1390, pop: 1, o: ['spice', 'ramenExtras'] },
+        { id: 'shoyu', n: 'Shoyu chicken ramen', d: 'Clear soy broth, chicken thigh, bamboo shoots, egg.', p: 1290, o: ['ramenExtras'] },
+        { id: 'tantan', n: 'Vegan tantanmen', d: 'Sesame and soy milk broth, spiced tofu, bok choy.', p: 1250, o: ['spice', 'ramenExtras'] }
+      ] },
+      { c: 'Bao and small plates', items: [
+        { id: 'porkbao', n: 'Pork belly bao (2)', d: 'Braised pork belly, peanut crumb, pickled cucumber, coriander.', p: 750, pop: 1 },
+        { id: 'tofubao', n: 'Crispy tofu bao (2)', d: 'Sticky glazed tofu, kimchi mayo, spring onion.', p: 690 },
+        { id: 'gyoza', n: 'Pork gyoza (6)', d: 'Pan-fried dumplings with black vinegar dip.', p: 650 },
+        { id: 'edamame', n: 'Edamame', d: 'Steamed with sea salt and chili.', p: 400 }
+      ] },
+      { c: 'Sweet', items: [
+        { id: 'matcha', n: 'Matcha cheesecake', d: 'Light, creamy and not too sweet.', p: 550 }
+      ] }
+    ] },
+    { id: 'kaze-sushi', name: 'Kaze Sushi', cats: ['sushi'], label: 'Sushi', tagline: 'Rolls and nigiri cut to order', price: '€€€', rating: 4.9, reviews: 760, eta: [30, 40], fee: 249, min: 1500, hours: [[720, 1380]], color: '#DDF1EE', ink: '#1E5A50', art: 'sushi', menu: [
+      { c: 'Sets', items: [
+        { id: 'kazeset', n: 'Kaze set (16 pieces)', d: 'Chef’s mix of nigiri, maki and one signature roll.', p: 2190, pop: 1 },
+        { id: 'salmonset', n: 'Salmon lover set (12 pieces)', d: 'Salmon nigiri, salmon maki and salmon avocado uramaki.', p: 1750 }
+      ] },
+      { c: 'Rolls', items: [
+        { id: 'dragon', n: 'Dragon roll (8)', d: 'Prawn tempura, avocado, eel sauce and toasted sesame.', p: 1290, pop: 1 },
+        { id: 'california', n: 'California roll (8)', d: 'Crab, avocado, cucumber and tobiko.', p: 950 },
+        { id: 'spicytuna', n: 'Spicy tuna roll (8)', d: 'Tuna, chili mayo, spring onion and tempura flakes.', p: 1090 }
+      ] },
+      { c: 'Nigiri and more', items: [
+        { id: 'nigiri', n: 'Salmon nigiri (2)', d: 'Norwegian salmon on seasoned rice.', p: 520 },
+        { id: 'misosoup', n: 'Miso soup', d: 'Tofu, wakame and spring onion.', p: 350 },
+        { id: 'wakame', n: 'Wakame salad', d: 'Seaweed with sesame dressing.', p: 450 }
+      ] }
+    ] },
+    { id: 'green-theory', name: 'Green Theory', cats: ['healthy'], label: 'Healthy bowls', tagline: 'Big bowls that actually keep you full', price: '€€', rating: 4.7, reviews: 980, eta: [15, 25], fee: 99, min: 1000, hours: [[540, 1320]], color: '#DDF3E1', ink: '#2C6B35', art: 'bowl', menu: [
+      { c: 'Bowls', items: [
+        { id: 'poke', n: 'Salmon poke', d: 'Salmon, avocado, edamame, mango, pickled ginger and ponzu.', p: 1290, pop: 1, o: ['base', 'bowlExtras'] },
+        { id: 'falafel', n: 'Falafel and hummus', d: 'Baked falafel, hummus, tabbouleh, pickled red onion. Vegan.', p: 1090, o: ['base', 'bowlExtras'] },
+        { id: 'teriyaki', n: 'Teriyaki chicken', d: 'Grilled chicken, broccoli, carrot, sesame and teriyaki glaze.', p: 1190, pop: 1, o: ['base', 'bowlExtras'] },
+        { id: 'acai', n: 'Açaí bowl', d: 'Açaí, banana, granola, berries and coconut.', p: 890 }
+      ] },
+      { c: 'Drinks', items: [
+        { id: 'greenjuice', n: 'Green juice', d: 'Apple, cucumber, spinach, lime and ginger. Cold-pressed.', p: 490 },
+        { id: 'shot', n: 'Ginger shot', d: 'Ginger, lemon and a little cayenne.', p: 250 }
+      ] }
+    ] },
+    { id: 'taqueria-luna', name: 'Taquería Luna', cats: ['mexican'], label: 'Mexican', tagline: 'Tacos on handmade tortillas until late', price: '€', rating: 4.7, reviews: 1580, eta: [25, 35], fee: 149, min: 1000, hours: [[720, 1560]], color: '#FFF0C4', ink: '#8A6410', art: 'taco', menu: [
+      { c: 'Tacos', items: [
+        { id: 'pastor', n: 'Al pastor tacos (3)', d: 'Marinated pork, grilled pineapple, onion and coriander.', p: 950, pop: 1, o: ['tortilla', 'salsa'] },
+        { id: 'birria', n: 'Birria tacos (3)', d: 'Slow-braised beef, melted cheese and a cup of consommé for dipping.', p: 1190, pop: 1, o: ['tortilla'] },
+        { id: 'baja', n: 'Baja fish tacos (3)', d: 'Crispy fish, cabbage slaw, chipotle crema.', p: 1050, o: ['tortilla', 'salsa'] },
+        { id: 'hongos', n: 'Mushroom tacos (3)', d: 'Roasted oyster mushrooms, black beans, salsa macha. Vegan.', p: 890, o: ['tortilla', 'salsa'] }
+      ] },
+      { c: 'More', items: [
+        { id: 'burrito', n: 'Chicken burrito', d: 'Chipotle chicken, rice, beans, cheese and pico de gallo.', p: 1090, o: ['salsa'] },
+        { id: 'nachos', n: 'Loaded nachos', d: 'Cheese sauce, jalapeños, guacamole and sour cream.', p: 850 }
+      ] },
+      { c: 'Sweet and drinks', items: [
+        { id: 'churros', n: 'Churros', d: 'Cinnamon sugar with warm chocolate sauce.', p: 490 },
+        { id: 'horchata', n: 'Horchata', d: 'Rice, cinnamon and vanilla over ice.', p: 350 }
+      ] }
+    ] },
+    { id: 'sweet-spot', name: 'The Sweet Spot', cats: ['desserts'], label: 'Desserts', tagline: 'Cakes, pastries and gelato made each morning', price: '€€', rating: 4.8, reviews: 870, eta: [20, 30], fee: 0, min: 800, hours: [[600, 1440]], color: '#FCE0EC', ink: '#8A1F45', art: 'cupcake', menu: [
+      { c: 'Cakes', items: [
+        { id: 'pistachio', n: 'Pistachio cheesecake', d: 'Baked cheesecake with a Sicilian pistachio cream top.', p: 620, pop: 1 },
+        { id: 'lava', n: 'Chocolate lava cake', d: 'Warm with a molten centre. Arrives ready to eat.', p: 590, pop: 1 },
+        { id: 'carrot', n: 'Carrot cake', d: 'Walnuts, warm spices and cream cheese frosting.', p: 520 }
+      ] },
+      { c: 'Bakery', items: [
+        { id: 'cinnamon', n: 'Cinnamon roll', d: 'Soft, gooey and glazed.', p: 380 },
+        { id: 'macarons', n: 'Macarons (6)', d: 'Raspberry, pistachio, salted caramel and more.', p: 900 }
+      ] },
+      { c: 'Gelato', items: [
+        { id: 'gelato', n: 'Gelato tub 500 ml', d: 'Churned in-house. Pick your flavour.', p: 850, o: ['gelato'] }
+      ] }
+    ] },
+    { id: 'morning-club', name: 'Morning Club', cats: ['breakfast'], label: 'Breakfast and brunch', tagline: 'All-day eggs and very good coffee, until 3 pm', price: '€€', rating: 4.6, reviews: 640, eta: [20, 30], fee: 99, min: 1000, hours: [[420, 900]], color: '#FFF4D6', ink: '#7A5A12', art: 'breakfast', menu: [
+      { c: 'Breakfast', items: [
+        { id: 'benedict', n: 'Eggs Benedict', d: 'Poached eggs, toasted muffin and hollandaise.', p: 1050, pop: 1, o: ['eggs'] },
+        { id: 'avotoast', n: 'Avocado toast', d: 'Sourdough, smashed avocado, feta, chili and lime.', p: 920 },
+        { id: 'pancakes', n: 'Pancake stack', d: 'Three fluffy buttermilk pancakes.', p: 890, pop: 1, o: ['pancake'] },
+        { id: 'shakshuka', n: 'Shakshuka', d: 'Eggs baked in spiced tomato with bread for dipping.', p: 990 }
+      ] },
+      { c: 'Coffee and juice', items: [
+        { id: 'flatwhite', n: 'Flat white', d: 'Double shot, silky milk.', p: 340, o: ['milk'] },
+        { id: 'oj', n: 'Fresh orange juice', d: 'Squeezed to order.', p: 390 }
+      ] }
+    ] },
+    { id: 'spice-route', name: 'Spice Route', cats: ['indian'], label: 'Indian', tagline: 'Slow-cooked curries and charcoal tandoor', price: '€€', rating: 4.7, reviews: 1120, eta: [35, 45], fee: 199, min: 1200, hours: [[660, 1740]], color: '#FFE4CC', ink: '#8A3F10', art: 'curry', menu: [
+      { c: 'Curries', items: [
+        { id: 'butterchicken', n: 'Butter chicken', d: 'Tandoori chicken in a silky tomato and butter sauce.', p: 1290, pop: 1, o: ['heat', 'side'] },
+        { id: 'paneer', n: 'Paneer tikka masala', d: 'Charred paneer, peppers and onion in masala sauce.', p: 1190, o: ['heat', 'side'] },
+        { id: 'roganjosh', n: 'Lamb rogan josh', d: 'Kashmiri chili, slow-braised lamb shoulder.', p: 1450, o: ['heat', 'side'] },
+        { id: 'chana', n: 'Chana masala', d: 'Chickpeas, tomato, ginger and garam masala. Vegan.', p: 990, o: ['heat', 'side'] }
+      ] },
+      { c: 'Rice and bread', items: [
+        { id: 'biryani', n: 'Chicken biryani', d: 'Layered basmati, saffron, fried onion and raita.', p: 1350, pop: 1, o: ['heat'] },
+        { id: 'naan', n: 'Garlic naan', d: 'From the tandoor, brushed with garlic butter.', p: 320 },
+        { id: 'rice', n: 'Basmati rice', d: 'Steamed with cumin.', p: 280 }
+      ] },
+      { c: 'Drinks', items: [
+        { id: 'lassi', n: 'Mango lassi', d: 'Alphonso mango and yoghurt.', p: 390 }
+      ] }
+    ] }
+  ];
+  const CATS = [
+    { id: 'all', name: 'All' },
+    { id: 'pizza', name: 'Pizza', art: 'pizza', color: '#FFE2D1' },
+    { id: 'burgers', name: 'Burgers', art: 'burger', color: '#FFE9B8' },
+    { id: 'asian', name: 'Ramen', art: 'ramen', color: '#DCE8FB' },
+    { id: 'sushi', name: 'Sushi', art: 'sushi', color: '#DDF1EE' },
+    { id: 'healthy', name: 'Healthy', art: 'bowl', color: '#DDF3E1' },
+    { id: 'mexican', name: 'Mexican', art: 'taco', color: '#FFF0C4' },
+    { id: 'indian', name: 'Indian', art: 'curry', color: '#FFE4CC' },
+    { id: 'breakfast', name: 'Breakfast', art: 'breakfast', color: '#FFF4D6' },
+    { id: 'desserts', name: 'Desserts', art: 'cupcake', color: '#FCE0EC' }
+  ];
+  const R = id => RESTAURANTS.find(r => r.id === id) || null;
+  const findItem = (r, iid) => { for (const s of r.menu) for (const it of s.items) if (it.id === iid) return it; return null; };
+  const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+  const isOpen = (r, m = nowMin()) => r.hours.some(([o, c]) => (m >= o && m < c) || (c > 1440 && m < c - 1440));
+  const opensAt = r => hhmm(r.hours[0][0]);
+  const closesAt = r => hhmm(r.hours[0][1]);
+  const is247 = r => r.hours[0][0] === 0 && r.hours[0][1] === 1440;
+  const hoursText = r => is247(r) ? 'Open 24 hours' : `${opensAt(r)} to ${closesAt(r)}`;
+  const etaText = r => `${r.eta[0]}-${r.eta[1]} min`;
+  const feeText = r => r.fee ? `${eur(r.fee)} delivery` : 'Free delivery';
+
+  /* ================= Data layer ================= */
+  /* Every function in `api` stands in for a REST endpoint that a MongoDB-backed server will
+     provide later (POST /api/auth/signup, POST /api/auth/login, GET /api/me, POST /api/orders ...).
+     Until then, documents are kept in this browser's localStorage with the same shape. */
+  const memory = {};
+  const LS = {
+    get(k, fallback) { try { const v = window.localStorage.getItem(k); if (v != null) return JSON.parse(v); } catch (e) { /* storage unavailable */ } return k in memory ? JSON.parse(JSON.stringify(memory[k])) : fallback; },
+    set(k, v) { memory[k] = v; try { window.localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+    del(k) { delete memory[k]; try { window.localStorage.removeItem(k); } catch (e) { /* storage unavailable */ } }
+  };
+  function objectId() {
+    const bytes = new Uint8Array(8);
+    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
+    else for (let i = 0; i < 8; i++) bytes[i] = Math.floor(Math.random() * 256);
+    return Math.floor(Date.now() / 1000).toString(16).padStart(8, '0') + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  }
+  async function hashPassword(password, salt) {
+    const data = new TextEncoder().encode(salt + ':' + password);
+    if (window.crypto && crypto.subtle) {
+      const buf = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, '0')).join('');
+    }
+    let h = 2166136261; for (const b of data) { h ^= b; h = Math.imul(h, 16777619); }
+    return 'fnv' + (h >>> 0).toString(16);
+  }
+  class ApiError extends Error { constructor(code, message) { super(message); this.code = code; } }
+  const collection = name => LS.get('morsel.db.' + name, []);
+  const saveCollection = (name, docs) => LS.set('morsel.db.' + name, docs);
+  const sessionId = () => LS.get('morsel.session', null);
+  const toPublicUser = u => u ? { _id: u._id, name: u.name, email: u.email, addresses: u.addresses, favorites: u.favorites, createdAt: u.createdAt } : null;
+  function mutateMe(fn) {
+    const users = collection('users');
+    const me = users.find(u => u._id === sessionId());
+    if (!me) throw new ApiError('unauthorized', 'Your session has ended. Log in again.');
+    fn(me);
+    saveCollection('users', users);
+    return toPublicUser(me);
+  }
+  function requireMe() {
+    const me = collection('users').find(u => u._id === sessionId());
+    if (!me) throw new ApiError('unauthorized', 'Your session has ended. Log in again.');
+    return me;
+  }
+
+  const api = {
+    async signUp({ name, email, password }) {
+      await sleep(350);
+      const users = collection('users');
+      const mail = email.trim().toLowerCase();
+      if (users.some(u => u.email === mail)) throw new ApiError('email_taken', 'An account with this email already exists. Log in instead.');
+      const salt = objectId();
+      const user = { _id: objectId(), name: name.trim(), email: mail, passwordSalt: salt, passwordHash: await hashPassword(password, salt), addresses: [], favorites: [], createdAt: new Date().toISOString() };
+      users.push(user);
+      saveCollection('users', users);
+      LS.set('morsel.session', user._id);
+      return toPublicUser(user);
+    },
+    async logIn({ email, password }) {
+      await sleep(350);
+      const user = collection('users').find(u => u.email === email.trim().toLowerCase());
+      if (!user || user.passwordHash !== await hashPassword(password, user.passwordSalt)) throw new ApiError('bad_credentials', 'That email and password don’t match. Check them and try again.');
+      LS.set('morsel.session', user._id);
+      return toPublicUser(user);
+    },
+    async logOut() { LS.del('morsel.session'); },
+    async me() { return toPublicUser(collection('users').find(u => u._id === sessionId())); },
+    async addAddress(addr) {
+      await sleep(200);
+      return mutateMe(u => {
+        const doc = { _id: objectId(), label: addr.label, street: addr.street.trim(), details: (addr.details || '').trim(), city: addr.city.trim(), isDefault: false };
+        if (!u.addresses.length || addr.makeDefault) u.addresses.forEach(a => { a.isDefault = false; });
+        doc.isDefault = !u.addresses.length || !!addr.makeDefault;
+        u.addresses.push(doc);
+      });
+    },
+    async setDefaultAddress(id) { return mutateMe(u => u.addresses.forEach(a => { a.isDefault = a._id === id; })); },
+    async deleteAddress(id) {
+      return mutateMe(u => {
+        const wasDefault = (u.addresses.find(a => a._id === id) || {}).isDefault;
+        u.addresses = u.addresses.filter(a => a._id !== id);
+        if (wasDefault && u.addresses[0]) u.addresses[0].isDefault = true;
+      });
+    },
+    async toggleFavorite(restaurantId) {
+      return mutateMe(u => { u.favorites = u.favorites.includes(restaurantId) ? u.favorites.filter(x => x !== restaurantId) : u.favorites.concat(restaurantId); });
+    },
+    async createOrder(payload) {
+      await sleep(700);
+      const me = requireMe();
+      const order = Object.assign({ _id: objectId(), userId: me._id, createdAt: new Date().toISOString(), rating: null }, payload);
+      const orders = collection('orders');
+      orders.push(order);
+      saveCollection('orders', orders);
+      return order;
+    },
+    async listOrders() {
+      const me = requireMe();
+      return collection('orders').filter(o => o.userId === me._id).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    },
+    async getOrder(id) {
+      const me = requireMe();
+      const order = collection('orders').find(o => o._id === id && o.userId === me._id);
+      if (!order) throw new ApiError('not_found', 'We couldn’t find that order.');
+      return order;
+    },
+    async rateOrder(id, rating) {
+      await sleep(250);
+      const me = requireMe();
+      const orders = collection('orders');
+      const order = orders.find(o => o._id === id && o.userId === me._id);
+      if (!order) throw new ApiError('not_found', 'We couldn’t find that order.');
+      order.rating = { stars: rating.stars, comment: rating.comment || '', ratedAt: new Date().toISOString() };
+      saveCollection('orders', orders);
+      return order;
+    },
+    async demoShiftOrder(id, ms) {
+      const orders = collection('orders');
+      const order = orders.find(o => o._id === id);
+      if (order) { order.startAt -= ms; saveCollection('orders', orders); }
+      return order;
+    },
+    async demoLogIn() {
+      const email = 'demo@morsel.app', password = 'morsel-demo-2026';
+      if (collection('users').some(u => u.email === email)) return api.logIn({ email, password });
+      const user = await api.signUp({ name: 'Alex Morgan', email, password });
+      await api.addAddress({ label: 'Home', street: '14 Linden Street', details: 'Flat 3, second floor', city: 'Old Town' });
+      const r = R('bao-and-broth');
+      const when = Date.now() - 3 * 86400000;
+      const orders = collection('orders');
+      orders.push({
+        _id: objectId(), userId: user._id, createdAt: new Date(when).toISOString(), restaurantId: r.id, restaurantName: r.name,
+        items: [
+          { itemId: 'tonkotsu', name: 'Tonkotsu ramen', qty: 2, unitPrice: 1350, options: [{ group: 'Spice level', choice: 'Medium', price: 0 }], note: '' },
+          { itemId: 'porkbao', name: 'Pork belly bao (2)', qty: 1, unitPrice: 750, options: [], note: '' }
+        ],
+        pricing: { subtotal: 3450, deliveryFee: 199, serviceFee: 173, smallOrderFee: 0, discount: 0, deliveryDiscount: 0, tip: 200, total: 4022 },
+        address: { label: 'Home', street: '14 Linden Street', details: 'Flat 3, second floor', city: 'Old Town' },
+        payment: 'card', courierNote: '', delivery: { type: 'asap' }, promoCode: null, etaMin: 35, startAt: when,
+        courier: { name: 'Maya', vehicle: 'bike' }, rating: { stars: 5, comment: 'The broth was incredible.', ratedAt: new Date(when + 3600000).toISOString() }
+      });
+      saveCollection('orders', orders);
+      return api.me();
+    }
+  };
+
+  /* ================= App state ================= */
+  const state = {
+    user: null,
+    orderCount: 0,
+    view: 'home',
+    params: {},
+    q: '', cat: 'all', sort: 'recommended', openNow: false, freeDel: false, topRated: false,
+    cart: LS.get('morsel.cart', null) || { restaurantId: null, lines: [] },
+    promo: LS.get('morsel.promo', null),
+    promoDismissed: LS.get('morsel.promoDismissed', false),
+    tip: 100,
+    co: { addressId: null, when: 'asap', slot: '', pay: 'card', note: '' },
+    acctTab: 'orders'
+  };
+  const app = $('#app');
+  let cleanups = [];
+
+  /* ================= Cart ================= */
+  const cartCount = () => state.cart.lines.reduce((n, l) => n + l.qty, 0);
+  const cartSubtotal = () => state.cart.lines.reduce((s, l) => s + l.unitPrice * l.qty, 0);
+  const qtyOfItem = (rid, iid) => state.cart.restaurantId === rid ? state.cart.lines.filter(l => l.itemId === iid).reduce((n, l) => n + l.qty, 0) : 0;
+  function saveCart() {
+    if (!state.cart.lines.length) state.cart.restaurantId = null;
+    LS.set('morsel.cart', state.cart);
+    onCartChange();
+  }
+  function clearCart() { state.cart = { restaurantId: null, lines: [] }; saveCart(); }
+
+  function validatePromo(code, r) {
+    if (code === 'WELCOME20') {
+      if (!state.user) return 'Log in to use WELCOME20.';
+      if (state.orderCount > 0) return 'WELCOME20 is for your first order only.';
+      return '';
+    }
+    if (code === 'FREEDEL') {
+      if (r && !r.fee) return 'Delivery from this restaurant is already free.';
+      return '';
+    }
+    return 'That code isn’t valid. Check the spelling and try again.';
+  }
+  function pricing(withExtras) {
+    const r = R(state.cart.restaurantId);
+    const subtotal = cartSubtotal();
+    if (!r || !subtotal) return { subtotal: 0, deliveryFee: 0, serviceFee: 0, smallOrderFee: 0, discount: 0, deliveryDiscount: 0, tip: 0, total: 0 };
+    const deliveryFee = r.fee;
+    const smallOrderFee = Math.max(0, r.min - subtotal);
+    const serviceFee = clamp(Math.round(subtotal * 0.05), 49, 199);
+    let discount = 0, deliveryDiscount = 0;
+    if (withExtras && state.promo && !validatePromo(state.promo, r)) {
+      if (state.promo === 'WELCOME20') discount = Math.min(800, Math.round(subtotal * 0.2));
+      if (state.promo === 'FREEDEL') deliveryDiscount = deliveryFee;
+    }
+    const tip = withExtras ? state.tip : 0;
+    return { subtotal, deliveryFee, serviceFee, smallOrderFee, discount, deliveryDiscount, tip, total: subtotal + deliveryFee + serviceFee + smallOrderFee - discount - deliveryDiscount + tip };
+  }
+  function priceRows(p, opts = {}) {
+    const rows = [];
+    rows.push(['Subtotal', eur(p.subtotal)]);
+    rows.push(['Delivery', p.deliveryFee === 0 ? '<span class="free">Free</span>' : p.deliveryDiscount ? `<span class="strike">${eur(p.deliveryFee)}</span><span class="free">Free</span>` : eur(p.deliveryFee)]);
+    rows.push(['Service fee', eur(p.serviceFee)]);
+    if (p.smallOrderFee) rows.push(['Small order fee', eur(p.smallOrderFee)]);
+    if (p.discount) rows.push([`Promo ${esc(state.promo || opts.promo || '')}`, `<span class="neg">−${eur(p.discount)}</span>`]);
+    if (opts.tip) rows.push(['Courier tip', eur(p.tip)]);
+    return `<dl class="rows">${rows.map(([a, b]) => `<div class="row"><dt>${a}</dt><dd>${b}</dd></div>`).join('')}<div class="row total"><dt>${opts.totalLabel || 'Total'}</dt><dd>${eur(p.total)}</dd></div></dl>`;
+  }
+
+  async function addToCart(r, line) {
+    if (state.cart.restaurantId && state.cart.restaurantId !== r.id && state.cart.lines.length) {
+      const other = R(state.cart.restaurantId);
+      const ok = await confirmDialog({
+        title: 'Start a new order?',
+        body: `Your bag has items from ${esc(other ? other.name : 'another restaurant')}. Adding this will clear them, because each order comes from one restaurant.`,
+        confirm: 'Start new order', cancel: 'Keep current bag'
+      });
+      if (!ok) return false;
+      state.cart = { restaurantId: null, lines: [] };
+    }
+    state.cart.restaurantId = r.id;
+    const existing = state.cart.lines.find(l => l.key === line.key);
+    if (existing) existing.qty += line.qty; else state.cart.lines.push(line);
+    saveCart();
+    return true;
+  }
+
+  function onCartChange() {
+    const n = cartCount();
+    const badge = $('#cart-count');
+    badge.textContent = n;
+    badge.hidden = n === 0;
+    $('#cart-btn').setAttribute('aria-label', n ? `Open your bag, ${plural(n, 'item', 'items')}` : 'Open your bag');
+    updateCartbar();
+    if ($('#drawer').classList.contains('open')) renderDrawer();
+    if (state.view === 'restaurant') refreshItemBadges();
+    if (state.view === 'checkout') renderCheckout();
+  }
+  function updateCartbar() {
+    const bar = $('#cartbar');
+    const n = cartCount();
+    const show = n > 0 && (state.view === 'home' || state.view === 'restaurant') && !$('#drawer').classList.contains('open');
+    bar.hidden = !show;
+    if (show) bar.innerHTML = `<span class="n">${n}</span><span>View bag</span><span class="t">${eur(cartSubtotal())}</span>`;
+  }
+
+  /* ================= Drawer ================= */
+  let lastFocus = null;
+  function lockScroll(on) { document.body.classList.toggle('locked', on); }
+  function openDrawer() {
+    lastFocus = document.activeElement;
+    renderDrawer();
+    $('#drawer').classList.add('open');
+    $('#overlay').classList.add('show');
+    lockScroll(true);
+    updateCartbar();
+    setTimeout(() => $('#drawer .close-btn').focus(), 50);
+  }
+  function closeDrawer(silent) {
+    const d = $('#drawer');
+    if (!d.classList.contains('open')) return;
+    d.classList.remove('open');
+    $('#overlay').classList.remove('show');
+    if (!$('#modal-root').children.length) lockScroll(false);
+    updateCartbar();
+    if (!silent && lastFocus && document.contains(lastFocus)) lastFocus.focus();
+  }
+  function renderDrawer() {
+    const body = $('#drawer-body'), foot = $('#drawer-foot'), sub = $('#drawer-sub');
+    const r = R(state.cart.restaurantId);
+    if (!r || !state.cart.lines.length) {
+      sub.textContent = '';
+      body.innerHTML = `<div class="empty" style="padding:48px 0"><div class="empty-art">${art('cupcake')}</div><h3>Your bag is empty</h3><p>Add something tasty from any restaurant and it will show up here.</p><button class="btn btn-primary" type="button" data-act="home">Browse restaurants</button></div>`;
+      foot.innerHTML = '';
+      return;
+    }
+    sub.innerHTML = `From <button class="link-btn" type="button" data-act="open-r" data-id="${r.id}">${esc(r.name)}</button>`;
+    const p = pricing(false);
+    const missing = Math.max(0, r.min - p.subtotal);
+    body.innerHTML = state.cart.lines.map(l => `
+      <div class="line">
+        <div>
+          <div class="line-name">${esc(l.name)}</div>
+          ${l.options.length || l.note ? `<p class="line-opts">${esc(l.options.map(o => o.choice).join(', '))}${l.note ? `${l.options.length ? '. ' : ''}Note: ${esc(l.note)}` : ''}</p>` : ''}
+        </div>
+        <div class="line-price">${eur(l.unitPrice * l.qty)}</div>
+        <div class="qty" role="group" aria-label="Quantity of ${esc(l.name)}">
+          <button type="button" data-act="qty" data-key="${esc(l.key)}" data-d="-1" aria-label="${l.qty === 1 ? 'Remove' : 'Decrease'} ${esc(l.name)}">${ic('minus')}</button>
+          <span>${l.qty}</span>
+          <button type="button" data-act="qty" data-key="${esc(l.key)}" data-d="1" aria-label="Increase ${esc(l.name)}">${ic('plus')}</button>
+        </div>
+      </div>`).join('') +
+      (missing ? `<div class="minbar">Add <strong>${eur(missing)}</strong> more to reach the ${eur(r.min)} minimum and skip the small order fee.<div class="progress"><i style="width:${Math.round(p.subtotal / r.min * 100)}%"></i></div></div>` : '') +
+      priceRows(p, { totalLabel: 'Total before tip' });
+    foot.innerHTML = `<button class="btn btn-primary btn-block btn-split" type="button" data-act="go-checkout"><span>Go to checkout</span><span>${eur(p.total)}</span></button>`;
+  }
+
+  /* ================= Modals ================= */
+  let modalStack = [];
+  function openModal(html, { onClose, wide, label } = {}) {
+    const prevFocus = document.activeElement;
+    const wrap = document.createElement('div');
+    wrap.className = 'modal-wrap';
+    wrap.innerHTML = `<div class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" ${label ? `aria-labelledby="${label}"` : ''}>
+      <button class="close-btn" type="button" data-modal-close aria-label="Close">${ic('close')}</button>${html}</div>`;
+    $('#modal-root').appendChild(wrap);
+    lockScroll(true);
+    const entry = { wrap, prevFocus, onClose };
+    modalStack.push(entry);
+    wrap.addEventListener('mousedown', e => { if (e.target === wrap) closeModal(entry); });
+    wrap.querySelector('[data-modal-close]').addEventListener('click', () => closeModal(entry));
+    setTimeout(() => {
+      const f = wrap.querySelector('[autofocus]') || wrap.querySelector('input, select, textarea, .modal-body button, .modal-foot button');
+      (f || wrap.querySelector('[data-modal-close]')).focus();
+    }, 30);
+    return entry;
+  }
+  function closeModal(entry, result) {
+    entry = entry || modalStack[modalStack.length - 1];
+    if (!entry || !entry.wrap.isConnected) return;
+    entry.wrap.remove();
+    modalStack = modalStack.filter(m => m !== entry);
+    if (!modalStack.length && !$('#drawer').classList.contains('open')) lockScroll(false);
+    if (entry.onClose) entry.onClose(result);
+    if (entry.prevFocus && document.contains(entry.prevFocus)) entry.prevFocus.focus();
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (modalStack.length) { e.preventDefault(); closeModal(); }
+      else if ($('#drawer').classList.contains('open')) closeDrawer();
+    }
+    if (e.key === 'Tab') {
+      const top = modalStack.length ? modalStack[modalStack.length - 1].wrap : ($('#drawer').classList.contains('open') ? $('#drawer') : null);
+      if (!top) return;
+      const focusables = $$('button:not([disabled]), input:not([disabled]), select, textarea, [href]', top).filter(el => el.offsetParent !== null);
+      if (!focusables.length) return;
+      const first = focusables[0], last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+  function confirmDialog({ title, body, confirm, cancel }) {
+    return new Promise(resolve => {
+      let answered = false;
+      const m = openModal(`
+        <div class="modal-head"><h2 id="cf-title">${title}</h2><p>${body}</p></div>
+        <div class="modal-foot"><button class="btn btn-secondary" type="button" data-cf="0">${cancel}</button><button class="btn btn-primary" type="button" data-cf="1" style="flex:1">${confirm}</button></div>`,
+        { label: 'cf-title', onClose: () => { if (!answered) resolve(false); } });
+      m.wrap.addEventListener('click', e => {
+        const b = e.target.closest('[data-cf]');
+        if (!b) return;
+        answered = true;
+        resolve(b.dataset.cf === '1');
+        closeModal(m);
+      });
+    });
+  }
+
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3600);
+  }
+
+  /* ================= Item modal ================= */
+  function openItem(rid, iid) {
+    const r = R(rid), it = findItem(r, iid);
+    if (!r || !it) return;
+    const open = isOpen(r);
+    const groups = (it.o || []).map(k => Object.assign({ key: k }, OPTS[k]));
+    const sel = {};
+    groups.forEach(g => { sel[g.key] = g.type === 'one' ? g.choices[0][0] : []; });
+    let qty = 1;
+    const unit = () => it.p + groups.reduce((s, g) => s + g.choices.filter(c => g.type === 'one' ? sel[g.key] === c[0] : sel[g.key].includes(c[0])).reduce((a, c) => a + c[2], 0), 0);
+    const m = openModal(`
+      <div class="item-band ${photoUrl(r.id, it.id) ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink}"><div class="art">${art(r.art)}</div>${photoImg(photoUrl(r.id, it.id), true)}</div>
+      <div class="modal-head"><h2 id="item-title">${esc(it.n)}</h2><p>${esc(it.d)}</p><p class="item-price-lg">${eur(it.p)}</p></div>
+      <div class="modal-body">
+        ${groups.map(g => `
+          <fieldset class="opt-group" style="border:0;margin:0;padding-left:0;padding-right:0">
+            <div class="opt-head"><h3>${g.name}</h3><span class="req">${g.type === 'one' ? 'Required' : `Optional, up to ${g.max}`}</span></div>
+            ${g.choices.map(([id, name, price], i) => `
+              <label class="choice"><input type="${g.type === 'one' ? 'radio' : 'checkbox'}" name="opt-${g.key}" value="${id}" data-g="${g.key}" ${g.type === 'one' && i === 0 ? 'checked' : ''}>
+              <span>${esc(name)}</span><span class="cp">${price ? '+' + eur(price) : ''}</span></label>`).join('')}
+          </fieldset>`).join('')}
+        <div class="field" style="margin:${groups.length ? '10px' : '0'} 0 0"><label for="item-note">Note for the kitchen <small>Optional</small></label>
+        <textarea class="input" id="item-note" maxlength="140" placeholder="Allergies, no onions, extra crispy"></textarea></div>
+      </div>
+      <div class="modal-foot">
+        <div class="qty" role="group" aria-label="Quantity"><button type="button" data-q="-1" aria-label="Decrease quantity">${ic('minus')}</button><span id="item-qty">1</span><button type="button" data-q="1" aria-label="Increase quantity">${ic('plus')}</button></div>
+        <button class="btn btn-primary btn-split" type="button" id="item-add" style="flex:1" ${open ? '' : 'disabled'}></button>
+      </div>`, { label: 'item-title' });
+    const w = m.wrap;
+    const refresh = () => {
+      $('#item-qty', w).textContent = qty;
+      $('#item-add', w).innerHTML = open ? `<span>Add ${qty} to order</span><span>${eur(unit() * qty)}</span>` : `<span>Opens at ${opensAt(r)}</span>`;
+      groups.filter(g => g.type === 'many').forEach(g => {
+        $$(`input[data-g="${g.key}"]`, w).forEach(inp => { inp.disabled = !inp.checked && sel[g.key].length >= g.max; });
+      });
+    };
+    w.addEventListener('change', e => {
+      const inp = e.target.closest('input[data-g]');
+      if (!inp) return;
+      const g = groups.find(x => x.key === inp.dataset.g);
+      if (g.type === 'one') sel[g.key] = inp.value;
+      else sel[g.key] = $$(`input[data-g="${g.key}"]:checked`, w).map(x => x.value);
+      refresh();
+    });
+    w.addEventListener('click', async e => {
+      const q = e.target.closest('[data-q]');
+      if (q) { qty = clamp(qty + Number(q.dataset.q), 1, 20); refresh(); return; }
+      if (e.target.closest('#item-add')) {
+        const options = [];
+        groups.forEach(g => g.choices.forEach(c => {
+          if (g.type === 'one' ? sel[g.key] === c[0] : sel[g.key].includes(c[0])) options.push({ group: g.name, choice: c[1], price: c[2], id: g.key + ':' + c[0] });
+        }));
+        const note = $('#item-note', w).value.trim();
+        const key = [it.id, options.map(o => o.id).sort().join('+'), note].join('|');
+        closeModal(m);
+        const added = await addToCart(r, { key, itemId: it.id, name: it.n, unitPrice: unit(), qty, options: options.map(({ group, choice, price }) => ({ group, choice, price })), note });
+        if (added) toast(`Added ${qty} × ${it.n}`);
+      }
+    });
+    refresh();
+  }
+
+  /* ================= Auth ================= */
+  function openAuth(mode = 'login', { reason = '', then } = {}) {
+    let current = mode;
+    const m = openModal(`<div id="auth-inner"></div>`, { label: 'auth-title' });
+    const w = m.wrap;
+    const draw = () => {
+      $('#auth-inner', w).innerHTML = `
+        <div class="modal-head">
+          <h2 id="auth-title">${current === 'login' ? 'Welcome back' : 'Create your account'}</h2>
+          <p>${reason ? esc(reason) : current === 'login' ? 'Log in to order, track deliveries and save your favourites.' : 'It takes a minute. Your first order gets 20% off.'}</p>
+        </div>
+        <div class="modal-body">
+          <div class="seg" role="tablist" aria-label="Account" style="margin-bottom:18px">
+            <button type="button" role="tab" aria-selected="${current === 'login'}" data-mode="login">Log in</button>
+            <button type="button" role="tab" aria-selected="${current === 'signup'}" data-mode="signup">Sign up</button>
+          </div>
+          <form id="auth-form" novalidate>
+            <p class="form-error" id="auth-error" role="alert"></p>
+            ${current === 'signup' ? `<div class="field"><label for="a-name">Full name</label><input class="input" id="a-name" autocomplete="name" autofocus><p class="err" id="e-name"></p></div>` : ''}
+            <div class="field"><label for="a-email">Email</label><input class="input" id="a-email" type="email" inputmode="email" autocomplete="email" ${current === 'login' ? 'autofocus' : ''}><p class="err" id="e-email"></p></div>
+            <div class="field"><label for="a-pass">Password ${current === 'signup' ? '<small>At least 8 characters</small>' : ''}</label>
+              <div class="pw-wrap"><input class="input" id="a-pass" type="password" autocomplete="${current === 'login' ? 'current-password' : 'new-password'}"><button class="pw-toggle" type="button" data-pw>Show</button></div>
+              <p class="err" id="e-pass"></p></div>
+            <button class="btn btn-primary btn-block" type="submit" id="auth-submit">${current === 'login' ? 'Log in' : 'Create account'}</button>
+          </form>
+          <div class="divider">or</div>
+          <button class="btn btn-outline btn-block" type="button" data-demo>Continue with the demo account</button>
+          <p class="hint">Accounts are saved in this browser until the database is connected.</p>
+        </div>`;
+    };
+    draw();
+    const finish = (user, msg) => {
+      closeModal(m);
+      onAuth(user).then(() => { toast(msg); if (then) then(); });
+    };
+    const setBusy = (btn, busy, label) => { btn.disabled = busy; btn.innerHTML = busy ? `<span class="spinner"></span>${label}` : label; };
+    w.addEventListener('click', async e => {
+      const mb = e.target.closest('[data-mode]');
+      if (mb && mb.dataset.mode !== current) { current = mb.dataset.mode; draw(); setTimeout(() => { const f = $('[autofocus]', w); if (f) f.focus(); }, 0); return; }
+      const pw = e.target.closest('[data-pw]');
+      if (pw) { const inp = $('#a-pass', w); const show = inp.type === 'password'; inp.type = show ? 'text' : 'password'; pw.textContent = show ? 'Hide' : 'Show'; return; }
+      const demo = e.target.closest('[data-demo]');
+      if (demo) {
+        setBusy(demo, true, 'Signing in…');
+        try { const u = await api.demoLogIn(); finish(u, `Signed in as ${u.name}`); }
+        catch (err) { setBusy(demo, false, 'Continue with the demo account'); $('#auth-error', w).textContent = err.message; }
+      }
+    });
+    w.addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = $('#a-name', w), email = $('#a-email', w), pass = $('#a-pass', w);
+      const errs = {};
+      if (name && name.value.trim().length < 2) errs.name = 'Enter your full name.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.value.trim())) errs.email = 'Enter an email like name@example.com.';
+      if (current === 'signup' && pass.value.length < 8) errs.pass = 'Use at least 8 characters.';
+      if (current === 'login' && !pass.value) errs.pass = 'Enter your password.';
+      [['name', name], ['email', email], ['pass', pass]].forEach(([k, el]) => {
+        if (!el) return;
+        el.closest('.field').classList.toggle('invalid', !!errs[k]);
+        el.setAttribute('aria-invalid', errs[k] ? 'true' : 'false');
+        $('#e-' + k, w).textContent = errs[k] || '';
+      });
+      $('#auth-error', w).textContent = '';
+      const firstBad = Object.keys(errs)[0];
+      if (firstBad) { ({ name, email, pass })[firstBad].focus(); return; }
+      const btn = $('#auth-submit', w);
+      const label = current === 'login' ? 'Log in' : 'Create account';
+      setBusy(btn, true, current === 'login' ? 'Logging in…' : 'Creating account…');
+      try {
+        if (current === 'login') { const u = await api.logIn({ email: email.value, password: pass.value }); finish(u, `Welcome back, ${firstName(u.name)}`); }
+        else { const u = await api.signUp({ name: name.value, email: email.value, password: pass.value }); finish(u, `Welcome to Morsel, ${firstName(u.name)}`); }
+      } catch (err) {
+        setBusy(btn, false, label);
+        $('#auth-error', w).textContent = err.message;
+      }
+    });
+  }
+  async function onAuth(user) {
+    state.user = user;
+    state.orderCount = user ? (await api.listOrders()).length : 0;
+    if (user) {
+      const def = user.addresses.find(a => a.isDefault);
+      if (!state.co.addressId || !user.addresses.some(a => a._id === state.co.addressId)) state.co.addressId = def ? def._id : null;
+    }
+    updateHeader();
+    render(true);
+  }
+  function requireAuth(reason, then) {
+    if (state.user) { then(); return; }
+    openAuth('login', { reason, then });
+  }
+
+  /* ================= Addresses ================= */
+  function openAddressForm({ then } = {}) {
+    let label = 'Home';
+    const m = openModal(`
+      <div class="modal-head"><h2 id="addr-title">Add an address</h2><p>Where should the courier bring your food?</p></div>
+      <form id="addr-form" novalidate>
+        <div class="modal-body">
+          <div class="field"><span class="label">Label</span>
+            <div class="seg" role="group" aria-label="Address label">${['Home', 'Work', 'Other'].map(l => `<button type="button" data-label="${l}" aria-pressed="${l === label}">${l}</button>`).join('')}</div></div>
+          <div class="field"><label for="f-street">Street and number</label><input class="input" id="f-street" autocomplete="address-line1" autofocus placeholder="14 Linden Street"><p class="err" id="e-street"></p></div>
+          <div class="field"><label for="f-details">Flat, floor or entrance <small>Optional</small></label><input class="input" id="f-details" autocomplete="address-line2" placeholder="Flat 3, second floor"></div>
+          <div class="field"><label for="f-city">City or district</label><input class="input" id="f-city" autocomplete="address-level2" placeholder="Old Town"><p class="err" id="e-city"></p></div>
+          <label class="choice"><input type="checkbox" id="f-default" ${state.user && state.user.addresses.length ? '' : 'checked disabled'}><span>Make this my default address</span></label>
+        </div>
+        <div class="modal-foot"><button class="btn btn-primary btn-block" type="submit" id="addr-save">Save address</button></div>
+      </form>`, { label: 'addr-title' });
+    const w = m.wrap;
+    w.addEventListener('click', e => {
+      const b = e.target.closest('[data-label]');
+      if (!b) return;
+      label = b.dataset.label;
+      $$('[data-label]', w).forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    });
+    w.addEventListener('submit', async e => {
+      e.preventDefault();
+      const street = $('#f-street', w), city = $('#f-city', w);
+      const errs = { street: street.value.trim().length < 3 ? 'Enter a street and number.' : '', city: city.value.trim().length < 2 ? 'Enter a city or district.' : '' };
+      [['street', street], ['city', city]].forEach(([k, el]) => { el.closest('.field').classList.toggle('invalid', !!errs[k]); $('#e-' + k, w).textContent = errs[k]; });
+      if (errs.street) { street.focus(); return; }
+      if (errs.city) { city.focus(); return; }
+      const btn = $('#addr-save', w);
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      try {
+        const user = await api.addAddress({ label, street: street.value, details: $('#f-details', w).value, city: city.value, makeDefault: $('#f-default', w).checked });
+        state.user = user;
+        const added = user.addresses[user.addresses.length - 1];
+        state.co.addressId = added._id;
+        closeModal(m);
+        updateHeader();
+        toast('Address saved');
+        if (then) then(added); else render(true);
+      } catch (err) { btn.disabled = false; btn.textContent = 'Save address'; toast(err.message); }
+    });
+  }
+  function openAddressPicker() {
+    const u = state.user;
+    const m = openModal(`
+      <div class="modal-head"><h2 id="pick-title">Deliver to</h2><p>Choose your default delivery address.</p></div>
+      <div class="modal-body">
+        ${u.addresses.map(a => `
+          <label class="radio-card"><input type="radio" name="pick" value="${a._id}" ${a.isDefault ? 'checked' : ''}>
+            <span class="rc-ic">${ic(a.label === 'Work' ? 'work' : a.label === 'Home' ? 'home' : 'pin')}</span>
+            <span class="rc-main"><strong>${esc(a.label)}</strong><span class="sub">${esc(a.street)}${a.details ? ', ' + esc(a.details) : ''}, ${esc(a.city)}</span></span></label>`).join('')}
+        <button class="btn btn-outline btn-block" type="button" data-new style="margin-top:6px">${ic('plus')} Add a new address</button>
+      </div>`, { label: 'pick-title' });
+    m.wrap.addEventListener('change', async e => {
+      if (e.target.name !== 'pick') return;
+      state.user = await api.setDefaultAddress(e.target.value);
+      state.co.addressId = e.target.value;
+      updateHeader();
+      closeModal(m);
+      render(true);
+      toast('Delivery address updated');
+    });
+    m.wrap.addEventListener('click', e => { if (e.target.closest('[data-new]')) { closeModal(m); openAddressForm(); } });
+  }
+
+  /* ================= Header ================= */
+  function updateHeader() {
+    const u = state.user;
+    const def = u && u.addresses.find(a => a.isDefault);
+    $('#addr-label').textContent = def ? `${def.label}, ${def.street}` : 'Add delivery address';
+    $('#addr-btn').setAttribute('aria-label', def ? `Delivering to ${def.label}, ${def.street}. Change address` : 'Add a delivery address');
+    const b = $('#acct-btn');
+    if (u) { b.classList.add('has-avatar'); b.innerHTML = `<span class="avatar" aria-hidden="true">${esc(initials(u.name))}</span><span class="lbl">${esc(firstName(u.name))}</span>`; b.setAttribute('aria-label', `Your account, ${u.name}`); }
+    else { b.classList.remove('has-avatar'); b.innerHTML = `${ic('user')}<span class="lbl">Log in</span>`; b.setAttribute('aria-label', 'Log in or sign up'); }
+  }
+
+  /* ================= Home ================= */
+  function greeting() {
+    const h = new Date().getHours();
+    if (h < 5) return 'Still up';
+    if (h < 12) return 'Good morning';
+    if (h < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+  function momentWord() {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 11) return 'this morning';
+    if (h >= 11 && h < 17) return 'today';
+    if (h >= 17 && h < 23) return 'tonight';
+    return 'right now';
+  }
+  function filteredRestaurants() {
+    const q = state.q.trim().toLowerCase();
+    const m = nowMin();
+    let list = RESTAURANTS.map((r, i) => {
+      let match = '';
+      if (q) {
+        const inName = (r.name + ' ' + r.label + ' ' + r.tagline + ' ' + r.cats.join(' ')).toLowerCase().includes(q);
+        if (!inName) {
+          for (const s of r.menu) { const hit = s.items.find(it => it.n.toLowerCase().includes(q) || it.d.toLowerCase().includes(q)); if (hit) { match = hit.n; break; } }
+          if (!match) return null;
+        }
+      }
+      return { r, i, match, open: isOpen(r, m) };
+    }).filter(Boolean);
+    if (state.cat !== 'all') list = list.filter(x => x.r.cats.includes(state.cat));
+    if (state.openNow) list = list.filter(x => x.open);
+    if (state.freeDel) list = list.filter(x => x.r.fee === 0);
+    if (state.topRated) list = list.filter(x => x.r.rating >= 4.8);
+    const by = {
+      recommended: (a, b) => a.i - b.i,
+      fastest: (a, b) => a.r.eta[0] - b.r.eta[0] || a.r.eta[1] - b.r.eta[1],
+      rating: (a, b) => b.r.rating - a.r.rating || b.r.reviews - a.r.reviews,
+      fee: (a, b) => a.r.fee - b.r.fee
+    }[state.sort];
+    return list.sort((a, b) => (b.open - a.open) || by(a, b));
+  }
+  const isFav = id => !!(state.user && state.user.favorites.includes(id));
+  function cardHTML({ r, match, open }) {
+    const fav = isFav(r.id);
+    const img = photoUrl(r.id);
+    return `<article class="card ${open ? '' : 'is-closed'}" style="--cv:${r.color};--cvi:${r.ink}">
+      <div class="cover ${img ? 'has-photo' : ''}"><div class="art">${art(r.art)}</div>${photoImg(img)}
+        <span class="eta">${ic('clock')}${etaText(r)}</span>
+        ${open ? '' : `<div class="veil"><span>Closed now<br>Opens at ${opensAt(r)}</span></div>`}
+        ${photoMode ? `<button class="photo-btn" type="button" data-act="photo" data-r="${r.id}">${ic('camera')}${img ? 'Change photo' : 'Set photo'}</button>` : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-title"><h3>${esc(r.name)}</h3><span class="rating">${ic('star', 'fill')}${r.rating.toFixed(1)}</span></div>
+        <p class="card-meta">${esc(r.label)}, ${r.price}, <span class="${r.fee ? '' : 'free'}">${feeText(r)}</span></p>
+        ${match ? `<p class="match">Serves ${esc(match)}</p>` : ''}
+      </div>
+      <button class="card-link" type="button" data-act="open-r" data-id="${r.id}" aria-label="${esc(r.name)}. ${esc(r.label)}. ${r.eta[0]} to ${r.eta[1]} minutes. ${feeText(r)}.${open ? '' : ' Closed now.'}"></button>
+      <button class="fav" type="button" data-act="fav" data-id="${r.id}" aria-pressed="${fav}" aria-label="${fav ? 'Remove' : 'Save'} ${esc(r.name)} ${fav ? 'from' : 'to'} favourites">${ic('heart')}</button>
+    </article>`;
+  }
+  function renderHome() {
+    const name = state.user ? firstName(state.user.name) : '';
+    app.innerHTML = `
+      <section class="wrap home-hero">
+        <p class="kicker">${greeting()}${name ? ', ' + esc(name) : ''}</p>
+        <h1>What are you craving ${momentWord()}?</h1>
+        <div class="search" role="search">${ic('search')}
+          <input id="q" type="search" placeholder="Search restaurants or dishes" aria-label="Search restaurants, dishes or cuisines" autocomplete="off" value="${esc(state.q)}">
+          <button class="search-clear" type="button" data-act="clear-search" aria-label="Clear search" ${state.q ? '' : 'hidden'}>${ic('close')}</button>
+        </div>
+        <div id="live-order"></div>
+        ${state.promoDismissed ? '' : `<div class="banner" id="promo-banner">
+          <p><strong>New to Morsel?</strong> Take 20% off your first order with <span class="code">WELCOME20</span></p>
+          <button class="btn" type="button" data-act="use-promo">Apply at checkout</button>
+          <button class="x" type="button" data-act="dismiss-promo" aria-label="Dismiss offer">${ic('close')}</button>
+        </div>`}
+      </section>
+      <section class="wrap">
+        <div class="cats" role="group" aria-label="Cuisines">
+          ${CATS.map(c => `<button class="cat" type="button" data-act="cat" data-id="${c.id}" aria-pressed="${state.cat === c.id}">
+            <span class="ic" style="--cv:${c.color || 'var(--surface-2)'}">${c.art ? art(c.art) : ic('grid')}</span>${c.name}</button>`).join('')}
+        </div>
+        <div class="toolbar">
+          <h2 id="res-title"></h2>
+          <div class="filters">
+            <label class="select-wrap"><span class="visually-hidden">Sort restaurants</span>
+              <select id="sort">
+                <option value="recommended">Recommended</option>
+                <option value="fastest">Fastest delivery</option>
+                <option value="rating">Top rated</option>
+                <option value="fee">Lowest delivery fee</option>
+              </select>${ic('chevron')}</label>
+            <button class="pill" type="button" data-act="filter" data-f="openNow" aria-pressed="${state.openNow}">Open now</button>
+            <button class="pill" type="button" data-act="filter" data-f="freeDel" aria-pressed="${state.freeDel}">Free delivery</button>
+            <button class="pill" type="button" data-act="filter" data-f="topRated" aria-pressed="${state.topRated}">Rated 4.8+</button>
+          </div>
+        </div>
+        <div id="results" aria-live="polite"></div>
+      </section>`;
+    $('#sort').value = state.sort;
+    $('#sort').addEventListener('change', e => { state.sort = e.target.value; updateResults(); });
+    $('#q').addEventListener('input', e => { state.q = e.target.value; $('.search-clear').hidden = !state.q; updateResults(); });
+    updateResults();
+    loadLiveOrder();
+  }
+  function updateResults() {
+    const list = filteredRestaurants();
+    const cat = CATS.find(c => c.id === state.cat);
+    const title = state.q.trim() ? 'Results' : state.cat === 'all' ? 'All restaurants' : cat.name;
+    $('#res-title').innerHTML = `${esc(title)}<span class="count">${list.length}</span>`;
+    $('#results').innerHTML = list.length
+      ? `<div class="grid">${list.map(cardHTML).join('')}</div>`
+      : `<div class="empty"><div class="empty-art">${art('bowl')}</div><h3>Nothing matches yet</h3><p>${state.q.trim() ? `No restaurants or dishes match “${esc(state.q.trim())}”. Try something like ramen, tacos or cheesecake.` : 'No restaurants match these filters right now.'}</p><button class="btn btn-secondary" type="button" data-act="reset-filters">Clear search and filters</button></div>`;
+  }
+  async function loadLiveOrder() {
+    if (!state.user) return;
+    const orders = await api.listOrders();
+    const live = orders.find(o => progress(o).stage !== 'delivered');
+    const box = $('#live-order');
+    if (!live || !box) return;
+    const p = progress(live);
+    box.innerHTML = `<div class="live-banner"><span class="pulse" aria-hidden="true"></span><p><strong>${esc(live.restaurantName)}</strong>: ${esc(stageCopy(live, p).title.toLowerCase())}</p><button class="btn btn-sm btn-primary" type="button" data-act="track" data-id="${live._id}">Track order</button></div>`;
+  }
+
+  /* ================= Restaurant ================= */
+  const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  function renderRestaurant(id) {
+    const r = R(id);
+    if (!r) { go('home'); return; }
+    const open = isOpen(r);
+    const fav = isFav(r.id);
+    const hero = photoUrl(r.id);
+    app.innerHTML = `
+      <div class="wrap">
+        <div class="r-cover ${hero ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink}">
+          <div class="art">${art(r.art)}</div>${photoImg(hero, true)}
+          <button class="round-btn back" type="button" data-act="home" aria-label="Back to all restaurants">${ic('back')}</button>
+          <button class="fav" type="button" data-act="fav" data-id="${r.id}" aria-pressed="${fav}" aria-label="${fav ? 'Remove' : 'Save'} ${esc(r.name)} ${fav ? 'from' : 'to'} favourites">${ic('heart')}</button>
+          ${photoMode ? `<button class="photo-btn" type="button" data-act="photo" data-r="${r.id}">${ic('camera')}${hero ? 'Change cover photo' : 'Set cover photo'}</button>` : ''}
+        </div>
+        <div class="r-head">
+          <h1>${esc(r.name)}</h1>
+          <p class="r-tag">${esc(r.tagline)}</p>
+          <p class="r-sub">
+            <span class="rating">${ic('star', 'fill')}${r.rating.toFixed(1)} <small>(${r.reviews.toLocaleString('en-GB')} ratings)</small></span>
+            <span class="open-state ${open ? '' : 'closed'}"><span class="dot" aria-hidden="true"></span>${open ? (is247(r) ? 'Open 24 hours' : `Open until ${closesAt(r)}`) : `Closed, opens at ${opensAt(r)}`}</span>
+          </p>
+        </div>
+        <div class="r-stats">
+          <div class="stat"><small>Delivery time</small><strong>${etaText(r)}</strong></div>
+          <div class="stat"><small>Delivery fee</small><strong class="${r.fee ? '' : 'free'}">${r.fee ? eur(r.fee) : 'Free'}</strong></div>
+          <div class="stat"><small>Minimum order</small><strong>${eur(r.min)}</strong></div>
+          <div class="stat"><small>Hours</small><strong>${hoursText(r)}</strong></div>
+        </div>
+        ${open ? '' : `<p class="notice">${esc(r.name)} is closed right now. Have a look at the menu, and order from ${opensAt(r)}.</p>`}
+      </div>
+      <div class="menu-tabs-bar"><nav class="wrap menu-tabs" id="menu-tabs" aria-label="Menu sections">
+        ${r.menu.map((s, i) => `<button type="button" data-act="menu-tab" data-sec="sec-${slug(s.c)}" aria-current="${i === 0}">${esc(s.c)}</button>`).join('')}
+      </nav></div>
+      <div class="wrap menu">
+        ${r.menu.map(s => `<section class="menu-sec" id="sec-${slug(s.c)}" aria-labelledby="h-${slug(s.c)}">
+          <h2 id="h-${slug(s.c)}">${esc(s.c)}</h2>
+          <div class="items">${s.items.map(it => itemHTML(r, it)).join('')}</div>
+        </section>`).join('')}
+      </div>`;
+    refreshItemBadges();
+    if ('IntersectionObserver' in window) {
+      const tabs = $$('#menu-tabs button');
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (!en.isIntersecting) return;
+          tabs.forEach(t => {
+            const on = t.dataset.sec === en.target.id;
+            t.setAttribute('aria-current', String(on));
+            if (on) t.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          });
+        });
+      }, { rootMargin: '-150px 0px -65% 0px' });
+      $$('.menu-sec').forEach(s => io.observe(s));
+      cleanups.push(() => io.disconnect());
+    }
+  }
+  function refreshItemBadges() {
+    $$('.item').forEach(el => {
+      const n = qtyOfItem(el.dataset.r, el.dataset.i);
+      el.classList.toggle('in-cart', n > 0);
+      const add = $('.add', el);
+      add.innerHTML = n ? String(n) : ic('plus');
+      const name = $('.item-name', el).firstChild.textContent;
+      el.setAttribute('aria-label', `${name}${n ? `, ${n} in your bag` : ''}. Open to customise and add.`);
+    });
+  }
+
+  /* ================= Checkout ================= */
+  function scheduleSlots(r) {
+    const slots = [];
+    const now = new Date();
+    let t = new Date(now.getTime() + 60 * 60000);
+    t.setMinutes(Math.ceil(t.getMinutes() / 15) * 15, 0, 0);
+    for (let i = 0; i < 16 && slots.length < 10; i++) {
+      const d = new Date(t.getTime() + i * 15 * 60000);
+      if (isOpen(r, d.getHours() * 60 + d.getMinutes())) slots.push(d);
+    }
+    return slots;
+  }
+  function renderCheckout() {
+    const r = R(state.cart.restaurantId);
+    if (!r || !state.cart.lines.length) {
+      app.innerHTML = `<div class="wrap"><div class="empty"><div class="empty-art">${art('cupcake')}</div><h3>Your bag is empty</h3><p>Pick a restaurant and add a few things, then come back to check out.</p><button class="btn btn-primary" type="button" data-act="home">Browse restaurants</button></div></div>`;
+      return;
+    }
+    const u = state.user;
+    const p = pricing(true);
+    const open = isOpen(r);
+    const slots = scheduleSlots(r);
+    if (!open && state.co.when === 'asap') state.co.when = 'later';
+    if (state.co.when === 'later' && !slots.some(s => String(s.getTime()) === state.co.slot)) state.co.slot = slots[0] ? String(slots[0].getTime()) : '';
+    const promoErr = state.promo ? validatePromo(state.promo, r) : '';
+    const scroll = window.scrollY;
+    app.innerHTML = `
+      <div class="wrap">
+        <div class="back-row"><button class="back-link" type="button" data-act="open-r" data-id="${r.id}">${ic('back')}Back to ${esc(r.name)}</button></div>
+        <h1 class="page-title">Checkout</h1>
+        <div class="checkout">
+          <div>
+            ${u ? '' : `<div class="login-card"><p><strong>Log in to place your order</strong>Your bag is saved. Log in or create an account to choose an address and pay.</p><button class="btn btn-primary" type="button" data-act="login">Log in</button><button class="btn btn-outline" type="button" data-act="signup">Sign up</button></div>`}
+            <section class="panel" aria-labelledby="co-addr">
+              <div class="panel-head"><h2 id="co-addr">Delivery address</h2>${u && u.addresses.length ? `<button class="btn btn-sm btn-secondary" type="button" data-act="add-addr">${ic('plus')}New</button>` : ''}</div>
+              ${!u ? '<p class="muted" style="margin:0">Log in to add or choose an address.</p>'
+                : !u.addresses.length ? `<p class="muted" style="margin:0 0 14px">You haven’t saved an address yet.</p><button class="btn btn-primary" type="button" data-act="add-addr">${ic('plus')}Add delivery address</button>`
+                : u.addresses.map(a => `<label class="radio-card"><input type="radio" name="co-addr" value="${a._id}" ${state.co.addressId === a._id ? 'checked' : ''}>
+                    <span class="rc-ic">${ic(a.label === 'Work' ? 'work' : a.label === 'Home' ? 'home' : 'pin')}</span>
+                    <span class="rc-main"><strong>${esc(a.label)}</strong><span class="sub">${esc(a.street)}${a.details ? ', ' + esc(a.details) : ''}, ${esc(a.city)}</span></span></label>`).join('')}
+              <p class="err" id="err-addr"></p>
+            </section>
+            <section class="panel" aria-labelledby="co-when">
+              <h2 id="co-when">Delivery time</h2>
+              <label class="radio-card" ${open ? '' : 'style="opacity:.5;cursor:not-allowed"'}><input type="radio" name="co-when" value="asap" ${state.co.when === 'asap' ? 'checked' : ''} ${open ? '' : 'disabled'}>
+                <span class="rc-ic">${ic('bolt')}</span><span class="rc-main"><strong>As soon as possible</strong><span class="sub">${open ? `Arrives in about ${etaText(r)}` : `${esc(r.name)} is closed right now`}</span></span></label>
+              <label class="radio-card"><input type="radio" name="co-when" value="later" ${state.co.when === 'later' ? 'checked' : ''} ${slots.length ? '' : 'disabled'}>
+                <span class="rc-ic">${ic('calendar')}</span><span class="rc-main"><strong>Schedule for later</strong><span class="sub">${slots.length ? 'Pick a time in the next few hours' : 'No times available in the next few hours'}</span></span></label>
+              ${state.co.when === 'later' && slots.length ? `<div class="field" style="margin:4px 0 0"><label for="co-slot">Arrival time</label><select class="input" id="co-slot">${slots.map(s => `<option value="${s.getTime()}" ${String(s.getTime()) === state.co.slot ? 'selected' : ''}>${s.getDate() === new Date().getDate() ? 'Today' : 'Tomorrow'} at ${clock(s)}</option>`).join('')}</select></div>` : ''}
+            </section>
+            <section class="panel" aria-labelledby="co-pay">
+              <h2 id="co-pay">Payment</h2>
+              <label class="radio-card"><input type="radio" name="co-pay" value="card" ${state.co.pay === 'card' ? 'checked' : ''}><span class="rc-ic">${ic('card')}</span><span class="rc-main"><strong>Card ending in 4242</strong><span class="sub">Demo card, nothing is charged</span></span></label>
+              <label class="radio-card"><input type="radio" name="co-pay" value="cash" ${state.co.pay === 'cash' ? 'checked' : ''}><span class="rc-ic">${ic('cash')}</span><span class="rc-main"><strong>Cash on delivery</strong><span class="sub">Pay the courier when your food arrives</span></span></label>
+            </section>
+            <section class="panel" aria-labelledby="co-note-h">
+              <h2 id="co-note-h">Note for the courier</h2>
+              <div class="field" style="margin:0"><label class="visually-hidden" for="co-note">Note for the courier</label><textarea class="input" id="co-note" maxlength="160" placeholder="Ring twice, the buzzer is broken">${esc(state.co.note)}</textarea></div>
+            </section>
+          </div>
+          <aside class="sticky-sum">
+            <section class="panel" aria-labelledby="co-sum">
+              <div class="sum-r"><span class="thumb ${photoUrl(r.id) ? 'has-photo' : ''}" style="--cv:${r.color}">${art(r.art)}${photoImg(photoUrl(r.id))}</span><div><h2 id="co-sum" style="margin:0">${esc(r.name)}</h2><span class="muted" style="font-size:.92rem">${plural(cartCount(), 'item', 'items')}</span></div></div>
+              <ul class="sum-items">${state.cart.lines.map(l => `<li><span><span class="q">${l.qty}×</span>${esc(l.name)}${l.options.length ? `<br><span class="muted" style="font-size:.85rem">${esc(l.options.map(o => o.choice).join(', '))}</span>` : ''}</span><span>${eur(l.unitPrice * l.qty)}</span></li>`).join('')}</ul>
+              <p class="sub-label">Promo code</p>
+              ${state.promo && !promoErr ? `<div class="applied"><span>${ic('tag')} ${esc(state.promo)} applied</span><button class="link-btn" type="button" data-act="remove-promo">Remove</button></div>`
+                : `<div class="promo-row"><label class="visually-hidden" for="promo">Promo code</label><input class="input" id="promo" placeholder="Enter code" value="${esc(state.promo || '')}" autocomplete="off"><button class="btn btn-secondary" type="button" data-act="apply-promo" style="min-height:46px">Apply</button></div>
+                   <p class="err" id="promo-err" style="margin-top:6px">${state.promo ? esc(promoErr) : ''}</p>`}
+              <p class="sub-label">Tip your courier</p>
+              <div class="tips" role="group" aria-label="Courier tip">${[0, 100, 200, 300].map(v => `<button class="pill" type="button" data-act="tip" data-v="${v}" aria-pressed="${state.tip === v}">${v ? eur(v) : 'None'}</button>`).join('')}</div>
+              ${priceRows(p, { tip: true })}
+              <button class="btn btn-primary btn-block btn-split" type="button" data-act="place-order" id="place-btn" style="margin-top:16px"><span>Place order</span><span>${eur(p.total)}</span></button>
+              <p class="fine">This is a demo checkout. No payment is taken.</p>
+            </section>
+          </aside>
+        </div>
+      </div>`;
+    window.scrollTo(0, scroll);
+    const slot = $('#co-slot');
+    if (slot) slot.addEventListener('change', e => { state.co.slot = e.target.value; });
+    $('#co-note').addEventListener('input', e => { state.co.note = e.target.value; });
+    const promo = $('#promo');
+    if (promo) promo.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); applyPromo(); } });
+  }
+  function applyPromo() {
+    const input = $('#promo');
+    const code = input.value.trim().toUpperCase();
+    const errEl = $('#promo-err');
+    if (!code) { errEl.textContent = 'Enter a promo code.'; input.focus(); return; }
+    const err = validatePromo(code, R(state.cart.restaurantId));
+    if (err) { errEl.textContent = err; input.focus(); return; }
+    state.promo = code;
+    LS.set('morsel.promo', code);
+    renderCheckout();
+    toast(`${code} applied`);
+  }
+  const COURIERS = [['Luca', 'bike'], ['Maya', 'scooter'], ['Andrei', 'bike'], ['Sofia', 'scooter'], ['Tom', 'bike'], ['Ines', 'scooter']];
+  async function placeOrder() {
+    if (!state.user) { openAuth('login', { reason: 'Log in to place your order. Your bag is saved.' }); return; }
+    const r = R(state.cart.restaurantId);
+    const addr = state.user.addresses.find(a => a._id === state.co.addressId);
+    if (!addr) {
+      const err = $('#err-addr');
+      if (err) err.textContent = state.user.addresses.length ? 'Choose where to deliver your order.' : 'Add an address so the courier knows where to go.';
+      $('#co-addr').scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' });
+      return;
+    }
+    if (state.co.when === 'asap' && !isOpen(r)) { toast(`${r.name} is closed. Schedule your order for later.`); return; }
+    if (state.co.when === 'later' && !state.co.slot) { toast('Pick an arrival time.'); return; }
+    const btn = $('#place-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span><span class="spinner" style="display:inline-block;vertical-align:-3px;margin-right:8px"></span>Placing order…</span>';
+    const p = pricing(true);
+    const etaMin = Math.round((r.eta[0] + r.eta[1]) / 2);
+    const later = state.co.when === 'later';
+    const at = later ? Number(state.co.slot) : null;
+    const [cname, vehicle] = COURIERS[Math.floor(Math.random() * COURIERS.length)];
+    try {
+      const order = await api.createOrder({
+        restaurantId: r.id, restaurantName: r.name,
+        items: state.cart.lines.map(l => ({ itemId: l.itemId, name: l.name, qty: l.qty, unitPrice: l.unitPrice, options: l.options, note: l.note })),
+        pricing: p,
+        address: { label: addr.label, street: addr.street, details: addr.details, city: addr.city },
+        payment: state.co.pay, courierNote: state.co.note.trim(),
+        delivery: later ? { type: 'scheduled', at: new Date(at).toISOString() } : { type: 'asap' },
+        promoCode: p.discount || p.deliveryDiscount ? state.promo : null,
+        etaMin, startAt: later ? at - etaMin * SIM_MS : Date.now(),
+        courier: { name: cname, vehicle }
+      });
+      state.orderCount += 1;
+      state.promo = null; LS.del('morsel.promo');
+      state.tip = 100; state.co.note = ''; state.co.when = 'asap';
+      clearCart();
+      go('order', { id: order._id });
+      toast('Order placed');
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = `<span>Place order</span><span>${eur(p.total)}</span>`;
+      toast(err.message);
+    }
+  }
+
+  /* ================= Order tracking ================= */
+  const SIM_MS = 2000; /* one simulated minute lasts two real seconds, so a 30-minute delivery plays out in one minute */
+  function plan(o) {
+    const total = o.etaMin;
+    const prep = Math.round(total * 0.45);
+    return { confirm: 1, prepStart: 2, pickup: 2 + prep, onway: 5 + prep, total };
+  }
+  function progress(o, now = Date.now()) {
+    const pl = plan(o);
+    if (now < o.startAt) return { stage: 'scheduled', sim: 0, remaining: pl.total, pl, frac: 0 };
+    const sim = (now - o.startAt) / SIM_MS;
+    let stage = 'delivered';
+    if (sim < pl.confirm) stage = 'placed';
+    else if (sim < pl.prepStart) stage = 'confirmed';
+    else if (sim < pl.pickup) stage = 'preparing';
+    else if (sim < pl.onway) stage = 'pickup';
+    else if (sim < pl.total) stage = 'onway';
+    const remaining = Math.max(0, Math.ceil(pl.total - sim));
+    const frac = stage === 'onway' ? (sim - pl.onway) / (pl.total - pl.onway) : stage === 'delivered' ? 1 : 0;
+    return { stage, sim, remaining, pl, frac };
+  }
+  function stageCopy(o, pr) {
+    const r = R(o.restaurantId) || { name: o.restaurantName };
+    const c = o.courier.name, v = o.courier.vehicle;
+    switch (pr.stage) {
+      case 'scheduled': return { title: `Scheduled for ${clock(new Date(o.delivery.at))}`, sub: `We’ll send your order to ${r.name}’s kitchen at the right time.` };
+      case 'placed': return { title: 'Sending your order', sub: `Waiting for ${r.name} to accept it.` };
+      case 'confirmed': return { title: 'Order confirmed', sub: `${r.name} has accepted your order.` };
+      case 'preparing': return { title: 'Preparing your food', sub: `The kitchen is on it. ${c} will pick it up when it’s ready.` };
+      case 'pickup': return { title: `${c} is picking up your order`, sub: 'Your food is being packed for the ride.' };
+      case 'onway': return { title: 'On the way', sub: `${c} is heading to you by ${v}.` };
+      default: return { title: 'Delivered. Enjoy your meal!', sub: `${c} dropped it off at ${o.address.street}.` };
+    }
+  }
+  const ROUTE = [[96, 236], [96, 192], [236, 192], [236, 118], [326, 118], [326, 74]];
+  function routePoint(frac) {
+    const segs = [];
+    let total = 0;
+    for (let i = 1; i < ROUTE.length; i++) { const l = Math.hypot(ROUTE[i][0] - ROUTE[i - 1][0], ROUTE[i][1] - ROUTE[i - 1][1]); segs.push(l); total += l; }
+    let d = clamp(frac, 0, 1) * total;
+    for (let i = 0; i < segs.length; i++) {
+      if (d <= segs[i]) { const t = d / segs[i]; return [ROUTE[i][0] + (ROUTE[i + 1][0] - ROUTE[i][0]) * t, ROUTE[i][1] + (ROUTE[i + 1][1] - ROUTE[i][1]) * t]; }
+      d -= segs[i];
+    }
+    return ROUTE[ROUTE.length - 1];
+  }
+  function mapSVG(o) {
+    const r = R(o.restaurantId) || RESTAURANTS[0];
+    const xs = [24, 96, 166, 236, 326, 400], ys = [-10, 44, 118, 192, 266, 340];
+    let blocks = '';
+    for (let i = 0; i < xs.length - 1; i++) for (let j = 0; j < ys.length - 1; j++) {
+      const x = xs[i] + 8, y = ys[j] + 8, w = xs[i + 1] - xs[i] - 16, h = ys[j + 1] - ys[j] - 16;
+      if (w <= 0 || h <= 0) continue;
+      const park = (i === 2 && j === 3);
+      blocks += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" style="fill:var(${park ? '--map-park' : '--map-block'})"/>`;
+    }
+    const roads = xs.map(x => `<path d="M${x} -20 V340"/>`).join('') + ys.map(y => `<path d="M-20 ${y} H420"/>`).join('');
+    const pts = ROUTE.map(p => p.join(',')).join(' ');
+    return `<svg viewBox="0 0 400 320" role="img" aria-label="Map showing your courier’s route from ${esc(r.name)} to your address">
+      <rect width="400" height="320" style="fill:var(--map-bg)"/>
+      ${blocks}
+      <path d="M260 -10 C300 60 360 40 410 90" style="stroke:var(--map-water)" stroke-width="22" fill="none" stroke-linecap="round"/>
+      <g style="stroke:var(--map-road)" stroke-width="9" stroke-linecap="round">${roads}</g>
+      <polyline points="${pts}" fill="none" style="stroke:var(--muted)" stroke-width="3.5" stroke-dasharray="2 7" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+      <polyline id="route-done" points="${pts}" pathLength="1" fill="none" style="stroke:var(--brand)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 1" stroke-dashoffset="1"/>
+      <g transform="translate(${ROUTE[0][0]} ${ROUTE[0][1]})">
+        <circle r="17" style="fill:${r.color};stroke:var(--surface)" stroke-width="3"/>
+        <svg x="-13" y="-13" width="26" height="26" viewBox="0 0 120 120">${FOOD[r.art]}</svg>
+      </g>
+      <text class="map-label" x="${ROUTE[0][0] + 24}" y="${ROUTE[0][1] + 4}">${esc(r.name)}</text>
+      <g transform="translate(${ROUTE[ROUTE.length - 1][0]} ${ROUTE[ROUTE.length - 1][1]})">
+        <circle r="16" style="fill:var(--brand);stroke:var(--surface)" stroke-width="3"/>
+        <path d="M-7 -1 L0 -7 L7 -1 V7 H-7 Z" style="fill:var(--brand-ink)"/>
+      </g>
+      <text class="map-label" x="${ROUTE[ROUTE.length - 1][0] - 22}" y="${ROUTE[ROUTE.length - 1][1] + 4}" text-anchor="end">You</text>
+      <g id="courier" transform="translate(${ROUTE[0][0]} ${ROUTE[0][1]})" style="opacity:0">
+        <circle class="courier-ring" r="14" style="fill:var(--accent)" opacity=".5"/>
+        <circle r="13" style="fill:var(--accent);stroke:var(--surface)" stroke-width="3"/>
+        <g transform="translate(-8 -8) scale(.68)" style="stroke:var(--accent-ink)" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${ICON.bike}</g>
+      </g>
+    </svg>`;
+  }
+  async function renderOrder(id) {
+    if (!state.user) {
+      app.innerHTML = `<div class="wrap"><div class="empty"><h3>Log in to see this order</h3><p>Orders are linked to your account.</p><button class="btn btn-primary" type="button" data-act="login">Log in</button></div></div>`;
+      return;
+    }
+    let o;
+    try { o = await api.getOrder(id); }
+    catch (err) {
+      app.innerHTML = `<div class="wrap"><div class="empty"><h3>Order not found</h3><p>${esc(err.message)}</p><button class="btn btn-primary" type="button" data-act="account">See your orders</button></div></div>`;
+      return;
+    }
+    const r = R(o.restaurantId);
+    app.innerHTML = `
+      <div class="wrap">
+        <div class="back-row"><button class="back-link" type="button" data-act="account">${ic('back')}All orders</button></div>
+        <div class="track">
+          <div>
+            <p class="track-kicker">${esc(o.restaurantName)}, ordered ${dayTime(new Date(o.createdAt))}</p>
+            <h1 id="tr-title"></h1>
+            <p class="track-sub" id="tr-sub"></p>
+            <div class="eta-box" id="tr-eta"></div>
+            <ol class="steps" id="tr-steps" aria-label="Order progress">
+              ${['Confirmed', 'Preparing', 'On the way', 'Delivered'].map(l => `<li><span class="bar"><i></i></span><span class="lbl">${l}</span></li>`).join('')}
+            </ol>
+            <p class="demo-note" id="tr-demo"><span>Demo runs at 30× speed.</span><button class="link-btn" type="button" data-act="skip" data-id="${o._id}">Skip to next step</button></p>
+            <div class="courier" id="tr-courier" hidden>
+              <span class="avatar" aria-hidden="true">${esc(initials(o.courier.name))}</span>
+              <p><strong>${esc(o.courier.name)}</strong> is your courier<br><small>Delivering by ${esc(o.courier.vehicle)}${o.courierNote ? `. Your note: “${esc(o.courierNote)}”` : ''}</small></p>
+            </div>
+            <div id="tr-rate"></div>
+            <section class="panel section-gap" aria-labelledby="tr-details" style="margin-top:24px">
+              <h2 id="tr-details">Order details</h2>
+              <ul class="sum-items">${o.items.map(l => `<li><span><span class="q">${l.qty}×</span>${esc(l.name)}${l.options.length ? `<br><span class="muted" style="font-size:.85rem">${esc(l.options.map(x => x.choice).join(', '))}</span>` : ''}</span><span>${eur(l.unitPrice * l.qty)}</span></li>`).join('')}</ul>
+              ${priceRowsStatic(o)}
+              <ul class="detail-list" style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">
+                <li><span class="muted">Deliver to</span><span style="text-align:right">${esc(o.address.street)}${o.address.details ? ', ' + esc(o.address.details) : ''}</span></li>
+                <li><span class="muted">Payment</span><span>${o.payment === 'cash' ? 'Cash on delivery' : 'Card ending in 4242'}</span></li>
+              </ul>
+            </section>
+          </div>
+          <div class="map-col"><div class="map">${mapSVG(o)}</div></div>
+        </div>
+      </div>`;
+    let lastStage = '';
+    let order = o;
+    const tick = async () => {
+      if (state.view !== 'order' || state.params.id !== id) return;
+      const pr = progress(order);
+      const copy = stageCopy(order, pr);
+      $('#tr-title').textContent = copy.title;
+      $('#tr-sub').textContent = copy.sub;
+      const eta = $('#tr-eta');
+      if (pr.stage === 'delivered') eta.innerHTML = '';
+      else if (pr.stage === 'scheduled') eta.innerHTML = `<div class="eta-big">${clock(new Date(order.delivery.at))}</div><div class="eta-label"><strong>Scheduled arrival</strong>${pr.pl.total} min after we start</div>`;
+      else {
+        const at = new Date(Date.now() + pr.remaining * 60000);
+        eta.innerHTML = `<div class="eta-big">${pr.remaining} min</div><div class="eta-label"><strong>Estimated arrival</strong>around ${clock(at)}</div>`;
+      }
+      const s = pr.sim, pl = pr.pl;
+      const fills = pr.stage === 'scheduled' ? [0, 0, 0, 0] : [
+        clamp(s / pl.prepStart, 0, 1), clamp((s - pl.prepStart) / (pl.pickup - pl.prepStart), 0, 1),
+        clamp((s - pl.pickup) / (pl.total - pl.pickup), 0, 1), s >= pl.total ? 1 : 0
+      ];
+      $$('#tr-steps li').forEach((li, i) => { $('i', li).style.width = (fills[i] * 100) + '%'; li.classList.toggle('reached', fills[i] > 0); });
+      $('#tr-demo').hidden = pr.stage === 'delivered';
+      $('#tr-courier').hidden = !['pickup', 'onway', 'delivered'].includes(pr.stage);
+      const courier = $('#courier');
+      if (courier) {
+        const [x, y] = routePoint(pr.frac);
+        courier.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+        courier.style.opacity = ['pickup', 'onway'].includes(pr.stage) ? '1' : '0';
+        $('#route-done').setAttribute('stroke-dashoffset', String(1 - pr.frac));
+      }
+      if (pr.stage !== lastStage) {
+        if (pr.stage === 'delivered') renderRating(order);
+        lastStage = pr.stage;
+      }
+    };
+    const timer = setInterval(tick, 500);
+    cleanups.push(() => clearInterval(timer));
+    tick();
+    state.refreshOrder = async () => { order = await api.getOrder(id); tick(); };
+    cleanups.push(() => { state.refreshOrder = null; });
+  }
+  function priceRowsStatic(o) {
+    const p = o.pricing;
+    const rows = [['Subtotal', eur(p.subtotal)], ['Delivery', p.deliveryFee && !p.deliveryDiscount ? eur(p.deliveryFee) : '<span class="free">Free</span>'], ['Service fee', eur(p.serviceFee)]];
+    if (p.smallOrderFee) rows.push(['Small order fee', eur(p.smallOrderFee)]);
+    if (p.discount) rows.push([`Promo ${esc(o.promoCode || '')}`, `<span class="neg">−${eur(p.discount)}</span>`]);
+    if (p.tip) rows.push(['Courier tip', eur(p.tip)]);
+    return `<dl class="rows">${rows.map(([a, b]) => `<div class="row"><dt>${a}</dt><dd>${b}</dd></div>`).join('')}<div class="row total"><dt>Total</dt><dd>${eur(p.total)}</dd></div></dl>`;
+  }
+  function renderRating(o) {
+    const box = $('#tr-rate');
+    if (!box) return;
+    if (o.rating) {
+      box.innerHTML = `<div class="rate"><div class="rated">${ic('check')}You rated this order ${plural(o.rating.stars, 'star', 'stars')}. Thanks for the feedback.</div></div>`;
+      return;
+    }
+    let stars = 0;
+    box.innerHTML = `<section class="rate panel" aria-labelledby="rate-h" style="margin-bottom:0">
+      <h2 id="rate-h">How was your order?</h2>
+      <div class="stars" role="radiogroup" aria-label="Rating">${[1, 2, 3, 4, 5].map(n => `<button type="button" role="radio" aria-checked="false" data-star="${n}" aria-label="${plural(n, 'star', 'stars')}">${ic('star', 'fill')}</button>`).join('')}</div>
+      <div class="field"><label for="rate-c">Anything to add? <small>Optional</small></label><textarea class="input" id="rate-c" maxlength="240" placeholder="What did you love, or what could be better?"></textarea></div>
+      <button class="btn btn-primary" type="button" id="rate-send" disabled>Send rating</button>
+    </section>`;
+    box.addEventListener('click', async e => {
+      const s = e.target.closest('[data-star]');
+      if (s) {
+        stars = Number(s.dataset.star);
+        $$('[data-star]', box).forEach(b => { const on = Number(b.dataset.star) <= stars; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(Number(b.dataset.star) === stars)); });
+        $('#rate-send').disabled = false;
+        return;
+      }
+      if (e.target.closest('#rate-send') && stars) {
+        const btn = $('#rate-send');
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Sending…';
+        const updated = await api.rateOrder(o._id, { stars, comment: $('#rate-c').value.trim() });
+        renderRating(updated);
+        toast('Thanks for rating your order');
+      }
+    });
+  }
+
+  /* ================= Account ================= */
+  async function renderAccount() {
+    const u = state.user;
+    if (!u) {
+      app.innerHTML = `<div class="wrap"><div class="empty"><div class="empty-art">${art('burger')}</div><h3>Your account</h3><p>Log in to see your orders, saved addresses and favourite restaurants.</p><button class="btn btn-primary" type="button" data-act="login">Log in</button> <button class="btn btn-outline" type="button" data-act="signup">Sign up</button></div></div>`;
+      return;
+    }
+    const tabs = [['orders', 'Orders'], ['addresses', 'Addresses'], ['favorites', 'Favourites'], ['profile', 'Profile']];
+    app.innerHTML = `
+      <div class="wrap">
+        <div class="acct-head"><span class="avatar-lg" aria-hidden="true">${esc(initials(u.name))}</span><div><h1>${esc(u.name)}</h1><p>${esc(u.email)}</p></div></div>
+        <div class="tabs" role="tablist" aria-label="Account sections">${tabs.map(([k, l]) => `<button type="button" role="tab" id="tab-${k}" aria-selected="${state.acctTab === k}" aria-controls="acct-panel" data-act="acct-tab" data-tab="${k}">${l}</button>`).join('')}</div>
+        <div class="tab-panel" id="acct-panel" role="tabpanel" aria-labelledby="tab-${state.acctTab}"></div>
+      </div>`;
+    const panel = $('#acct-panel');
+    if (state.acctTab === 'orders') {
+      const orders = await api.listOrders();
+      panel.innerHTML = orders.length ? orders.map(o => {
+        const r = R(o.restaurantId) || RESTAURANTS[0];
+        const st = progress(o).stage;
+        const status = st === 'delivered' ? '<span class="status done">Delivered</span>' : st === 'scheduled' ? '<span class="status live">Scheduled</span>' : '<span class="status live">In progress</span>';
+        return `<div class="order-row">
+          <span class="thumb ${photoUrl(r.id) ? 'has-photo' : ''}" style="--cv:${r.color}">${art(r.art)}${photoImg(photoUrl(r.id))}</span>
+          <div><h3>${esc(o.restaurantName)} ${status}${o.rating ? `<span class="mini-stars" aria-label="Rated ${o.rating.stars} of 5">${Array.from({ length: o.rating.stars }, () => ic('star', 'fill')).join('')}</span>` : ''}</h3>
+            <p>${dayTime(new Date(o.createdAt))}</p>
+            <p>${esc(o.items.map(i => `${i.qty}× ${i.name}`).join(', '))}</p></div>
+          <div class="order-actions"><strong>${eur(o.pricing.total)}</strong>
+            ${st === 'delivered' ? `<button class="btn btn-sm btn-secondary" type="button" data-act="reorder" data-id="${o._id}">Reorder</button><button class="link-btn" type="button" data-act="track" data-id="${o._id}" style="font-size:.88rem">Details</button>` : `<button class="btn btn-sm btn-primary" type="button" data-act="track" data-id="${o._id}">Track</button>`}</div>
+        </div>`;
+      }).join('') : `<div class="empty"><div class="empty-art">${art('pizza')}</div><h3>No orders yet</h3><p>Your first order gets 20% off with WELCOME20.</p><button class="btn btn-primary" type="button" data-act="home">Find something to eat</button></div>`;
+    } else if (state.acctTab === 'addresses') {
+      panel.innerHTML = (u.addresses.length ? u.addresses.map(a => `
+        <div class="addr-row">
+          <span class="rc-ic">${ic(a.label === 'Work' ? 'work' : a.label === 'Home' ? 'home' : 'pin')}</span>
+          <div class="main"><strong>${esc(a.label)}${a.isDefault ? '<span class="default-tag">Default</span>' : ''}</strong><p>${esc(a.street)}${a.details ? ', ' + esc(a.details) : ''}, ${esc(a.city)}</p></div>
+          <div class="acts">${a.isDefault ? '' : `<button class="btn btn-sm btn-secondary" type="button" data-act="default-addr" data-id="${a._id}">Make default</button>`}<button class="btn btn-sm btn-outline" type="button" data-act="del-addr" data-id="${a._id}">Delete</button></div>
+        </div>`).join('') : '<p class="muted" style="margin:18px 0">No saved addresses yet.</p>') +
+        `<button class="btn btn-primary section-gap" type="button" data-act="add-addr">${ic('plus')}Add an address</button>`;
+    } else if (state.acctTab === 'favorites') {
+      const favs = RESTAURANTS.filter(r => u.favorites.includes(r.id));
+      panel.innerHTML = favs.length ? `<div class="grid" style="padding-top:18px">${favs.map(r => cardHTML({ r, match: '', open: isOpen(r) })).join('')}</div>`
+        : `<div class="empty"><div class="empty-art">${art('cupcake')}</div><h3>No favourites yet</h3><p>Tap the heart on any restaurant to keep it here.</p><button class="btn btn-primary" type="button" data-act="home">Browse restaurants</button></div>`;
+    } else {
+      panel.innerHTML = `<dl class="profile-list">
+          <div><dt>Name</dt><dd>${esc(u.name)}</dd></div>
+          <div><dt>Email</dt><dd>${esc(u.email)}</dd></div>
+          <div><dt>Member since</dt><dd>${new Date(u.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</dd></div>
+          <div><dt>Orders placed</dt><dd>${state.orderCount}</dd></div>
+        </dl>
+        <button class="btn btn-outline" type="button" data-act="logout">Log out</button>`;
+    }
+  }
+
+  /* ================= Photos ================= */
+  /* A photo comes from, in order: an upload made in photo editing mode (stored in this
+     artifact's asset store, with a pointer document in its database), the catalog's `img`
+     URL, or the illustration as a fallback. */
+  const photos = new Map();
+  let assetsApi = null, dbApi = null, photoMode = false;
+  const photoKey = (rid, iid) => iid ? `item_${rid}_${iid}` : `restaurant_${rid}`;
+  const PHOTO_TOTAL = RESTAURANTS.reduce((n, r) => n + 1 + r.menu.reduce((m, s) => m + s.items.length, 0), 0);
+  function photoUrl(rid, iid) {
+    const hit = photos.get(photoKey(rid, iid));
+    if (hit) return hit.url;
+    const r = R(rid);
+    if (!r) return null;
+    if (iid) { const it = findItem(r, iid); return (it && it.img) || null; }
+    return r.img || null;
+  }
+  const photoImg = (url, eager) => url ? `<img class="photo" src="${esc(url)}" alt="" decoding="async"${eager ? '' : ' loading="lazy"'}>` : '';
+  document.addEventListener('error', e => {
+    const t = e.target;
+    if (t && t.classList && t.classList.contains('photo')) {
+      const parent = t.parentElement;
+      t.remove();
+      if (parent) parent.classList.remove('has-photo');
+    }
+  }, true);
+  function photoError(err) {
+    switch (err && err.code) {
+      case 'too_large': return 'That photo is too large. Try one under 20 MB.';
+      case 'unsupported_type': return 'Use a JPG, PNG or WebP photo.';
+      case 'quota_or_state': return 'Photo storage for this app is full. Remove a few photos first.';
+      case 'rate_limited': return 'Too many uploads at once. Wait a moment and try again.';
+      case 'decode': return 'That file couldn’t be opened as an image. Try a JPG or PNG.';
+      case 'not_granted': case 'capability_disabled': case 'capability_removed': case 'invalid_argument': return 'Only editors of this app can change photos.';
+      default: return 'The photo couldn’t be saved. Try again.';
+    }
+  }
+  async function shrinkPhoto(file, max) {
+    let source, w, h;
+    try { source = await createImageBitmap(file); w = source.width; h = source.height; }
+    catch (e) {
+      source = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => { const img = new Image(); img.onload = () => resolve(img); img.onerror = () => reject({ code: 'decode' }); img.src = reader.result; };
+        reader.onerror = () => reject({ code: 'decode' });
+        reader.readAsDataURL(file);
+      });
+      w = source.naturalWidth; h = source.naturalHeight;
+    }
+    const scale = Math.min(1, max / Math.max(w, h));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(w * scale));
+    canvas.height = Math.max(1, Math.round(h * scale));
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+    return new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject({ code: 'decode' }), 'image/jpeg', 0.85));
+  }
+  async function savePhoto(rid, iid, file) {
+    const key = photoKey(rid, iid);
+    const blob = await shrinkPhoto(file, iid ? 1000 : 1800);
+    const res = await assetsApi.upload(blob, { type: 'image/jpeg' });
+    const prev = photos.get(key);
+    try {
+      await dbApi.doc('photos/' + key).set({ assetId: res.id, kind: iid ? 'dish' : 'restaurant', restaurantId: rid, itemId: iid || null, updatedAt: new Date().toISOString() });
+    } catch (err) {
+      assetsApi.delete(res.id).catch(() => {});
+      throw err;
+    }
+    photos.set(key, { assetId: res.id, url: res.url });
+    if (prev && prev.assetId !== res.id) assetsApi.delete(prev.assetId).catch(() => {});
+  }
+  async function removePhoto(rid, iid) {
+    const key = photoKey(rid, iid);
+    const prev = photos.get(key);
+    await dbApi.doc('photos/' + key).delete();
+    photos.delete(key);
+    if (prev) assetsApi.delete(prev.assetId).catch(() => {});
+  }
+  function openPhotoModal(rid, iid) {
+    const r = R(rid), it = iid ? findItem(r, iid) : null;
+    if (!r || (iid && !it)) return;
+    if (!assetsApi || !dbApi) { toast('Only editors of this app can change photos.'); return; }
+    const cur = photos.get(photoKey(rid, iid));
+    const m = openModal(`
+      <div class="modal-head"><h2 id="ph-title">${esc(it ? it.n : r.name)}</h2><p>${it ? `Dish photo at ${esc(r.name)}. Close-up, square shots look best.` : 'Cover photo for the restaurant. Wide shots look best.'}</p></div>
+      <div class="modal-body">
+        <div class="photo-preview ${it ? 'square' : ''} ${cur ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink}"><div class="art">${art(r.art)}</div>${cur ? photoImg(cur.url, true) : ''}</div>
+        <p class="form-error" id="ph-err" role="alert"></p>
+        <label class="btn btn-primary btn-block file-label" id="ph-pick">${ic('camera')}<span>${cur ? 'Replace photo' : 'Choose a photo'}</span><input class="visually-hidden" type="file" id="ph-file" accept="image/jpeg,image/png,image/webp"></label>
+        ${cur ? '<button class="btn btn-outline btn-block" type="button" id="ph-remove" style="margin-top:10px">Remove photo</button>' : ''}
+        <p class="hint">JPG, PNG or WebP. Unsplash and Pexels have free food photos you’re allowed to use.</p>
+      </div>`, { label: 'ph-title' });
+    const w = m.wrap;
+    const busy = (on, text) => {
+      const pick = $('#ph-pick', w);
+      pick.classList.toggle('is-busy', on);
+      $('span', pick).textContent = text;
+      $('#ph-file', w).disabled = on;
+      const rm = $('#ph-remove', w);
+      if (rm) rm.disabled = on;
+    };
+    $('#ph-file', w).addEventListener('change', async e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      $('#ph-err', w).textContent = '';
+      busy(true, 'Uploading…');
+      try { await savePhoto(rid, iid, file); closeModal(m); refreshPhotoViews(); toast('Photo saved'); }
+      catch (err) { busy(false, cur ? 'Replace photo' : 'Choose a photo'); $('#ph-err', w).textContent = photoError(err); e.target.value = ''; }
+    });
+    w.addEventListener('click', async e => {
+      if (!e.target.closest('#ph-remove')) return;
+      busy(true, 'Removing…');
+      try { await removePhoto(rid, iid); closeModal(m); refreshPhotoViews(); toast('Photo removed'); }
+      catch (err) { busy(false, 'Replace photo'); $('#ph-err', w).textContent = photoError(err); }
+    });
+  }
+  function itemHTML(r, it) {
+    const img = photoUrl(r.id, it.id);
+    return `
+            <button class="item ${img ? 'has-photo' : ''}" type="button" data-act="open-item" data-r="${r.id}" data-i="${it.id}">
+              <span class="item-main">
+                <span class="item-name">${esc(it.n)}${it.pop ? '<span class="tag-pop">Popular</span>' : ''}</span>
+                <span class="item-desc">${esc(it.d)}</span>
+                <span class="item-price">${eur(it.p)}${it.o ? '<span class="muted" style="font-weight:500"> and up</span>' : ''}</span>
+              </span>
+              ${img ? `<span class="item-thumb">${photoImg(img)}<span class="add" aria-hidden="true">${ic('plus')}</span></span>` : `<span class="add" aria-hidden="true">${ic('plus')}</span>`}
+              ${photoMode ? `<span class="photo-hint">${ic('camera')}${img ? 'Change photo' : 'Set photo'}</span>` : ''}
+            </button>`;
+  }
+  function updatePhotoStrip() {
+    const strip = $('#photo-strip');
+    const btn = $('#photo-btn');
+    btn.hidden = !(assetsApi && dbApi);
+    btn.setAttribute('aria-pressed', String(photoMode));
+    btn.setAttribute('aria-label', photoMode ? 'Stop editing photos' : 'Edit photos');
+    strip.hidden = !photoMode;
+    if (photoMode) strip.innerHTML = `<div class="wrap">${ic('camera')}<p><strong>Photo editing is on.</strong> Use “Set photo” on any restaurant or dish. ${photos.size} of ${PHOTO_TOTAL} photos added. Only editors see these controls.</p><button class="btn" type="button" data-act="photo-mode">Done</button></div>`;
+  }
+  function refreshPhotoViews() {
+    updatePhotoStrip();
+    if (state.view === 'home') { if ($('#results')) updateResults(); }
+    else if (state.view === 'restaurant' || state.view === 'account') render(true);
+  }
+  async function initPhotos() {
+    const c = window.claude;
+    if (!c || typeof c.use !== 'function') return;
+    try {
+      const [db, assets] = await Promise.all([c.use('db'), c.use('assets')]);
+      dbApi = db;
+      assetsApi = assets;
+      if (db) {
+        db.collection('photos').limit(500).onSnapshot(snap => {
+          photos.clear();
+          snap.docs.forEach(d => { const v = d.data(); if (v && typeof v.assetId === 'string') photos.set(d.id, { assetId: v.assetId, url: '/_blob/' + v.assetId }); });
+          refreshPhotoViews();
+        }, () => { /* keep illustrations */ });
+      }
+      updatePhotoStrip();
+    } catch (e) { /* runs without photos */ }
+  }
+
+  /* ================= Router ================= */
+  function render(keepScroll) {
+    cleanups.forEach(fn => fn());
+    cleanups = [];
+    const y = window.scrollY;
+    switch (state.view) {
+      case 'restaurant': renderRestaurant(state.params.id); break;
+      case 'checkout': renderCheckout(); break;
+      case 'order': renderOrder(state.params.id); break;
+      case 'account': renderAccount(); break;
+      default: renderHome();
+    }
+    updateCartbar();
+    if (keepScroll) window.scrollTo(0, y);
+  }
+  function go(view, params = {}) {
+    closeDrawer(true);
+    state.view = view;
+    state.params = params;
+    render();
+    window.scrollTo(0, 0);
+    app.focus({ preventScroll: true });
+  }
+
+  /* ================= Events ================= */
+  document.addEventListener('click', async e => {
+    const el = e.target.closest('[data-act]');
+    if (!el) return;
+    const act = el.dataset.act;
+    const id = el.dataset.id;
+    switch (act) {
+      case 'home': go('home'); break;
+      case 'open-r': go('restaurant', { id }); break;
+      case 'cat': state.cat = id; $$('.cat').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.id === id))); updateResults(); break;
+      case 'filter': state[el.dataset.f] = !state[el.dataset.f]; el.setAttribute('aria-pressed', String(state[el.dataset.f])); updateResults(); break;
+      case 'clear-search': state.q = ''; $('#q').value = ''; el.hidden = true; $('#q').focus(); updateResults(); break;
+      case 'reset-filters':
+        Object.assign(state, { q: '', cat: 'all', openNow: false, freeDel: false, topRated: false, sort: 'recommended' });
+        renderHome(); break;
+      case 'use-promo': state.promo = 'WELCOME20'; LS.set('morsel.promo', 'WELCOME20'); toast('WELCOME20 will be applied at checkout'); break;
+      case 'dismiss-promo': state.promoDismissed = true; LS.set('morsel.promoDismissed', true); $('#promo-banner').remove(); break;
+      case 'fav':
+        requireAuth('Log in to save your favourite restaurants.', async () => {
+          state.user = await api.toggleFavorite(id);
+          const on = isFav(id);
+          $$(`.fav[data-id="${id}"]`).forEach(b => { b.setAttribute('aria-pressed', String(on)); });
+          toast(on ? 'Saved to favourites' : 'Removed from favourites');
+          if (state.view === 'account') render(true);
+        });
+        break;
+      case 'open-item': if (photoMode) openPhotoModal(el.dataset.r, el.dataset.i); else openItem(el.dataset.r, el.dataset.i); break;
+      case 'photo': openPhotoModal(el.dataset.r, el.dataset.i || null); break;
+      case 'photo-mode': photoMode = !photoMode; updatePhotoStrip(); render(true); toast(photoMode ? 'Photo editing on' : 'Photo editing off'); break;
+      case 'menu-tab': {
+        const sec = document.getElementById(el.dataset.sec);
+        if (sec) sec.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
+        break;
+      }
+      case 'cart': openDrawer(); break;
+      case 'close-drawer': closeDrawer(); break;
+      case 'qty': {
+        const line = state.cart.lines.find(l => l.key === el.dataset.key);
+        if (!line) break;
+        line.qty += Number(el.dataset.d);
+        if (line.qty <= 0) state.cart.lines = state.cart.lines.filter(l => l !== line);
+        saveCart();
+        break;
+      }
+      case 'go-checkout': go('checkout'); break;
+      case 'account-btn': if (state.user) go('account'); else openAuth('login'); break;
+      case 'account': go('account'); break;
+      case 'login': openAuth('login'); break;
+      case 'signup': openAuth('signup'); break;
+      case 'addr':
+        if (!state.user) openAuth('login', { reason: 'Log in to save delivery addresses.', then: () => { if (!state.user.addresses.length) openAddressForm(); } });
+        else if (!state.user.addresses.length) openAddressForm();
+        else openAddressPicker();
+        break;
+      case 'add-addr': openAddressForm({ then: () => render(true) }); break;
+      case 'default-addr': state.user = await api.setDefaultAddress(id); updateHeader(); render(true); toast('Default address updated'); break;
+      case 'del-addr': {
+        const ok = await confirmDialog({ title: 'Delete this address?', body: 'You can always add it again later.', confirm: 'Delete', cancel: 'Keep it' });
+        if (!ok) break;
+        state.user = await api.deleteAddress(id);
+        if (state.co.addressId === id) state.co.addressId = (state.user.addresses.find(a => a.isDefault) || {})._id || null;
+        updateHeader(); render(true); toast('Address deleted');
+        break;
+      }
+      case 'acct-tab': state.acctTab = el.dataset.tab; render(true); break;
+      case 'logout': await api.logOut(); state.user = null; state.orderCount = 0; state.co.addressId = null; updateHeader(); go('home'); toast('You’re logged out'); break;
+      case 'track': go('order', { id }); break;
+      case 'reorder': {
+        const o = await api.getOrder(id);
+        const r = R(o.restaurantId);
+        if (!r) break;
+        let first = true;
+        for (const it of o.items) {
+          if (!findItem(r, it.itemId)) continue;
+          const key = [it.itemId, it.options.map(x => x.group + ':' + x.choice).sort().join('+'), it.note || ''].join('|');
+          const ok = await addToCart(r, { key, itemId: it.itemId, name: it.name, unitPrice: it.unitPrice, qty: it.qty, options: it.options, note: it.note || '' });
+          if (!ok && first) return;
+          first = false;
+        }
+        openDrawer();
+        break;
+      }
+      case 'skip': {
+        const o = await api.getOrder(id);
+        const pr = progress(o);
+        let ms;
+        if (pr.stage === 'scheduled') ms = o.startAt - Date.now() + 50;
+        else {
+          const pl = pr.pl;
+          const next = [pl.confirm, pl.prepStart, pl.pickup, pl.onway, pl.total].find(b => b > pr.sim + 0.01);
+          ms = next ? (next - pr.sim) * SIM_MS + 50 : 0;
+        }
+        if (ms > 0) { await api.demoShiftOrder(id, ms); if (state.refreshOrder) state.refreshOrder(); }
+        break;
+      }
+      case 'tip': state.tip = Number(el.dataset.v); renderCheckout(); break;
+      case 'apply-promo': applyPromo(); break;
+      case 'remove-promo': state.promo = null; LS.del('morsel.promo'); renderCheckout(); break;
+      case 'place-order': placeOrder(); break;
+    }
+  });
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (state.view !== 'checkout') return;
+    if (t.name === 'co-addr') { state.co.addressId = t.value; const err = $('#err-addr'); if (err) err.textContent = ''; }
+    if (t.name === 'co-when') { state.co.when = t.value; renderCheckout(); }
+    if (t.name === 'co-pay') state.co.pay = t.value;
+  });
+
+  /* ================= Start ================= */
+  (async () => {
+    state.user = await api.me();
+    if (state.user) {
+      state.orderCount = (await api.listOrders()).length;
+      const def = state.user.addresses.find(a => a.isDefault);
+      state.co.addressId = def ? def._id : null;
+    }
+    if (state.cart.restaurantId && !R(state.cart.restaurantId)) state.cart = { restaurantId: null, lines: [] };
+    updateHeader();
+    onCartChange();
+    const hash = (location.hash || '').slice(1);
+    if (hash.startsWith('r-') && R(hash.slice(2))) { state.view = 'restaurant'; state.params = { id: hash.slice(2) }; }
+    else if (hash.startsWith('order-')) { state.view = 'order'; state.params = { id: hash.slice(6) }; }
+    else if (['checkout', 'account'].includes(hash)) state.view = hash;
+    render();
+    initPhotos();
+  })();
+})();
+</script>
+</body>
+</html>

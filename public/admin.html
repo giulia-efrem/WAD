@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Morsel admin, photos</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/css/admin.css">
+<script type="module" src="/js/admin.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <mask id="mk-bite" maskUnits="userSpaceOnUse" x="0" y="0" width="40" height="40">
+      <rect width="40" height="40" fill="#fff"/>
+      <circle cx="29" cy="10.5" r="5.6" fill="#000"/>
+      <circle cx="31.8" cy="18" r="4.6" fill="#000"/>
+    </mask>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="logo" href="/" aria-label="Morsel, back to the app" style="text-decoration:none">
+      <svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" style="fill:var(--brand)"/><circle cx="18.5" cy="21" r="11.5" style="fill:var(--brand-ink)" mask="url(#mk-bite)"/><circle cx="31.4" cy="29.6" r="2.5" style="fill:var(--accent)"/></svg>
+      <span class="wordmark">morsel</span>
+    </a>
+    <span class="admin-tag">Admin</span>
+    <div class="top-actions">
+      <span class="muted admin-who" id="who"></span>
+      <a class="icon-btn" href="/"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span class="lbl">Back to Morsel</span></a>
+    </div>
+  </div>
+</header>
+
+<main id="admin" class="wrap admin-main" tabindex="-1"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

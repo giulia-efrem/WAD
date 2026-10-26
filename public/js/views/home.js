@@ -2,7 +2,7 @@ import { $, esc, firstName } from '../util.js';
 import { ic, art } from '../art.js';
 import { api } from '../api.js';
 import { state, catalog, CATS, isOpen, nowMin, opensAt, etaText, feeText, isFav } from '../state.js';
-import { photoUrl, photoImg } from '../photos.js';
+import { hasPhoto, photoImg, photoStyle } from '../photos.js';
 import { progress } from '../progress.js';
 import { stageCopy } from './order.js';
 import { app } from '../router.js';
@@ -52,9 +52,8 @@ function filteredRestaurants() {
 
 export function cardHTML({ r, match, open }) {
   const fav = isFav(r);
-  const img = photoUrl(r);
   return `<article class="card ${open ? '' : 'is-closed'}" style="--cv:${r.color};--cvi:${r.ink}">
-    <div class="cover ${img ? 'has-photo' : ''}"><div class="art">${art(r.illustration)}</div>${photoImg(img)}
+    <div class="cover ${hasPhoto(r) ? 'has-photo' : ''}" style="${photoStyle(r)}"><div class="art">${art(r.illustration)}</div>${photoImg(r, { size: 'card' })}
       <span class="eta">${ic('clock')}${etaText(r)}</span>
       ${open ? '' : `<div class="veil"><span>Closed now<br>Opens at ${opensAt(r)}</span></div>`}
     </div>

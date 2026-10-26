@@ -7,6 +7,11 @@ import { renderRestaurant } from './views/restaurant.js';
 import { renderCheckout } from './views/checkout.js';
 import { renderOrder } from './views/order.js';
 import { renderAccount } from './views/account.js';
+import { renderCredits } from './views/pages.js';
+
+/* Views that have their own address (served by the server as index.html). */
+export const PATH_VIEWS = { '/credits': 'credits' };
+const pathOf = view => Object.keys(PATH_VIEWS).find(p => PATH_VIEWS[p] === view) || '/';
 
 export const app = () => $('#app');
 
@@ -23,6 +28,7 @@ export function render(keepScroll) {
     case 'checkout': renderCheckout(); break;
     case 'order': renderOrder(state.params.id); break;
     case 'account': renderAccount(); break;
+    case 'credits': renderCredits(); break;
     default: renderHome();
   }
   updateCartbar();
@@ -33,6 +39,8 @@ export function go(view, params = {}) {
   closeDrawer(true);
   state.view = view;
   state.params = params;
+  const path = pathOf(view);
+  if (location.pathname !== path) history.pushState(null, '', path);
   render();
   window.scrollTo(0, 0);
   app().focus({ preventScroll: true });

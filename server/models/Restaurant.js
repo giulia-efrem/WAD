@@ -18,13 +18,33 @@ const optionGroupSchema = new mongoose.Schema({
   choices: { type: [choiceSchema], default: [] }
 }, { _id: false });
 
+/* Where a photo came from, so it can be credited. Only Unsplash photos have one. */
+const creditSchema = new mongoose.Schema({
+  source: { type: String, enum: ['unsplash'], default: 'unsplash' },
+  unsplashId: String,
+  name: String,
+  username: String,
+  profileUrl: String,
+  photoUrl: String,
+  downloadLocation: String
+}, { _id: false });
+
+/* image is a URL (Unsplash raw URL, any pasted URL or /uploads/…). The rest describe it. */
+const photoFields = {
+  image: { type: String, default: '' },
+  imageColor: { type: String, default: '' },
+  imageBlurHash: { type: String, default: '' },
+  imageAlt: { type: String, default: '' },
+  imageCredit: { type: creditSchema, default: null }
+};
+
 const itemSchema = new mongoose.Schema({
   slug: { type: String, required: true },
   name: { type: String, required: true },
   description: { type: String, default: '' },
   price: { type: Number, required: true, min: 0 },
   popular: { type: Boolean, default: false },
-  image: { type: String, default: '' },
+  ...photoFields,
   optionGroups: { type: [optionGroupSchema], default: [] }
 }, { _id: false });
 
@@ -49,7 +69,7 @@ const restaurantSchema = new mongoose.Schema({
   color: { type: String, default: '#EEE' },
   ink: { type: String, default: '#333' },
   illustration: { type: String, default: 'bowl' },
-  image: { type: String, default: '' },
+  ...photoFields,
   sortOrder: { type: Number, default: 0 },
   menu: { type: [sectionSchema], default: [] }
 }, { timestamps: true });

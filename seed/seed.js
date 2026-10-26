@@ -13,6 +13,7 @@ const db = require('../server/db');
 const User = require('../server/models/User');
 const Restaurant = require('../server/models/Restaurant');
 const Order = require('../server/models/Order');
+const { fieldsFromImagesEntry } = require('../server/lib/photos');
 const { OPTION_GROUPS, RESTAURANTS } = require('./catalog');
 
 const DEMO = { name: 'Alex Morgan', email: 'demo@morsel.app', password: 'morsel-demo-2026' };
@@ -28,7 +29,8 @@ function loadImages() {
   return images;
 }
 
-const imageFor = (images, key) => (typeof images[key] === 'string' ? images[key].trim() : '');
+/* Photo fields for a key: a plain URL, or a full Unsplash entry with colour and credit. */
+const photoFor = (images, key) => fieldsFromImagesEntry(images[key]);
 
 function buildRestaurant(r, i, images) {
   return {
@@ -47,7 +49,7 @@ function buildRestaurant(r, i, images) {
     color: r.color,
     ink: r.ink,
     illustration: r.illustration,
-    image: imageFor(images, r.slug),
+    ...photoFor(images, r.slug),
     sortOrder: i,
     menu: r.menu.map(s => ({
       category: s.category,
@@ -57,7 +59,7 @@ function buildRestaurant(r, i, images) {
         description: it.description,
         price: it.price,
         popular: it.popular,
-        image: imageFor(images, `${r.slug}/${it.slug}`),
+        ...photoFor(images, `${r.slug}/${it.slug}`),
         optionGroups: it.options.map(key => {
           if (!OPTION_GROUPS[key]) throw new Error(`Unknown option group “${key}” on ${r.slug}/${it.slug}`);
           return OPTION_GROUPS[key];
@@ -79,7 +81,7 @@ async function seedRestaurants() {
     bySlug[r.slug] = doc;
   }
   const removed = await Restaurant.deleteMany({ slug: { $nin: RESTAURANTS.map(r => r.slug) } });
-  const photos = Object.values(images).filter(v => typeof v === 'string' && v.trim()).length;
+  const photos = Object.values(images).filter(v => fieldsFromImagesEntry(v).image).length;
   console.log(`  ${RESTAURANTS.length} restaurants and menus saved${removed.deletedCount ? `, ${removed.deletedCount} old ones removed` : ''}, ${photos} photos from images.json`);
   return bySlug;
 }

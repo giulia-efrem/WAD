@@ -567,7 +567,14 @@ select.input { appearance: auto; }
 .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .cover.has-photo::before, .r-cover.has-photo::before, .item-band.has-photo::before, .photo-preview.has-photo::before { display: none; }
 .cover.has-photo .art, .r-cover.has-photo .art, .item-band.has-photo .art, .photo-preview.has-photo .art, .thumb.has-photo svg { visibility: hidden; }
-.cover .photo { transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+/* While a photo loads, its own colour fills the space; then it fades in. */
+.has-photo { background-color: var(--photo-bg, var(--cv)); }
+.photo { opacity: 0; transition: opacity .45s ease; }
+.photo.is-loaded { opacity: 1; }
+.cover .photo { transition: opacity .45s ease, transform .5s cubic-bezier(.2,.8,.2,1); }
+.credit { margin: 0; font-size: 0.78rem; color: var(--muted); }
+.credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.credit.on-photo { position: absolute; right: 10px; bottom: 10px; z-index: 2; padding: 3px 9px; border-radius: 999px; background: rgba(12, 6, 20, 0.55); color: #fff; font-size: 0.72rem; line-height: 1.5; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .card:hover .cover .photo { transform: scale(1.04); }
 .r-cover.has-photo { height: clamp(210px, 30vw, 360px); }
 .item-band.has-photo { height: 240px; }
@@ -594,3 +601,17 @@ select.input { appearance: auto; }
 /* Admin link in the header (shown to the admin account only) */
 a.icon-btn { text-decoration: none; }
 .load-error { padding: 80px 0 140px; }
+
+/* Content pages (/credits) */
+.page { padding-bottom: 100px; max-width: 900px; }
+.lead { font-size: 1.08rem; color: var(--muted); margin: -8px 0 24px; }
+.lead a, .credit-list a, .site-footer a { color: var(--brand-text); }
+.credit-group h2 { margin: 28px 0 8px; font-size: 1.2rem; font-weight: 800; }
+.credit-list { margin: 0; padding: 0; list-style: none; }
+.credit-list li { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 0.95rem; }
+.credit-list .muted { font-size: 0.88rem; }
+
+/* Loading skeletons */
+.sk { border-radius: 12px; background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%); background-size: 200% 100%; animation: shimmer 1.3s linear infinite; }
+.sk-line { height: 52px; margin: 10px 0; }
+@keyframes shimmer { to { background-position: -200% 0; } }

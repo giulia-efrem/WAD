@@ -1,7 +1,7 @@
 import { $, $$, esc, eur, clamp } from '../util.js';
 import { ic, art } from '../art.js';
 import { state, R, menuOf, loadMenu, findItem, isOpen, opensAt, closesAt, is247, hoursText, etaText, isFav, qtyOfItem, selectedOptions, lineKey, MAX_QTY } from '../state.js';
-import { photoUrl, photoImg } from '../photos.js';
+import { hasPhoto, photoImg, photoStyle, creditHTML } from '../photos.js';
 import { openModal, closeModal, toast } from '../ui.js';
 import { addToCart } from './bag.js';
 import { app, go, onLeave } from '../router.js';
@@ -24,11 +24,10 @@ export function renderRestaurant(id) {
 function drawRestaurant(r) {
   const open = isOpen(r);
   const fav = isFav(r);
-  const hero = photoUrl(r);
   app().innerHTML = `
     <div class="wrap">
-      <div class="r-cover ${hero ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink}">
-        <div class="art">${art(r.illustration)}</div>${photoImg(hero, true)}
+      <div class="r-cover ${hasPhoto(r) ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink};${photoStyle(r)}">
+        <div class="art">${art(r.illustration)}</div>${photoImg(r, { size: 'cover', eager: true })}${creditHTML(r, 'on-photo')}
         <button class="round-btn back" type="button" data-act="home" aria-label="Back to all restaurants">${ic('back')}</button>
         <button class="fav" type="button" data-act="fav" data-id="${esc(r._id)}" aria-pressed="${fav}" aria-label="${fav ? 'Remove' : 'Save'} ${esc(r.name)} ${fav ? 'from' : 'to'} favourites">${ic('heart')}</button>
       </div>
@@ -76,7 +75,7 @@ function drawRestaurant(r) {
 }
 
 function itemHTML(r, it) {
-  const img = photoUrl(r, it);
+  const img = hasPhoto(it);
   return `
           <button class="item ${img ? 'has-photo' : ''}" type="button" data-act="open-item" data-r="${esc(r.slug)}" data-i="${esc(it.slug)}">
             <span class="item-main">
@@ -84,7 +83,7 @@ function itemHTML(r, it) {
               <span class="item-desc">${esc(it.description)}</span>
               <span class="item-price">${eur(it.price)}${it.optionGroups.length ? '<span class="muted" style="font-weight:500"> and up</span>' : ''}</span>
             </span>
-            ${img ? `<span class="item-thumb">${photoImg(img)}<span class="add" aria-hidden="true">${ic('plus')}</span></span>` : `<span class="add" aria-hidden="true">${ic('plus')}</span>`}
+            ${img ? `<span class="item-thumb" style="${photoStyle(it)}">${photoImg(it, { size: 'square' })}<span class="add" aria-hidden="true">${ic('plus')}</span></span>` : `<span class="add" aria-hidden="true">${ic('plus')}</span>`}
           </button>`;
 }
 
@@ -110,9 +109,9 @@ export function openItem(rid, iid) {
   groups.forEach(g => { sel[g.key] = g.type === 'one' ? g.choices[0].id : []; });
   let qty = 1;
   const unit = () => selectedOptions(it, sel).unitPrice;
-  const img = photoUrl(r, it);
+  const img = hasPhoto(it);
   const m = openModal(`
-    <div class="item-band ${img ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink}"><div class="art">${art(r.illustration)}</div>${photoImg(img, true)}</div>
+    <div class="item-band ${img ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink};${photoStyle(it)}"><div class="art">${art(r.illustration)}</div>${photoImg(it, { size: 'band', eager: true, alt: it.imageAlt || it.name })}${creditHTML(it, 'on-photo')}</div>
     <div class="modal-head"><h2 id="item-title">${esc(it.name)}</h2><p>${esc(it.description)}</p><p class="item-price-lg">${eur(it.price)}</p></div>
     <div class="modal-body">
       ${groups.map(g => `

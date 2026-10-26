@@ -24,6 +24,7 @@ Open **http://localhost:3000**. Click **Log in**, then **Continue with the demo 
 | `PORT` | `3000` | HTTP port |
 | `ADMIN_EMAIL` | `you@example.com` | Whoever signs up with this email gets the admin role |
 | `DEMO_SPEED` | `30` | Order tracking speed. 30 means one simulated minute lasts 2 seconds. 1 is real time, and turns off "Skip to next step" |
+| `UNSPLASH_ACCESS_KEY` | from unsplash.com/developers | Optional. Used only by `npm run photos` and /admin/photos, never sent to the browser |
 
 Never commit `.env`. It is listed in `.gitignore`.
 
@@ -34,6 +35,8 @@ Never commit `.env`. It is listed in `.gitignore`.
 | `npm run dev` | Starts the server and restarts it when files change (`node --watch`) |
 | `npm start` | Starts the server |
 | `npm run seed` | Resets the 9 restaurants and menus, applies photos from `seed/images.json`, and recreates the demo account |
+| `npm run photos` | Finds Unsplash photos for every restaurant and dish (see below). Safe to stop and run again |
+| `npm run screenshots` | Screenshots the main views at 375, 768 and 1440 px in light and dark mode into `screenshots/` (needs the server running) |
 
 The seed keeps each restaurant's `_id` stable by slug, so existing favourites and orders keep working. It leaves every account except the demo one alone. Photos are reset to what `seed/images.json` says, so a photo set only in /admin is overwritten by a re-seed.
 
@@ -41,12 +44,24 @@ The seed keeps each restaurant's `_id` stable by slug, so existing favourites an
 
 `demo@morsel.app` / `morsel-demo-2026`, with a saved home address and one delivered, rated order.
 
-### Photos and the admin page
+### Photos
 
-Each restaurant and dish has an `image` field. When it's empty, or the image fails to load, the restaurant's illustration shows instead. There are two ways to set photos:
+Each restaurant and dish has an `image` field plus its colour, alt text and photo credit. While a photo loads its colour shows, then it fades in. When there's no photo, or it fails to load, the restaurant's illustration shows instead.
 
-1. **`seed/images.json`**: fill in URLs for keys like `"forno-sette"` (cover photo) or `"forno-sette/margherita"` (dish), then run `npm run seed`.
-2. **`/admin`**: sign up or log in with `ADMIN_EMAIL`, then open http://localhost:3000/admin (or use the **Photos** button in the header). Paste a URL or upload a JPG, PNG or WebP up to 8 MB. Uploads are saved in `uploads/` and served at `/uploads/...`.
+**From Unsplash (`npm run photos`).** `scripts/fetch-photos.js` runs one search per item with the query in `scripts/photo-queries.js`: restaurant covers first, then popular dishes, then the rest. It keeps the 8 best results per item in `seed/photo-candidates.json`, picks a default (right shape, no people, text or logos in its description, never the same photo twice), triggers that photo's Unsplash download event, and saves it to MongoDB and `seed/images.json`.
+
+- **Rate limits.** It uses at most 40 requests in any rolling hour (`PHOTOS_PER_HOUR` changes this), and pauses whenever Unsplash reports 10 or fewer left, so the review page always has some. Rate-limit errors wait for the next hour once; any other error stops the run. Nothing is retried in a loop. A demo key needs about 4 hours for all 77 items.
+- **Resuming.** Run `npm run photos` again at any time. Items with a photo are skipped and saved searches are reused, so no request is wasted. Change a query in `photo-queries.js` and that item is searched again on the next run. Its progress is logged to the console (redirect it to `photos.log` if you like).
+- **Hotlinking.** Photos are shown straight from Unsplash using the URL the API returned, with size parameters added (`w`, `h`, `fit=crop`, `q`, `auto=format`) and a `srcset` for each place. Nothing is downloaded or re-hosted, and the access key never leaves the server.
+- **Credit.** "Photo by NAME on Unsplash" appears on restaurant covers and in the dish window, and [/credits](http://localhost:3000/credits) lists every photo. Links carry `?utm_source=morsel&utm_medium=referral`.
+
+**Review (`/admin/photos`).** Shows every restaurant and dish with its current photo and the other saved results. Clicking a result makes it the photo and triggers its download event (1 request). "Search again" runs your own query (1 request) and replaces the saved results; the script then keeps your query. "Remove photo" brings back the illustration, and the script won't pick a new one.
+
+**By hand (`/admin`).** Paste any image URL or upload a JPG, PNG or WebP up to 8 MB. Uploads are saved in `uploads/` and served at `/uploads/...`.
+
+**`seed/images.json`** mirrors whatever is chosen, so `npm run seed` restores every photo with its credit. Values are either a plain URL or `{ url, color, blurHash, alt, credit }`.
+
+Sign up or log in with `ADMIN_EMAIL` to use the admin pages (or the **Photos** button in the header).
 
 ## Project layout
 
@@ -104,12 +119,13 @@ Money is always in cents.
 | DELETE | `/addresses/:id` | | Returns `{ user }`. Deleting the default promotes the next address |
 | POST | `/favorites/:restaurantId/toggle` | | Returns `{ user, favorite }` |
 
-### Restaurants and promo codes
+### Restaurants, promo codes and credits
 
 | Method | Path | Body | Notes |
 |---|---|---|---|
 | GET | `/restaurants` | | Cards with `isOpen` and a compact `dishes` list for search |
 | GET | `/restaurants/:slug` | | Full restaurant with `menu` and option groups |
+| GET | `/credits` | | Every Unsplash photo in use with its photographer |
 | POST | `/promo/validate` | `{ code, restaurantSlug? }` | Login optional. Returns 200 `{ valid, code, kind }`, or 400 `invalid_promo` with the reason |
 
 ### Orders (logged in)
@@ -149,6 +165,12 @@ Each order in a response also includes `status: { stage, remaining, sim, frac }`
 | GET | `/admin/catalog` | | All restaurants with full menus |
 | PUT | `/admin/restaurants/:slug/image` | JSON `{ url }` or multipart field `image` | An empty `url` removes the photo |
 | PUT | `/admin/restaurants/:slug/items/:itemSlug/image` | same | |
+| GET | `/admin/photos` | | Every restaurant and dish with its photo, saved Unsplash results and the request quota |
+| POST | `/admin/photos/choose` | `{ key, photoId }` | Uses a saved result and triggers its Unsplash download event. 409 if another item uses it |
+| POST | `/admin/photos/search` | `{ key, query }` | New Unsplash search for that item (replaces its saved results) |
+| POST | `/admin/photos/remove` | `{ key }` | Clears the photo |
+
+`key` is a restaurant slug (`forno-sette`) or `slug/itemSlug` (`forno-sette/margherita`). When the Unsplash limit is nearly used up (3 or fewer left), choose and search return 429 `rate_limited`.
 
 Uploads must be JPG, PNG or WebP, up to 8 MB, and the file contents are checked, not only the extension. Once a replaced upload is no longer used anywhere, it is deleted from disk.
 

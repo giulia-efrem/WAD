@@ -2,7 +2,7 @@ import { esc, eur, dayTime, initials } from '../util.js';
 import { ic, art } from '../art.js';
 import { api } from '../api.js';
 import { state, R, catalog, isOpen } from '../state.js';
-import { photoUrl, photoImg } from '../photos.js';
+import { hasPhoto, photoImg, photoStyle } from '../photos.js';
 import { progress } from '../progress.js';
 import { cardHTML } from './home.js';
 import { addrIcon, addrLine } from './addresses.js';
@@ -34,7 +34,7 @@ export async function renderAccount() {
       const st = progress(o).stage;
       const status = st === 'delivered' ? '<span class="status done">Delivered</span>' : st === 'scheduled' ? '<span class="status live">Scheduled</span>' : '<span class="status live">In progress</span>';
       return `<div class="order-row">
-        <span class="thumb ${photoUrl(r) ? 'has-photo' : ''}" style="--cv:${r.color}">${art(r.illustration)}${photoImg(photoUrl(r))}</span>
+        <span class="thumb ${hasPhoto(r) ? 'has-photo' : ''}" style="--cv:${r.color};${photoStyle(r)}">${art(r.illustration)}${photoImg(r, { size: 'thumb' })}</span>
         <div><h3>${esc(o.restaurantName)} ${status}${o.rating ? `<span class="mini-stars" aria-label="Rated ${o.rating.stars} of 5">${Array.from({ length: o.rating.stars }, () => ic('star', 'fill')).join('')}</span>` : ''}</h3>
           <p>${dayTime(new Date(o.createdAt))}</p>
           <p>${esc(o.items.map(i => `${i.qty}× ${i.name}`).join(', '))}</p></div>

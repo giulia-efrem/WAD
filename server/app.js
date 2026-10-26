@@ -43,10 +43,14 @@ app.use('/api/restaurants', require('./routes/restaurants'));
 app.use('/api/promo', require('./routes/promo'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/credits', require('./routes/credits'));
 app.use('/api', notFoundApi);
 
 app.use('/uploads', express.static(config.uploadsDir, { maxAge: '7d' }));
 app.get('/admin', (req, res) => res.sendFile(path.join(config.publicDir, 'admin.html')));
+app.get('/admin/photos', (req, res) => res.sendFile(path.join(config.publicDir, 'admin-photos.html')));
+/* Pages of the main app with their own address. The front end picks the view from the path. */
+app.get(['/credits'], (req, res) => res.sendFile(path.join(config.publicDir, 'index.html')));
 app.use(express.static(config.publicDir, { extensions: ['html'] }));
 
 app.use(errorHandler);

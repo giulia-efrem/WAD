@@ -6,6 +6,17 @@ const { progress } = require('./orderStatus');
 
 /* Shapes documents into the JSON the front end reads. */
 
+/* A photo as the browser needs it: the URL plus what to show while it loads and who to credit. */
+function photoOut(e) {
+  const c = e.imageCredit;
+  return {
+    image: e.image || '',
+    imageColor: e.imageColor || '',
+    imageAlt: e.imageAlt || '',
+    imageCredit: c && c.name ? { name: c.name, profileUrl: c.profileUrl, photoUrl: c.photoUrl } : null
+  };
+}
+
 function restaurantCard(r, now = new Date()) {
   return {
     _id: String(r._id),
@@ -24,7 +35,7 @@ function restaurantCard(r, now = new Date()) {
     color: r.color,
     ink: r.ink,
     illustration: r.illustration,
-    image: r.image || '',
+    ...photoOut(r),
     isOpen: isOpenNow(r.hours, now),
     /* Lets the home page search dishes without loading every menu. */
     dishes: r.menu.flatMap(s => s.items.map(it => ({ name: it.name, description: it.description })))
@@ -43,7 +54,7 @@ function restaurantDetail(r, now = new Date()) {
         description: it.description,
         price: it.price,
         popular: it.popular,
-        image: it.image || '',
+        ...photoOut(it),
         optionGroups: it.optionGroups.map(g => ({
           key: g.key, name: g.name, type: g.type, ...(g.type === 'many' ? { max: g.max } : {}),
           choices: g.choices.map(c => ({ id: c.id, name: c.name, price: c.price }))
@@ -84,4 +95,4 @@ function orderOut(o, now = Date.now()) {
   };
 }
 
-module.exports = { restaurantCard, restaurantDetail, orderOut };
+module.exports = { photoOut, restaurantCard, restaurantDetail, orderOut };

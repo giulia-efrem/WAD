@@ -3,7 +3,7 @@ import { art } from './art.js';
 import { api } from './api.js';
 import { state, LS, R, loadRestaurants, loadMenu, findItem, selectedOptions, lineKey, isFav, saveCart, onCartChanged, setPromo } from './state.js';
 import { openDrawer, closeDrawer, confirmDialog, closeAllModals, toast } from './ui.js';
-import { app, render, go } from './router.js';
+import { app, render, go, PATH_VIEWS } from './router.js';
 import { onCartChange, addToCart } from './views/bag.js';
 import { updateHeader } from './views/header.js';
 import { openAuth, requireAuth } from './views/auth.js';
@@ -133,6 +133,15 @@ document.addEventListener('change', e => {
   if (t.name === 'co-pay') state.co.pay = t.value;
 });
 
+/* Back and forward between pages that have their own address, such as /credits. */
+window.addEventListener('popstate', () => {
+  state.view = PATH_VIEWS[location.pathname] || 'home';
+  state.params = {};
+  closeAllModals();
+  closeDrawer(true);
+  render();
+});
+
 /* The server said the session is gone (expired or logged out elsewhere). */
 window.addEventListener('morsel:signed-out', () => {
   if (!state.user) return;
@@ -162,7 +171,8 @@ window.addEventListener('morsel:signed-out', () => {
   updateHeader();
   onCartChange();
   const hash = (location.hash || '').slice(1);
-  if (hash.startsWith('r-') && R(hash.slice(2))) { state.view = 'restaurant'; state.params = { id: hash.slice(2) }; }
+  if (PATH_VIEWS[location.pathname]) state.view = PATH_VIEWS[location.pathname];
+  else if (hash.startsWith('r-') && R(hash.slice(2))) { state.view = 'restaurant'; state.params = { id: hash.slice(2) }; }
   else if (hash.startsWith('order-')) { state.view = 'order'; state.params = { id: hash.slice(6) }; }
   else if (['checkout', 'account'].includes(hash)) state.view = hash;
   render();

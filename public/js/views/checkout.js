@@ -2,7 +2,7 @@ import { $, esc, eur, clock, plural, reduced } from '../util.js';
 import { ic, art } from '../art.js';
 import { api } from '../api.js';
 import { state, R, menuOf, loadMenu, isOpen, etaText, cartCount, clearCart, setPromo, pricing, priceRows, promoError } from '../state.js';
-import { photoUrl, photoImg } from '../photos.js';
+import { hasPhoto, photoImg, photoStyle } from '../photos.js';
 import { toast } from '../ui.js';
 import { openAuth } from './auth.js';
 import { addrIcon, addrLine } from './addresses.js';
@@ -73,7 +73,7 @@ export function renderCheckout() {
         </div>
         <aside class="sticky-sum">
           <section class="panel" aria-labelledby="co-sum">
-            <div class="sum-r"><span class="thumb ${photoUrl(r) ? 'has-photo' : ''}" style="--cv:${r.color}">${art(r.illustration)}${photoImg(photoUrl(r))}</span><div><h2 id="co-sum" style="margin:0">${esc(r.name)}</h2><span class="muted" style="font-size:.92rem">${plural(cartCount(), 'item', 'items')}</span></div></div>
+            <div class="sum-r"><span class="thumb ${hasPhoto(r) ? 'has-photo' : ''}" style="--cv:${r.color};${photoStyle(r)}">${art(r.illustration)}${photoImg(r, { size: 'thumb' })}</span><div><h2 id="co-sum" style="margin:0">${esc(r.name)}</h2><span class="muted" style="font-size:.92rem">${plural(cartCount(), 'item', 'items')}</span></div></div>
             <ul class="sum-items">${state.cart.lines.map(l => `<li><span><span class="q">${l.qty}×</span>${esc(l.name)}${l.options.length ? `<br><span class="muted" style="font-size:.85rem">${esc(l.options.map(o => o.choice).join(', '))}</span>` : ''}</span><span>${eur(l.unitPrice * l.qty)}</span></li>`).join('')}</ul>
             <p class="sub-label">Promo code</p>
             ${promo && !promoErr ? `<div class="applied"><span>${ic('tag')} ${esc(promo)} applied</span><button class="link-btn" type="button" data-act="remove-promo">Remove</button></div>`

@@ -30,7 +30,7 @@ const findEntry = (slug, itemSlug) => {
 const allEntries = () => restaurants.flatMap(r => [r, ...r.menu.flatMap(s => s.items)]);
 
 function preview(r, img) {
-  return `<div class="photo-preview ${img ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink}"><div class="art">${art(r.illustration)}</div>${photoImg(img, true)}</div>`;
+  return `<div class="photo-preview ${img ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink}"><div class="art">${art(r.illustration)}</div>${photoImg({ image: img }, { size: 'card' })}</div>`;
 }
 function form(slug, itemSlug, img, label) {
   return `<form class="ph-form" data-r="${esc(slug)}" data-i="${esc(itemSlug || '')}" novalidate>

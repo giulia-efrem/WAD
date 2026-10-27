@@ -87,3 +87,17 @@ test('staff accounts cannot delete themselves', async () => {
   const p = await as('partner');
   assert.equal((await p.del('/api/auth/me', { password: 'morsel-partner-2026' })).status, 403);
 });
+
+test('logging out clears the login cookie with the same settings it was set with', async () => {
+  const c = await newCustomer();
+  const login = await client().post('/api/auth/login', { email: c.email, password: c.password });
+  const set = login.headers.getSetCookie().find(h => h.startsWith('morsel_session='));
+  const out = await c.post('/api/auth/logout');
+  const cleared = out.headers.getSetCookie().find(h => h.startsWith('morsel_session='));
+  assert.ok(cleared, 'logout sends a Set-Cookie for the session');
+  const attrs = h => h.split(';').slice(1).map(x => x.trim().toLowerCase()).filter(x => !/^(expires|max-age)=/.test(x)).sort();
+  assert.deepEqual(attrs(cleared), attrs(set), 'path, SameSite, HttpOnly and Secure match');
+  assert.match(cleared, /^morsel_session=;/);
+  assert.match(cleared, /Expires=Thu, 01 Jan 1970/);
+  assert.equal((await c.get('/api/auth/me')).body.user, null);
+});

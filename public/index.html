@@ -38,7 +38,10 @@
     </button>
     <div class="top-actions">
       <a class="icon-btn" href="/admin" id="admin-link" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3v11H4z"/><circle cx="12" cy="13.5" r="3.5"/></svg><span class="lbl">Photos</span></a>
-      <button class="icon-btn" type="button" data-act="account-btn" id="acct-btn"></button>
+      <div class="acct-wrap">
+        <button class="icon-btn" type="button" data-act="account-btn" id="acct-btn"></button>
+        <div class="acct-pop" id="acct-pop" role="menu" aria-labelledby="acct-btn" hidden></div>
+      </div>
       <div class="baskets-wrap">
         <button class="icon-btn" type="button" data-act="baskets" id="baskets-btn" aria-haspopup="true" aria-expanded="false" hidden>
           <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.1a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>

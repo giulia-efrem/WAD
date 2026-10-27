@@ -6,7 +6,7 @@ import { state, R, loadRestaurants, loadMenu, findItem, selectedOptions, dealPri
 import { confirmDialog, closeAllModals, toast } from './ui.js';
 import { app, render, go, PATH_VIEWS, routeOf, pathFor } from './router.js';
 import { refreshOrderUI, openOrderSheet, toggleBasketsMenu } from './views/basket.js';
-import { updateHeader } from './views/header.js';
+import { updateHeader, toggleAccountMenu, closeAccountMenu } from './views/header.js';
 import { openAuth, requireAuth } from './views/auth.js';
 import { openAddressForm, openAddressPicker } from './views/addresses.js';
 import { renderHome, renderHomeSkeleton, updateResults } from './views/home.js';
@@ -89,6 +89,23 @@ document.addEventListener('click', e => {
   go(route.view, route.params);
 });
 
+/* Logs out on the server (which clears the login cookie), then forgets everything about the
+   account in this page and goes home. If the server can't be reached, nothing changes here,
+   so the page never shows you as logged out while the cookie still works. */
+async function logOut() {
+  closeAccountMenu();
+  closeAllModals();
+  try { await api.logOut(); }
+  catch (err) { toast('We couldn’t log you out. Check your connection and try again.'); return; }
+  state.user = null;
+  state.orderCount = 0;
+  state.co.addressId = null;
+  state.acctTab = 'orders';
+  updateHeader();
+  go('home');
+  toast('You’re logged out');
+}
+
 /* Filters apply to whichever list is on screen: the home page's or the search results. */
 const refreshList = () => { if (state.view === 'search') drawResults(); else updateResults(); };
 
@@ -161,7 +178,7 @@ document.addEventListener('click', async e => {
       case 'open-order': openOrderSheet(el.dataset.r); break;
       case 'baskets': toggleBasketsMenu(); break;
       case 'go-checkout': case 'checkout-basket': closeAllModals(); go('checkout', { slug: el.dataset.r }); break;
-      case 'account-btn': if (state.user) go('account', { tab: 'orders' }); else openAuth('login'); break;
+      case 'account-btn': if (state.user) toggleAccountMenu(); else openAuth('login'); break;
       case 'account': go('account', { tab: 'orders' }); break;
       case 'login': openAuth('login'); break;
       case 'forgot': openAuth('forgot'); break;
@@ -185,7 +202,7 @@ document.addEventListener('click', async e => {
         break;
       }
       case 'acct-tab': go('account', { tab: el.dataset.tab }); break;
-      case 'logout': await api.logOut(); state.user = null; state.orderCount = 0; state.co.addressId = null; updateHeader(); go('home'); toast('You’re logged out'); break;
+      case 'logout': await logOut(); break;
       case 'track': go('order', { id }); break;
       case 'reorder': await reorder(id); break;
       case 'skip': {

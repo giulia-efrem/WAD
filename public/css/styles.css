@@ -1085,3 +1085,5 @@ legend.opt-head + * { clear: both; }
 .hero-photo.sk { background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%); background-size: 200% 100%; }
 .hero-photo.sk::before { display: none; }
 .hero-sub, .r-tag, .modal-head p { text-wrap: balance; }
+/* Photo credit links: the pill clips outlines, so their focus ring sits inside the text box. */
+.credit.on-photo a:focus-visible { outline: 2px solid #fff; outline-offset: -1px; border-radius: 3px; }

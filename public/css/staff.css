@@ -364,3 +364,7 @@
 .panel.avail { max-width: 860px; }
 /* Courier: empty lists read as a calm placeholder rather than loose text. */
 .c-h ~ .col-empty { margin: 0 0 8px; padding: 20px 16px; border: 1px dashed var(--line-strong); border-radius: 16px; background: var(--surface); text-align: center; text-wrap: pretty; }
+.nowrap { white-space: nowrap; }
+/* Sticky at the spot it already sits in, so the side menu doesn't shift between long and short sections. */
+.admin-side { top: 69px; }
+@media (max-width: 960px) { .admin-side { top: 68px; } }

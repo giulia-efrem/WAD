@@ -278,7 +278,7 @@ async function drawRestaurants() {
     <div class="staff-head"><div><h1>Restaurants</h1><p class="muted">${plural(restaurants.length, 'restaurant', 'restaurants')} · ${restaurants.filter(r => r.paused).length} paused</p></div>
       <button class="btn btn-primary" type="button" data-act="new-rest">${ic('plus')}Add restaurant</button></div>
     <div class="rest-list">${restaurants.map(r => `<article class="panel rest-row">
-      <div class="rest-id">${logoBadge(r)}<div><h2>${esc(r.name)}</h2><p class="muted">${esc(r.label || r.cuisines.join(', '))} · ${esc(r.priceLevel)} · ${r.rating ? `${r.rating.toFixed(1)} ★ (${r.reviewCount})` : 'No ratings yet'}</p></div></div>
+      <div class="rest-id">${logoBadge(r)}<div><h2>${esc(r.name)}</h2><p class="muted">${esc(r.label || r.cuisines.join(', '))} · ${esc(r.priceLevel)} · <span class="nowrap">${r.rating ? `${r.rating.toFixed(1)} ★ (${r.reviewCount})` : 'No ratings yet'}</span></p></div></div>
       <dl class="rest-facts">
         <div><dt>Now</dt><dd>${r.paused ? '<span class="chip st-cancelled">Paused</span>' : isOpenNow(r) ? '<span class="chip st-delivered">Open</span>' : '<span class="chip">Closed</span>'}</dd></div>
         <div><dt>Hours</dt><dd>${esc(hoursText(r))}</dd></div>

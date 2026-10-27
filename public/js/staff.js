@@ -1,4 +1,5 @@
 import { $, esc, clock, ingredientWords } from './util.js';
+import './topbar.js';
 import { api, request } from './api.js';
 
 /* Shared by the staff pages (/admin, /partner, /courier): sign-in gate, toasts, status chips

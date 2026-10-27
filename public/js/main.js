@@ -1,4 +1,5 @@
 import { $, $$, esc, reduced } from './util.js';
+import './topbar.js';
 import { art } from './art.js';
 import { api } from './api.js';
 import { state, LS, R, loadRestaurants, loadMenu, findItem, selectedOptions, dealPrice, mainPart, lineKey, isFav, addLine, changeQty, onBasketChanged, setPromo } from './state.js';
@@ -223,15 +224,13 @@ window.addEventListener('morsel:account-deleted', () => {
   toast('Your account has been deleted');
 });
 
-/* The header gains a soft edge once content scrolls under it; long pages get a back-to-top button. */
+/* Long pages get a back-to-top button. */
 {
-  const topbar = $('.topbar'), toTop = $('#to-top');
+  const toTop = $('#to-top');
   let ticking = false;
   const onScroll = () => {
     ticking = false;
-    const y = window.scrollY;
-    topbar.classList.toggle('scrolled', y > 4);
-    const show = y > window.innerHeight * 1.5;
+    const show = window.scrollY > window.innerHeight * 1.5;
     if (show !== toTop.classList.contains('show')) { toTop.classList.toggle('show', show); toTop.inert = !show; }
   };
   window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });

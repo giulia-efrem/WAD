@@ -1,4 +1,5 @@
 import { $, esc } from './util.js';
+import './topbar.js';
 import { art } from './art.js';
 import { api, ApiError } from './api.js';
 import { sizedUrl, withUtm, creditHTML, photoImg, photoStyle } from './photos.js';

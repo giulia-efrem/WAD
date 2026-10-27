@@ -24,7 +24,7 @@ const arg = (name, fallback) => { const a = process.argv.find(x => x.startsWith(
 const OUT = path.resolve(config.root, arg('out', 'screenshots'));
 const WIDTHS = arg('widths', '375,768,1440').split(',').map(Number);
 const THEMES = arg('themes', 'light,dark').split(',');
-const VIEWS = arg('views', 'home,restaurant,dish,basket,checkout,order,account,admin,partner,courier,admin-photos,credits').split(',');
+const VIEWS = arg('views', 'home,restaurant,dish,basket,checkout,order,login,account,admin,partner,courier,admin-photos,credits,about').split(',');
 const HEIGHT = { 375: 812, 768: 1024, 1440: 900 };
 const MAX_PAGE = 3600;
 const TEMP_ADMIN = 'screenshots-admin@morsel.invalid';
@@ -134,11 +134,14 @@ const VIEW_STEPS = {
     /* Put the order back to “on the way” for every shot, since demo time keeps running. */
     await onTheWay(ctx.orderId);
     await page.goto(`${BASE}/#order-${ctx.orderId}`); await page.waitForSelector('#tr-title:not(:empty)'); await page.waitForTimeout(800); return true; },
+  /* Logged out: the login window over the home page. */
+  async login(page) { await page.goto(BASE + '/'); await page.waitForSelector('.card'); await page.click('#acct-btn'); await page.waitForSelector('#auth-form'); await page.waitForTimeout(300); return false; },
   async account(page) { await page.goto(BASE + '/#account'); await page.waitForSelector('.order-row'); return true; },
   async admin(page) { await page.goto(BASE + '/admin'); await page.waitForSelector('.cols-chart'); return true; },
   async partner(page, ctx) { await onTheWay(ctx.orderId); await page.goto(BASE + '/partner'); await page.waitForSelector('.board'); return true; },
   async courier(page) { await page.goto(BASE + '/courier'); await page.waitForSelector('.c-tiles'); return true; },
   async 'admin-photos'(page) { await page.goto(BASE + '/admin/photos'); await page.waitForSelector('.rv'); return true; },
+  async about(page) { await page.goto(BASE + '/about'); await page.waitForSelector('#app h1'); return true; },
   async credits(page) { await page.goto(BASE + '/credits'); await page.waitForSelector('.credit-list, .credit-group, #credits-list p'); return true; }
 };
 
@@ -152,9 +155,9 @@ const VIEW_STEPS = {
     for (const theme of THEMES) for (const width of WIDTHS) {
       const context = await browser.newContext({ viewport: { width, height: HEIGHT[width] || 900 }, colorScheme: theme, reducedMotion: 'reduce', deviceScaleFactor: 1 });
       for (const view of VIEWS) {
-        const token = { admin: ctx.adminToken, 'admin-photos': ctx.adminToken, partner: ctx.partnerToken, courier: ctx.courierToken }[view] || ctx.demoToken;
+        const token = view === 'login' ? null : { admin: ctx.adminToken, 'admin-photos': ctx.adminToken, partner: ctx.partnerToken, courier: ctx.courierToken }[view] || ctx.demoToken;
         await context.clearCookies();
-        await context.addCookies([{ name: 'morsel_session', value: token, url: BASE, httpOnly: true, sameSite: 'Lax' }]);
+        if (token) await context.addCookies([{ name: 'morsel_session', value: token, url: BASE, httpOnly: true, sameSite: 'Lax' }]);
         const page = await context.newPage();
         page.on('pageerror', e => problems.push(`${view} ${width} ${theme}: ${e.message}`));
         page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) problems.push(`${view} ${width} ${theme}: ${m.text()}`); });

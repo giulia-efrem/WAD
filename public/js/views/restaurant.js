@@ -126,7 +126,7 @@ function itemHTML(r, it) {
               <span class="item-name">${esc(it.name)}${it.popular ? '<span class="tag-pop">Popular</span>' : ''}</span>
               <span class="item-desc">${esc(it.description)}</span>
               ${deal ? `<span class="deal-parts">${esc(dealPartsText(it.deal))}</span>` : tagsHTML(it.tags)}
-              <span class="item-price">${eur(it.price)}${fromPrice ? '<span class="muted" style="font-weight:500"> and up</span>' : ''}${saving > 0 && !it.soldOut ? `<span class="save-tag">Save ${eur(saving)}</span>` : ''}${it.soldOut ? '<span class="sold-tag">Sold out</span>' : ''}</span>
+              <span class="item-price"><span>${eur(it.price)}${fromPrice ? '<span class="muted" style="font-weight:500"> and up</span>' : ''}</span>${saving > 0 && !it.soldOut ? `<span class="save-tag">Save ${eur(saving)}</span>` : ''}${it.soldOut ? '<span class="sold-tag">Sold out</span>' : ''}</span>
             </span>
             ${textOnly
               ? `<span class="add add-inline" aria-hidden="true">${ic('plus')}</span>`

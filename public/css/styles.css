@@ -997,3 +997,26 @@ body:has(#orderbar:not([hidden])) .site-footer { padding-bottom: calc(110px + en
 :root[data-theme="dark"] .photo { filter: brightness(0.9) saturate(0.96); }
 :root[data-theme="dark"] .logo-badge { background: color-mix(in srgb, var(--lb-bg) 82%, var(--surface)); }
 .pill { transition: color .15s, background-color .15s, border-color .15s, transform .1s; }
+
+/* ================= Polish: restaurant page ================= */
+/* Tab labels line up with the page's left edge; on phones the row fades out where it scrolls. */
+.menu-tabs { padding-left: max(0px, calc(var(--gutter) - 14px)); }
+@media (max-width: 900px) { .menu-tabs { mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); } }
+/* The sticky tab bar carries the edge, so the header doesn't stack a second shadow on it. */
+body:has(.menu-tabs-bar) .topbar.scrolled { box-shadow: none; }
+.menu-tabs-bar { transition: box-shadow .2s; }
+.topbar.scrolled ~ main .menu-tabs-bar { box-shadow: 0 6px 20px -12px rgba(29, 20, 40, 0.28); }
+.menu-tabs button { transition: color .15s; }
+/* A tag that wraps under a dish name starts at the same left edge. */
+.item-name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.tag-pop { margin-left: 0; vertical-align: 0; }
+.item:active { transform: scale(0.995); }
+.item { transition: border-color .15s, box-shadow .2s, transform .1s; }
+/* Dark mode: the illustrated placeholders' pastel grounds are toned down. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) :is(.item-media, .cover, .thumb, .item-band, .r-hero, .hero-photo, .photo-preview):not(.has-photo) { background-color: color-mix(in srgb, var(--cv) 72%, var(--bg)); }
+}
+:root[data-theme="dark"] :is(.item-media, .cover, .thumb, .item-band, .r-hero, .hero-photo, .photo-preview):not(.has-photo) { background-color: color-mix(in srgb, var(--cv) 72%, var(--bg)); }
+/* Price and its "Save" or "Sold out" tag: when the tag wraps, it starts at the left edge too. */
+.item-price { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.item-price .save-tag, .item-price .sold-tag { margin-left: 0; }

@@ -1068,3 +1068,12 @@ legend.opt-head + * { clear: both; }
 .tabs button:first-child[aria-selected="true"]::after { left: 0; }
 .order-row { transition: background-color .15s; }
 .order-row .thumb { align-self: start; margin-top: 2px; }
+
+/* ================= Polish: content pages ================= */
+.not-found .code { margin: 0 auto; }
+/* A heading sits closer to its own paragraph than to the one before it. */
+.prose h2 + p, .prose h2 + ul { margin-top: 0; }
+.prose h2 { margin-top: 36px; }
+/* The "also used" note is its own line already, so the break after it would leave a gap. */
+.credit-list .also + br { display: none; }
+.credit-list .muted { display: inline-block; margin-top: 2px; }

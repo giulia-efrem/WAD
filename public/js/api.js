@@ -53,7 +53,8 @@ export const api = {
   async createOrder(payload) { return withClock((await request('POST', '/orders', payload)).order); },
   async listOrders() { return (await request('GET', '/orders/mine')).orders.map(withClock); },
   async getOrder(id) { return withClock((await request('GET', `/orders/${encodeURIComponent(id)}`)).order); },
-  async rateOrder(id, rating) { return withClock((await request('POST', `/orders/${encodeURIComponent(id)}/rate`, rating)).order); },
+  async reviewOrder(id, review) { return withClock((await request('POST', `/orders/${encodeURIComponent(id)}/review`, review)).order); },
+  async reviews(slug, sort = 'newest', page = 1) { return request('GET', `/restaurants/${encodeURIComponent(slug)}/reviews?sort=${encodeURIComponent(sort)}&page=${page}`); },
   async skipOrder(id) { return withClock((await request('POST', `/orders/${encodeURIComponent(id)}/skip`)).order); },
 
   async adminCatalog() { return (await request('GET', '/admin/catalog')).restaurants; },

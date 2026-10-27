@@ -36,7 +36,7 @@ export async function renderAccount() {
       const status = st === 'delivered' ? '<span class="status done">Delivered</span>' : st === 'scheduled' ? '<span class="status live">Scheduled</span>' : '<span class="status live">In progress</span>';
       return `<div class="order-row">
         <span class="thumb ${hasPhoto(r) ? 'has-photo' : ''}" style="--cv:${r.color};${photoStyle(r)}">${art(r.illustration)}${photoImg(r, { size: 'thumb' })}</span>
-        <div><h3>${esc(o.restaurantName)} ${status}${o.rating ? `<span class="mini-stars" aria-label="Rated ${o.rating.stars} of 5">${Array.from({ length: o.rating.stars }, () => ic('star', 'fill')).join('')}</span>` : ''}</h3>
+        <div><h3>${esc(o.restaurantName)} ${status}${o.review ? `<span class="mini-stars" aria-label="You rated the food ${o.review.food} of 5">${Array.from({ length: o.review.food }, () => ic('star', 'fill')).join('')}</span>` : ''}</h3>
           <p>${dayTime(new Date(o.createdAt))}</p>
           <p>${esc(o.items.map(i => `${i.qty}× ${i.name}`).join(', '))}</p></div>
         <div class="order-actions"><strong>${eur(o.pricing.total)}</strong>

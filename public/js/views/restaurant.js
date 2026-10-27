@@ -1,9 +1,10 @@
 import { $, $$, esc, eur, clamp, logoBadge } from '../util.js';
 import { ic, art } from '../art.js';
-import { state, R, menuOf, loadMenu, findItem, isOpen, opensAt, closesAt, is247, hoursText, etaText, isFav, qtyOfItem, selectedOptions, lineKey, MAX_QTY } from '../state.js';
+import { state, R, menuOf, loadMenu, findItem, isOpen, opensAt, closesAt, is247, hoursText, etaText, isFav, qtyOfItem, selectedOptions, missingChoices, isPrimaryGroup, ingredientWords, lineKey, MAX_QTY, basketLines, addLine, replaceLine, removeLine } from '../state.js';
 import { hasPhoto, photoImg, photoStyle, creditHTML } from '../photos.js';
 import { openModal, closeModal, toast } from '../ui.js';
-import { addToCart } from './bag.js';
+import { orderHTML, refreshOrderUI } from './basket.js';
+import { renderReviews } from './reviews.js';
 import { app, onLeave } from '../router.js';
 import { renderNotFound } from './pages.js';
 
@@ -33,6 +34,7 @@ function drawRestaurant(r) {
   document.title = r.name + ' · Morsel';
   const open = isOpen(r);
   const fav = isFav(r);
+  const card = R(r.slug) || r;
   const openText = open ? (is247(r) ? 'Open 24 hours' : `Open until ${closesAt(r)}`) : `Closed, opens at ${opensAt(r)}`;
   app().innerHTML = `
     <div class="r-hero ${hasPhoto(r) ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink};${photoStyle(r)}">
@@ -48,7 +50,7 @@ function drawRestaurant(r) {
         <h1>${esc(r.name)}</h1>
         <p class="r-tag">${esc(r.label)} · ${esc(r.priceLevel)} · ${esc(r.tagline)}</p>
         <ul class="r-facts" aria-label="About ${esc(r.name)}">
-          <li><span class="rating">${ic('star', 'fill')}${r.rating.toFixed(1)}</span><small>(${r.reviewCount.toLocaleString('en-GB')})</small></li>
+          <li><a class="rating" href="#sec-reviews" data-act="menu-tab" data-sec="sec-reviews">${ic('star', 'fill')}${card.rating.toFixed(1)}</a><small>(${card.reviewCount.toLocaleString('en-GB')} ${card.reviewCount === 1 ? 'rating' : 'ratings'})</small></li>
           <li>${ic('clock')}<strong>${etaText(r)}</strong></li>
           <li>${ic('bike')}<strong class="${r.deliveryFee ? '' : 'free'}">${r.deliveryFee ? `${eur(r.deliveryFee)} delivery` : 'Free delivery'}</strong></li>
           <li>${ic('bag')}<span>Min. <strong>${eur(r.minOrder)}</strong></span></li>
@@ -59,14 +61,21 @@ function drawRestaurant(r) {
     </div>
     <div class="menu-tabs-bar"><nav class="wrap menu-tabs" id="menu-tabs" aria-label="Menu sections">
       ${r.menu.map((s, i) => `<button type="button" data-act="menu-tab" data-sec="sec-${slug(s.category)}" aria-current="${i === 0}">${esc(s.category)}</button>`).join('')}
+      <button type="button" data-act="menu-tab" data-sec="sec-reviews" aria-current="false">Reviews</button>
     </nav></div>
-    <div class="wrap menu">
-      ${r.menu.map(s => `<section class="menu-sec" id="sec-${slug(s.category)}" aria-labelledby="h-${slug(s.category)}">
-        <h2 id="h-${slug(s.category)}">${esc(s.category)}</h2>
-        <div class="items">${s.items.map(it => itemHTML(r, it)).join('')}</div>
-      </section>`).join('')}
+    <div class="wrap r-body">
+      <div class="r-main menu">
+        ${r.menu.map(s => `<section class="menu-sec" id="sec-${slug(s.category)}" aria-labelledby="h-${slug(s.category)}">
+          <h2 id="h-${slug(s.category)}">${esc(s.category)}</h2>
+          <div class="items">${s.items.map(it => itemHTML(r, it)).join('')}</div>
+        </section>`).join('')}
+        <section class="menu-sec reviews" id="sec-reviews" aria-labelledby="h-reviews"><h2 id="h-reviews">Reviews</h2><div id="reviews-box"></div></section>
+      </div>
+      <aside class="r-aside" aria-label="Your order"><div class="order-panel" id="order-panel">${orderHTML(r.slug)}</div></aside>
     </div>`;
   refreshItemBadges();
+  refreshOrderUI();
+  renderReviews(r.slug, $('#reviews-box'));
   if ('IntersectionObserver' in window) {
     const tabs = $$('#menu-tabs button');
     const io = new IntersectionObserver(entries => {
@@ -91,7 +100,7 @@ function itemHTML(r, it) {
             <span class="item-main">
               <span class="item-name">${esc(it.name)}${it.popular ? '<span class="tag-pop">Popular</span>' : ''}</span>
               <span class="item-desc">${esc(it.description)}</span>
-              <span class="item-price">${eur(it.price)}${it.optionGroups.length ? '<span class="muted" style="font-weight:500"> and up</span>' : ''}</span>
+              <span class="item-price">${eur(it.price)}${it.optionGroups.some(g => g.choices.some(c => c.price)) ? '<span class="muted" style="font-weight:500"> and up</span>' : ''}</span>
             </span>
             <span class="item-media ${hasPhoto(it) ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink};${photoStyle(it)}"><span class="art">${art(r.illustration)}</span>${photoImg(it, { size: 'square' })}<span class="add" aria-hidden="true">${ic('plus')}</span></span>
           </button>`;
@@ -104,67 +113,132 @@ export function refreshItemBadges() {
     const add = $('.add', el);
     add.innerHTML = n ? String(n) : ic('plus');
     const name = $('.item-name', el).firstChild.textContent;
-    el.setAttribute('aria-label', `${name}${n ? `, ${n} in your bag` : ''}. Open to customise and add.`);
+    el.setAttribute('aria-label', `${name}${n ? `, ${n} in your order` : ''}. Open to customise and add.`);
   });
 }
 
-/* ================= Item modal ================= */
-export function openItem(rid, iid) {
+/* ================= Dish window ================= */
+/* Sections in this order: the main choice (size, base...), ingredients to leave out, extras,
+   the other choices (spice level, sauce...), then a note for the kitchen. */
+function groupHTML(g, sel) {
+  const one = g.type === 'one';
+  const picked = one ? [sel[g.key]] : (sel[g.key] || []);
+  return `<fieldset class="opt-group" data-group="${esc(g.key)}">
+    <legend class="opt-head"><span class="opt-title">${esc(g.name)}</span><span class="req ${one ? 'is-required' : ''}" data-req="${esc(g.key)}">${one ? 'Required' : `Optional, up to ${g.max}`}</span></legend>
+    ${one ? `<p class="opt-hint">Choose 1</p>` : ''}
+    ${g.choices.map(c => `
+      <label class="choice"><input type="${one ? 'radio' : 'checkbox'}" name="opt-${esc(g.key)}" value="${esc(c.id)}" data-g="${esc(g.key)}" ${picked.includes(c.id) ? 'checked' : ''}>
+      <span>${esc(c.name)}</span><span class="cp">${c.price ? '+' + eur(c.price) : ''}</span></label>`).join('')}
+  </fieldset>`;
+}
+
+/* opts.edit: a basket line to change instead of adding a new one. */
+export function openItem(rid, iid, { edit = null } = {}) {
   const r = menuOf(rid);
   const it = r && findItem(r, iid);
   if (!r || !it) return;
   const open = isOpen(r);
   const groups = it.optionGroups;
+  const removable = (it.ingredients || []).filter(i => i.removable);
   const sel = {};
-  groups.forEach(g => { sel[g.key] = g.type === 'one' ? g.choices[0].id : []; });
+  groups.forEach(g => { sel[g.key] = g.type === 'one' ? '' : []; });
+  let remove = [];
   let qty = 1;
-  const unit = () => selectedOptions(it, sel).unitPrice;
-  const img = hasPhoto(it);
+  if (edit) {
+    Object.assign(sel, JSON.parse(JSON.stringify(edit.sel)));
+    remove = [...(edit.remove || [])];
+    qty = edit.qty;
+  }
+  const primary = groups.filter(g => g.type === 'one' && isPrimaryGroup(g));
+  const extras = groups.filter(g => g.type === 'many');
+  const others = groups.filter(g => g.type === 'one' && !isPrimaryGroup(g));
+  const ingredientsText = (it.ingredients || []).map(i => i.name).join(', ');
   const m = openModal(`
-    <div class="item-band ${img ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink};${photoStyle(it)}"><div class="art">${art(r.illustration)}</div>${photoImg(it, { size: 'band', eager: true, alt: it.imageAlt || it.name })}${creditHTML(it, 'on-photo')}</div>
-    <div class="modal-head"><h2 id="item-title">${esc(it.name)}</h2><p>${esc(it.description)}</p><p class="item-price-lg">${eur(it.price)}</p></div>
+    <div class="item-band ${hasPhoto(it) ? 'has-photo' : ''}" style="--cv:${r.color};--cvi:${r.ink};${photoStyle(it)}"><div class="art">${art(r.illustration)}</div>${photoImg(it, { size: 'band', eager: true, alt: it.imageAlt || it.name })}${creditHTML(it, 'on-photo')}</div>
+    <div class="modal-head"><h2 id="item-title">${esc(it.name)}</h2><p>${esc(it.description)}</p>
+      ${ingredientsText ? `<p class="ingredients"><span>Ingredients:</span> ${esc(ingredientsText)}</p>` : ''}
+      <p class="item-price-lg">${eur(it.price)}</p></div>
     <div class="modal-body">
-      ${groups.map(g => `
-        <fieldset class="opt-group" style="border:0;margin:0;padding-left:0;padding-right:0">
-          <div class="opt-head"><h3>${esc(g.name)}</h3><span class="req">${g.type === 'one' ? 'Required' : `Optional, up to ${g.max}`}</span></div>
-          ${g.choices.map((c, i) => `
-            <label class="choice"><input type="${g.type === 'one' ? 'radio' : 'checkbox'}" name="opt-${esc(g.key)}" value="${esc(c.id)}" data-g="${esc(g.key)}" ${g.type === 'one' && i === 0 ? 'checked' : ''}>
-            <span>${esc(c.name)}</span><span class="cp">${c.price ? '+' + eur(c.price) : ''}</span></label>`).join('')}
-        </fieldset>`).join('')}
-      <div class="field" style="margin:${groups.length ? '10px' : '0'} 0 0"><label for="item-note">Note for the kitchen <small>Optional</small></label>
-      <textarea class="input" id="item-note" maxlength="140" placeholder="Allergies, no onions, extra crispy"></textarea></div>
+      ${primary.map(g => groupHTML(g, sel)).join('')}
+      ${removable.length ? `<fieldset class="opt-group" data-group="remove">
+        <legend class="opt-head"><span class="opt-title">Remove ingredients</span><span class="req">Optional</span></legend>
+        ${removable.map(i => `<label class="choice"><input type="checkbox" name="remove" value="${esc(i.id)}" data-remove ${remove.includes(i.id) ? 'checked' : ''}><span>No ${esc(ingredientWords(i.name))}</span></label>`).join('')}
+      </fieldset>` : ''}
+      ${extras.map(g => groupHTML(g, sel)).join('')}
+      ${others.map(g => groupHTML(g, sel)).join('')}
+      <div class="field note-field"><label for="item-note">Note for the kitchen <small>Optional</small></label>
+      <textarea class="input" id="item-note" maxlength="140" placeholder="Allergies, extra crispy, cut in half">${esc(edit ? edit.note : '')}</textarea></div>
+      ${edit ? `<button class="link-btn remove-line" type="button" id="item-remove">Remove from order</button>` : ''}
     </div>
     <div class="modal-foot">
-      <div class="qty" role="group" aria-label="Quantity"><button type="button" data-q="-1" aria-label="Decrease quantity">${ic('minus')}</button><span id="item-qty">1</span><button type="button" data-q="1" aria-label="Increase quantity">${ic('plus')}</button></div>
-      <button class="btn btn-primary btn-split" type="button" id="item-add" style="flex:1" ${open ? '' : 'disabled'}></button>
+      <div class="qty" role="group" aria-label="Quantity"><button type="button" data-q="-1" aria-label="Decrease quantity">${ic('minus')}</button><span id="item-qty">${qty}</span><button type="button" data-q="1" aria-label="Increase quantity">${ic('plus')}</button></div>
+      <button class="btn btn-primary btn-split" type="button" id="item-add" style="flex:1"></button>
     </div>`, { label: 'item-title' });
   const w = m.wrap;
+  const unit = () => selectedOptions(it, sel, remove).unitPrice;
   const refresh = () => {
     $('#item-qty', w).textContent = qty;
-    $('#item-add', w).innerHTML = open ? `<span>Add ${qty} to order</span><span>${eur(unit() * qty)}</span>` : `<span>Opens at ${opensAt(r)}</span>`;
+    const missing = missingChoices(it, sel);
+    const btn = $('#item-add', w);
+    btn.disabled = !open;
+    if (!open) btn.innerHTML = `<span>Opens at ${opensAt(r)}</span>`;
+    else if (missing.length) btn.innerHTML = `<span>Choose ${missing[0].name.toLowerCase()}</span><span>${eur(unit() * qty)}</span>`;
+    else btn.innerHTML = `<span>${edit ? 'Update order' : `Add ${qty} to order`}</span><span>${eur(unit() * qty)}</span>`;
+    /* Still clickable while a choice is missing: it points the customer at what to pick. */
+    btn.classList.toggle('needs-choice', open && missing.length > 0);
     groups.filter(g => g.type === 'many').forEach(g => {
       $$(`input[data-g="${g.key}"]`, w).forEach(inp => { inp.disabled = !inp.checked && sel[g.key].length >= g.max; });
     });
+    groups.filter(g => g.type === 'one').forEach(g => {
+      const tag = $(`[data-req="${g.key}"]`, w);
+      if (tag) { tag.textContent = sel[g.key] ? 'Done' : 'Required'; tag.classList.toggle('done', !!sel[g.key]); }
+    });
   };
   w.addEventListener('change', e => {
-    const inp = e.target.closest('input[data-g]');
-    if (!inp) return;
+    const inp = e.target;
+    if (inp.matches('[data-remove]')) { remove = $$('[data-remove]:checked', w).map(x => x.value); refresh(); return; }
+    if (!inp.matches('input[data-g]')) return;
     const g = groups.find(x => x.key === inp.dataset.g);
-    if (g.type === 'one') sel[g.key] = inp.value;
+    if (g.type === 'one') { sel[g.key] = inp.value; $(`[data-group="${g.key}"]`, w).classList.remove('missing'); }
     else sel[g.key] = $$(`input[data-g="${g.key}"]:checked`, w).map(x => x.value);
     refresh();
   });
-  w.addEventListener('click', async e => {
+  w.addEventListener('click', e => {
     const q = e.target.closest('[data-q]');
     if (q) { qty = clamp(qty + Number(q.dataset.q), 1, MAX_QTY); refresh(); return; }
-    if (e.target.closest('#item-add')) {
-      const note = $('#item-note', w).value.trim();
-      const chosen = JSON.parse(JSON.stringify(sel));
-      const { options, unitPrice } = selectedOptions(it, chosen);
+    if (e.target.closest('#item-remove')) {
+      removeLine(r.slug, edit.key);
       closeModal(m);
-      const added = await addToCart(r, { key: lineKey(it.slug, chosen, note), itemSlug: it.slug, name: it.name, unitPrice, qty, options, sel: chosen, note });
-      if (added) toast(`Added ${qty} × ${it.name}`);
+      toast(`Removed ${it.name}`);
+      return;
     }
+    if (!e.target.closest('#item-add') || !open) return;
+    const missing = missingChoices(it, sel);
+    if (missing.length) {
+      /* Point at the first required choice that's still empty. */
+      missing.forEach(g => $(`[data-group="${g.key}"]`, w).classList.add('missing'));
+      const first = $(`[data-group="${missing[0].key}"]`, w);
+      first.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      const inp = $('input', first);
+      if (inp) inp.focus({ preventScroll: true });
+      return;
+    }
+    const note = $('#item-note', w).value.trim();
+    const chosen = JSON.parse(JSON.stringify(sel));
+    const { options, removed, unitPrice } = selectedOptions(it, chosen, remove);
+    const line = { key: lineKey(it.slug, chosen, remove, note), itemSlug: it.slug, name: it.name, unitPrice, qty, options, removed, sel: chosen, remove: [...remove], note };
+    closeModal(m);
+    if (edit) { replaceLine(r.slug, edit.key, line); toast(`Updated ${it.name}`); return; }
+    const ok = addLine(r.slug, line);
+    toast(ok ? `Added ${qty} × ${it.name}` : `You can order up to ${MAX_QTY} of the same item.`);
   });
   refresh();
+}
+
+/* Opens the dish window for a line already in the basket. */
+export async function editLine(slugValue, key) {
+  const line = basketLines(slugValue).find(l => l.key === key);
+  if (!line) return;
+  await loadMenu(slugValue);
+  openItem(slugValue, line.itemSlug, { edit: line });
 }

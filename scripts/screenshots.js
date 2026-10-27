@@ -24,7 +24,7 @@ const arg = (name, fallback) => { const a = process.argv.find(x => x.startsWith(
 const OUT = path.resolve(config.root, arg('out', 'screenshots'));
 const WIDTHS = arg('widths', '375,768,1440').split(',').map(Number);
 const THEMES = arg('themes', 'light,dark').split(',');
-const VIEWS = arg('views', 'home,restaurant,dish,bag,checkout,order,account,admin-photos,credits').split(',');
+const VIEWS = arg('views', 'home,restaurant,dish,basket,checkout,order,account,admin-photos,credits').split(',');
 const HEIGHT = { 375: 812, 768: 1024, 1440: 900 };
 const MAX_PAGE = 3600;
 const TEMP_ADMIN = 'screenshots-admin@morsel.invalid';
@@ -56,12 +56,18 @@ async function setup() {
   } })).data.order;
   /* Move it to “on the way” so the map and courier show. */
   await Order.updateOne({ _id: order._id }, { $set: { startAt: new Date(Date.now() - (order.etaMin - 6) * config.simMinuteMs) } });
+  /* One basket at Smash Society (shown) and one at Forno Sette (so "Your baskets" appears). */
   const cart = {
-    restaurantSlug: 'smash-society', promo: null,
-    lines: [
-      { key: 'classic|burgerExtras:bacon+sauce:bbq|', itemSlug: 'classic', name: classic.name, unitPrice: classic.price + 180, qty: 2, options: [{ group: 'Sauce', choice: 'Smoky BBQ', price: 0 }, { group: 'Add to your burger', choice: 'Crispy bacon', price: 180 }], sel: { sauce: 'bbq', burgerExtras: ['bacon'] }, note: '' },
-      { key: 'fries|fries:truffle|', itemSlug: 'fries', name: fries.name, unitPrice: fries.price + 150, qty: 1, options: [{ group: 'Style', choice: 'Truffle and parmesan', price: 150 }], sel: { fries: 'truffle' }, note: '' }
-    ]
+    promo: null,
+    baskets: {
+      'smash-society': { updatedAt: Date.now(), lines: [
+        { key: 'classic|burgerExtras:bacon+sauce:bbq|pickles|', itemSlug: 'classic', name: classic.name, unitPrice: classic.price + 180, qty: 2, options: [{ group: 'Sauce', choice: 'Smoky BBQ', price: 0 }, { group: 'Add to your burger', choice: 'Crispy bacon', price: 180 }], removed: [{ id: 'pickles', name: 'Pickles' }], sel: { sauce: 'bbq', burgerExtras: ['bacon'] }, remove: ['pickles'], note: '' },
+        { key: 'fries|fries:truffle||', itemSlug: 'fries', name: fries.name, unitPrice: fries.price + 150, qty: 1, options: [{ group: 'Style', choice: 'Truffle and parmesan', price: 150 }], removed: [], sel: { fries: 'truffle' }, remove: [], note: '' }
+      ] },
+      'forno-sette': { updatedAt: Date.now() - 60000, lines: [
+        { key: 'margherita|size:40||', itemSlug: 'margherita', name: 'Margherita', unitPrice: 1350, qty: 1, options: [{ group: 'Size', choice: '40 cm', price: 400 }], removed: [], sel: { size: '40', pizzaExtras: [] }, remove: [], note: '' }
+      ] }
+    }
   };
   /* Temporary admin, signed in with a token, so ADMIN_EMAIL is never touched. */
   await User.deleteMany({ email: TEMP_ADMIN });
@@ -100,8 +106,14 @@ const VIEW_STEPS = {
     await page.goto(BASE + '/#r-forno-sette'); await page.waitForSelector('.item[data-i="margherita"]');
     await page.click('.item[data-i="margherita"]'); await page.waitForSelector('#item-add'); return false;
   },
-  async bag(page) { await page.goto(BASE + '/'); await page.waitForSelector('.card'); await page.click('#cart-btn'); await page.waitForSelector('#drawer.open .line'); return false; },
-  async checkout(page) { await page.goto(BASE + '/#checkout'); await page.waitForSelector('#place-btn'); return true; },
+  /* Desktop: the order panel next to the menu. Phones and tablets: the order opened as a sheet. */
+  async basket(page) {
+    await page.goto(BASE + '/#r-smash-society'); await page.waitForSelector('.item');
+    if (page.viewportSize().width < 1100) { await page.click('#orderbar'); await page.waitForSelector('#sheet-order .oline'); }
+    else { await page.waitForSelector('#order-panel .oline'); }
+    return false;
+  },
+  async checkout(page) { await page.goto(BASE + '/#checkout-smash-society'); await page.waitForSelector('#place-btn'); return true; },
   async order(page, ctx) {
     /* Put the order back to “on the way” for every shot, since demo time keeps running. */
     await Order.updateOne({ _id: ctx.orderId }, { $set: { startAt: new Date(Date.now() - (ctx.etaMin - 6) * config.simMinuteMs) } });
@@ -127,7 +139,7 @@ const VIEW_STEPS = {
         const page = await context.newPage();
         page.on('pageerror', e => problems.push(`${view} ${width} ${theme}: ${e.message}`));
         page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) problems.push(`${view} ${width} ${theme}: ${m.text()}`); });
-        await page.addInitScript(cart => { try { localStorage.setItem('morsel.cart', JSON.stringify(cart)); localStorage.setItem('morsel.promoDismissed', 'false'); } catch (e) { /* ignore */ } }, ctx.cart);
+        await page.addInitScript(cart => { try { localStorage.setItem('morsel.baskets', JSON.stringify(cart)); localStorage.setItem('morsel.promoDismissed', 'false'); } catch (e) { /* ignore */ } }, ctx.cart);
         try {
           const full = await VIEW_STEPS[view](page, ctx);
           await settle(page);

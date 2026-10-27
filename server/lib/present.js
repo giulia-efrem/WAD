@@ -55,6 +55,7 @@ function restaurantDetail(r, now = new Date()) {
         price: it.price,
         popular: it.popular,
         ...photoOut(it),
+        ingredients: (it.ingredients || []).map(i => ({ id: i.id, name: i.name, removable: i.removable })),
         optionGroups: it.optionGroups.map(g => ({
           key: g.key, name: g.name, type: g.type, ...(g.type === 'many' ? { max: g.max } : {}),
           choices: g.choices.map(c => ({ id: c.id, name: c.name, price: c.price }))
@@ -75,7 +76,8 @@ function orderOut(o, now = Date.now()) {
     restaurantName: o.restaurantName,
     items: o.items.map(l => ({
       itemSlug: l.itemSlug, name: l.name, qty: l.qty, unitPrice: l.unitPrice,
-      options: l.options.map(x => ({ group: x.group, choice: x.choice, price: x.price })), note: l.note || ''
+      options: l.options.map(x => ({ group: x.group, choice: x.choice, price: x.price })),
+      removed: (l.removed || []).map(x => ({ id: x.id, name: x.name })), note: l.note || ''
     })),
     pricing: { ...(o.pricing.toObject ? o.pricing.toObject() : o.pricing) },
     address: { label: o.address.label, street: o.address.street, details: o.address.details || '', city: o.address.city },
@@ -86,7 +88,7 @@ function orderOut(o, now = Date.now()) {
     etaMin: o.etaMin,
     startAt: new Date(o.startAt).getTime(),
     courier: { name: o.courier.name, vehicle: o.courier.vehicle },
-    rating: o.rating && o.rating.stars ? { stars: o.rating.stars, comment: o.rating.comment || '', ratedAt: o.rating.ratedAt } : null,
+    review: o.review && o.review.food ? { food: o.review.food, delivery: o.review.delivery, comment: o.review.comment || '', reviewedAt: o.review.reviewedAt } : null,
     createdAt: o.createdAt,
     status: { stage: pr.stage, sim: pr.sim, remaining: pr.remaining, frac: pr.frac },
     serverNow: now,

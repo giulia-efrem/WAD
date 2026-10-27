@@ -1,26 +1,32 @@
 import { $, $$, esc, reduced } from './util.js';
 import { art } from './art.js';
 import { api } from './api.js';
-import { state, LS, R, loadRestaurants, loadMenu, findItem, selectedOptions, lineKey, isFav, saveCart, onCartChanged, setPromo } from './state.js';
-import { openDrawer, closeDrawer, confirmDialog, closeAllModals, toast } from './ui.js';
+import { state, LS, R, loadRestaurants, loadMenu, findItem, selectedOptions, lineKey, isFav, addLine, changeQty, onBasketChanged, setPromo } from './state.js';
+import { confirmDialog, closeAllModals, toast } from './ui.js';
 import { app, render, go, PATH_VIEWS } from './router.js';
-import { onCartChange, addToCart } from './views/bag.js';
+import { refreshOrderUI, openOrderSheet, toggleBasketsMenu } from './views/basket.js';
 import { updateHeader } from './views/header.js';
 import { openAuth, requireAuth } from './views/auth.js';
 import { openAddressForm, openAddressPicker } from './views/addresses.js';
 import { renderHome, renderHomeSkeleton, updateResults } from './views/home.js';
-import { openItem } from './views/restaurant.js';
+import { openItem, editLine, refreshItemBadges } from './views/restaurant.js';
 import { renderCheckout, applyPromo, placeOrder } from './views/checkout.js';
 
-onCartChanged(onCartChange);
+/* Whatever shows a basket redraws when one changes. */
+onBasketChanged(() => {
+  refreshOrderUI();
+  if (state.view === 'restaurant') refreshItemBadges();
+  if (state.view === 'checkout') renderCheckout();
+});
 
-/* Rebuilds a past order's lines from today's menu, matching the saved option names. */
+/* Puts a past order back in that restaurant's basket, rebuilt from today's menu (same choices,
+   same ingredients left out), then opens the restaurant. */
 async function reorder(id) {
   const o = await api.getOrder(id);
   const r = R(o.restaurantSlug);
   if (!r) { toast('That restaurant isn’t on Morsel any more.'); return; }
   const detail = await loadMenu(r.slug);
-  let first = true;
+  let added = 0;
   for (const line of o.items) {
     const item = findItem(detail, line.itemSlug);
     if (!item) continue;
@@ -29,13 +35,14 @@ async function reorder(id) {
       const picked = line.options.filter(x => x.group === g.name).map(x => g.choices.find(c => c.name === x.choice)).filter(Boolean);
       sel[g.key] = g.type === 'one' ? (picked[0] || g.choices[0]).id : picked.map(c => c.id).slice(0, g.max);
     }
-    const { options, unitPrice } = selectedOptions(item, sel);
+    const remove = (line.removed || []).map(x => x.id).filter(rid => (item.ingredients || []).some(i => i.id === rid && i.removable));
+    const { options, removed, unitPrice } = selectedOptions(item, sel, remove);
     const note = line.note || '';
-    const ok = await addToCart(detail, { key: lineKey(item.slug, sel, note), itemSlug: item.slug, name: item.name, unitPrice, qty: line.qty, options, sel, note });
-    if (!ok && first) return;
-    first = false;
+    addLine(r.slug, { key: lineKey(item.slug, sel, remove, note), itemSlug: item.slug, name: item.name, unitPrice, qty: line.qty, options, removed, sel, remove, note });
+    added += line.qty;
   }
-  openDrawer();
+  go('restaurant', { id: r.slug });
+  toast(added ? `Added ${added} ${added === 1 ? 'item' : 'items'} to your ${r.name} order` : 'Those dishes aren’t on the menu any more.');
 }
 
 /* Works out which view a URL shows: /credits and friends by path, the rest by hash as before. */
@@ -45,6 +52,7 @@ function routeOf(url) {
   const hash = (url.hash || '').slice(1);
   if (hash.startsWith('r-')) return { view: 'restaurant', params: { id: hash.slice(2) } };
   if (hash.startsWith('order-')) return { view: 'order', params: { id: hash.slice(6) } };
+  if (hash.startsWith('checkout-')) return { view: 'checkout', params: { slug: hash.slice(9) } };
   if (['checkout', 'account'].includes(hash)) return { view: hash, params: {} };
   return { view: 'home', params: {} };
 }
@@ -109,17 +117,11 @@ document.addEventListener('click', async e => {
         if (sec) sec.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
         break;
       }
-      case 'cart': openDrawer(); break;
-      case 'close-drawer': closeDrawer(); break;
-      case 'qty': {
-        const line = state.cart.lines.find(l => l.key === el.dataset.key);
-        if (!line) break;
-        line.qty = Math.min(20, line.qty + Number(el.dataset.d));
-        if (line.qty <= 0) state.cart.lines = state.cart.lines.filter(l => l !== line);
-        saveCart();
-        break;
-      }
-      case 'go-checkout': go('checkout'); break;
+      case 'line-qty': changeQty(el.dataset.r, el.dataset.key, Number(el.dataset.d)); break;
+      case 'edit-line': await editLine(el.dataset.r, el.dataset.key); break;
+      case 'open-order': openOrderSheet(el.dataset.r); break;
+      case 'baskets': toggleBasketsMenu(); break;
+      case 'go-checkout': case 'checkout-basket': closeAllModals(); go('checkout', { slug: el.dataset.r }); break;
       case 'account-btn': if (state.user) go('account'); else openAuth('login'); break;
       case 'account': go('account'); break;
       case 'login': openAuth('login'); break;
@@ -174,7 +176,6 @@ window.addEventListener('popstate', () => {
   state.view = route.view;
   state.params = route.params;
   closeAllModals();
-  closeDrawer(true);
   render();
 });
 
@@ -205,9 +206,7 @@ window.addEventListener('morsel:signed-out', () => {
     const def = state.user.addresses.find(a => a.isDefault);
     state.co.addressId = def ? def._id : null;
   }
-  if (state.cart.restaurantSlug && !R(state.cart.restaurantSlug)) { state.cart.lines = []; saveCart(); }
   updateHeader();
-  onCartChange();
   state.view = route.view;
   state.params = route.params;
   render();

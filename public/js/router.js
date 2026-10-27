@@ -1,7 +1,6 @@
 import { $ } from './util.js';
 import { state } from './state.js';
-import { closeDrawer } from './ui.js';
-import { updateCartbar } from './views/bag.js';
+import { refreshOrderUI, closeBasketsMenu } from './views/basket.js';
 import { renderHome } from './views/home.js';
 import { renderRestaurant } from './views/restaurant.js';
 import { renderCheckout } from './views/checkout.js';
@@ -36,12 +35,12 @@ export function render(keepScroll) {
     case 'notfound': renderNotFound(); break;
     default: renderHome();
   }
-  updateCartbar();
+  refreshOrderUI();
   if (keepScroll) window.scrollTo(0, y);
 }
 
 export function go(view, params = {}) {
-  closeDrawer(true);
+  closeBasketsMenu();
   state.view = view;
   state.params = params;
   const path = pathOf(view);

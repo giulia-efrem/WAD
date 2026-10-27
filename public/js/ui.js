@@ -1,36 +1,15 @@
 import { $, $$ } from './util.js';
 import { ic } from './art.js';
-import { renderDrawer, updateCartbar } from './views/bag.js';
 
-/* ================= Drawer ================= */
-let lastFocus = null;
 export function lockScroll(on) { document.body.classList.toggle('locked', on); }
-export const drawerOpen = () => $('#drawer').classList.contains('open');
-export function openDrawer() {
-  lastFocus = document.activeElement;
-  renderDrawer();
-  $('#drawer').classList.add('open');
-  $('#overlay').classList.add('show');
-  lockScroll(true);
-  updateCartbar();
-  setTimeout(() => $('#drawer .close-btn').focus(), 50);
-}
-export function closeDrawer(silent) {
-  const d = $('#drawer');
-  if (!d.classList.contains('open')) return;
-  d.classList.remove('open');
-  $('#overlay').classList.remove('show');
-  if (!$('#modal-root').children.length) lockScroll(false);
-  updateCartbar();
-  if (!silent && lastFocus && document.contains(lastFocus)) lastFocus.focus();
-}
 
 /* ================= Modals ================= */
 let modalStack = [];
-export function openModal(html, { onClose, wide, label } = {}) {
+/* cls 'sheet' makes it a bottom sheet on every screen size. */
+export function openModal(html, { onClose, wide, label, cls = '' } = {}) {
   const prevFocus = document.activeElement;
   const wrap = document.createElement('div');
-  wrap.className = 'modal-wrap';
+  wrap.className = 'modal-wrap ' + cls;
   wrap.innerHTML = `<div class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" ${label ? `aria-labelledby="${label}"` : ''}>
     <button class="close-btn" type="button" data-modal-close aria-label="Close">${ic('close')}</button>${html}</div>`;
   $('#modal-root').appendChild(wrap);
@@ -50,7 +29,7 @@ export function closeModal(entry, result) {
   if (!entry || !entry.wrap.isConnected) return;
   entry.wrap.remove();
   modalStack = modalStack.filter(m => m !== entry);
-  if (!modalStack.length && !drawerOpen()) lockScroll(false);
+  if (!modalStack.length) lockScroll(false);
   if (entry.onClose) entry.onClose(result);
   if (entry.prevFocus && document.contains(entry.prevFocus)) entry.prevFocus.focus();
 }
@@ -58,10 +37,9 @@ export function closeAllModals() { while (modalStack.length) closeModal(modalSta
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (modalStack.length) { e.preventDefault(); closeModal(); }
-    else if (drawerOpen()) closeDrawer();
   }
   if (e.key === 'Tab') {
-    const top = modalStack.length ? modalStack[modalStack.length - 1].wrap : (drawerOpen() ? $('#drawer') : null);
+    const top = modalStack.length ? modalStack[modalStack.length - 1].wrap : null;
     if (!top) return;
     const focusables = $$('button:not([disabled]), input:not([disabled]), select, textarea, [href]', top).filter(el => el.offsetParent !== null);
     if (!focusables.length) return;

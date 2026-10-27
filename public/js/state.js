@@ -2,8 +2,8 @@ import { api } from './api.js';
 import { esc, eur, clamp, hhmm } from './util.js';
 
 /* ================= Browser storage =================
-   Only the bag (with its promo code) and dismissed banners live in localStorage.
-   Accounts, addresses, favourites and orders come from the server. */
+   Only the baskets (with a promo code waiting to be applied) and dismissed banners live in
+   localStorage. Accounts, addresses, favourites, orders and reviews come from the server. */
 const memory = {};
 export const LS = {
   get(k, fallback) { try { const v = window.localStorage.getItem(k); if (v != null) return JSON.parse(v); } catch (e) { /* storage unavailable */ } return k in memory ? JSON.parse(JSON.stringify(memory[k])) : fallback; },
@@ -13,21 +13,42 @@ export const LS = {
 /* The browser-only version of Morsel kept accounts and orders here. They now live on the server. */
 ['morsel.db.users', 'morsel.db.orders', 'morsel.session', 'morsel.promo'].forEach(k => LS.del(k));
 
-const emptyCart = () => ({ restaurantSlug: null, lines: [], promo: null });
-function loadCart() {
-  const c = LS.get('morsel.cart', null);
-  if (!c || !Array.isArray(c.lines) || !('restaurantSlug' in c) || c.lines.some(l => !l.itemSlug || !l.sel)) return emptyCart();
-  return { restaurantSlug: c.restaurantSlug, lines: c.lines, promo: c.promo || null };
+const BASKETS_KEY = 'morsel.baskets';
+const validLine = l => l && l.itemSlug && l.sel && Number.isInteger(l.qty) && l.qty > 0;
+
+/* One basket per restaurant: { promo, baskets: { [slug]: { lines, updatedAt } } }.
+   The single bag of earlier versions ('morsel.cart') becomes that restaurant's basket. */
+function loadBaskets() {
+  const saved = LS.get(BASKETS_KEY, null);
+  const data = { promo: null, baskets: {} };
+  if (saved && saved.baskets && typeof saved.baskets === 'object') {
+    data.promo = saved.promo || null;
+    for (const [slug, b] of Object.entries(saved.baskets)) {
+      const lines = Array.isArray(b && b.lines) ? b.lines.filter(validLine) : [];
+      if (lines.length) data.baskets[slug] = { lines: lines.map(l => ({ remove: [], removed: [], ...l })), updatedAt: b.updatedAt || Date.now() };
+    }
+  }
+  const old = LS.get('morsel.cart', null);
+  if (old && old.restaurantSlug && Array.isArray(old.lines)) {
+    const lines = old.lines.filter(validLine).map(l => ({ ...l, remove: [], removed: [], key: lineKey(l.itemSlug, l.sel, [], l.note || '') }));
+    if (lines.length && !data.baskets[old.restaurantSlug]) data.baskets[old.restaurantSlug] = { lines, updatedAt: Date.now() };
+    if (old.promo && !data.promo) data.promo = old.promo;
+    LS.del('morsel.cart');
+    LS.set(BASKETS_KEY, data);
+  }
+  return data;
 }
 
 /* ================= App state ================= */
+const stored = loadBaskets();
 export const state = {
   user: null,
   orderCount: 0,
   view: 'home',
   params: {},
   q: '', cat: 'all', sort: 'recommended', openNow: false, freeDel: false, topRated: false,
-  cart: loadCart(),
+  baskets: stored.baskets,
+  promo: stored.promo,
   promoDismissed: LS.get('morsel.promoDismissed', false),
   tip: 100,
   co: { addressId: null, when: 'asap', slot: '', pay: 'card', note: '' },
@@ -63,14 +84,14 @@ export async function loadRestaurants() {
   catalog.list = await api.restaurants();
   return catalog.list;
 }
-/* Loads a full menu once, and brings any bag lines from that restaurant up to today's prices. */
+/* Loads a full menu once, and brings that restaurant's basket up to today's menu and prices. */
 export async function loadMenu(slug, { fresh = false } = {}) {
   if (!fresh && catalog.menus.has(slug)) return catalog.menus.get(slug);
   const detail = await api.restaurant(slug);
   catalog.menus.set(slug, detail);
   const i = catalog.list.findIndex(r => r.slug === slug);
   if (i >= 0) { const { menu, ...card } = detail; catalog.list[i] = Object.assign({}, catalog.list[i], card); }
-  if (state.cart.restaurantSlug === slug) repriceCart(detail);
+  repriceBasket(detail);
   return detail;
 }
 
@@ -83,9 +104,16 @@ export const hoursText = r => is247(r) ? 'Open 24 hours' : `${opensAt(r)} to ${c
 export const etaText = r => `${r.eta.min}-${r.eta.max} min`;
 export const feeText = r => r.deliveryFee ? `${eur(r.deliveryFee)} delivery` : 'Free delivery';
 
-/* ================= Options ================= */
-/* `sel` maps option group keys to a choice id (single choice) or a list of ids (several). */
-export function selectedOptions(item, sel) {
+/* ================= Choices ================= */
+/* The main choice of a dish (shown first in the dish window and in its description). */
+const PRIMARY_GROUPS = ['size', 'base', 'tortilla', 'gelato', 'milk', 'fries', 'eggs', 'pancake'];
+export const isPrimaryGroup = g => PRIMARY_GROUPS.includes(g.key);
+/* Names of the single-choice groups (size, sauce, spice level...). Extras are the multi-choice ones. */
+const SINGLE_NAMES = ['Size', 'Base', 'Tortilla', 'Flavour', 'Milk', 'Style', 'Topping', 'Sauce', 'Spice level', 'Heat', 'Served with', 'Salsa'];
+
+/* `sel` maps option group keys to a choice id (single choice) or a list of ids (several);
+   `remove` lists ingredient ids left out. */
+export function selectedOptions(item, sel, remove = []) {
   const options = [];
   let unit = item.price;
   for (const g of item.optionGroups) {
@@ -96,46 +124,109 @@ export function selectedOptions(item, sel) {
       unit += c.price;
     }
   }
-  return { options, unitPrice: unit };
+  const removed = (item.ingredients || []).filter(i => remove.includes(i.id)).map(i => ({ id: i.id, name: i.name }));
+  return { options, removed, unitPrice: unit };
 }
-export const lineKey = (itemSlug, sel, note) =>
-  [itemSlug, Object.entries(sel).flatMap(([g, v]) => (Array.isArray(v) ? v : [v]).map(c => g + ':' + c)).sort().join('+'), note].join('|');
+/* Required choices still missing, e.g. ['size']. */
+export const missingChoices = (item, sel) => item.optionGroups.filter(g => g.type === 'one' && !sel[g.key]);
 
-function selIsValid(item, sel) {
+/* A function declaration, so loading saved baskets (before this line runs) can use it. */
+export function lineKey(itemSlug, sel, remove, note) {
+  return [itemSlug, Object.entries(sel).flatMap(([g, v]) => (Array.isArray(v) ? v : [v]).filter(Boolean).map(c => g + ':' + c)).sort().join('+'), [...(remove || [])].sort().join('+'), note].join('|');
+}
+
+const lowerFirst = s => (/^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
+/* "Basil" -> "basil", but names that start with a proper noun keep it: "San Marzano tomato", "American cheese". */
+const PROPER = ['American', 'Swiss', 'San', 'Norwegian', 'Kashmiri', 'Alphonso', 'Ligurian'];
+export const ingredientWords = name => (PROPER.includes(name.split(' ')[0]) ? name : name.charAt(0).toLowerCase() + name.slice(1));
+/* "40 cm, no basil, extra mozzarella": the single choices, then what's left out, then the extras. */
+export function describeChoices(options = [], removed = []) {
+  const single = options.filter(o => SINGLE_NAMES.includes(o.group));
+  const extras = options.filter(o => !SINGLE_NAMES.includes(o.group));
+  const parts = [...single.map(o => o.choice), ...removed.map(r => `No ${ingredientWords(r.name)}`), ...extras.map(o => o.choice)];
+  return parts.map((p, i) => (i ? lowerFirst(p) : p)).join(', ');
+}
+
+function selIsValid(item, sel, remove = []) {
   return item.optionGroups.every(g => g.type === 'one'
     ? g.choices.some(c => c.id === sel[g.key])
     : (sel[g.key] || []).every(id => g.choices.some(c => c.id === id)) && (sel[g.key] || []).length <= g.max)
-    && Object.keys(sel).every(k => item.optionGroups.some(g => g.key === k));
+    && Object.keys(sel).every(k => item.optionGroups.some(g => g.key === k))
+    && remove.every(id => (item.ingredients || []).some(i => i.id === id && i.removable));
 }
 
-/* ================= Cart ================= */
+/* ================= Baskets ================= */
 export const MAX_QTY = 20;
-export const cartCount = () => state.cart.lines.reduce((n, l) => n + l.qty, 0);
-export const cartSubtotal = () => state.cart.lines.reduce((s, l) => s + l.unitPrice * l.qty, 0);
-export const qtyOfItem = (slug, itemSlug) => state.cart.restaurantSlug === slug ? state.cart.lines.filter(l => l.itemSlug === itemSlug).reduce((n, l) => n + l.qty, 0) : 0;
+export const basketLines = slug => (state.baskets[slug] && state.baskets[slug].lines) || [];
+export const basketCount = slug => basketLines(slug).reduce((n, l) => n + l.qty, 0);
+export const basketSubtotal = slug => basketLines(slug).reduce((s, l) => s + l.unitPrice * l.qty, 0);
+export const qtyOfItem = (slug, itemSlug) => basketLines(slug).filter(l => l.itemSlug === itemSlug).reduce((n, l) => n + l.qty, 0);
+/* Non-empty baskets, most recently changed first. */
+export const allBaskets = () => Object.entries(state.baskets)
+  .filter(([, b]) => b.lines.length)
+  .map(([slug, b]) => ({ slug, count: b.lines.reduce((n, l) => n + l.qty, 0), subtotal: b.lines.reduce((s, l) => s + l.unitPrice * l.qty, 0), updatedAt: b.updatedAt }))
+  .sort((a, b) => b.updatedAt - a.updatedAt);
 
-const cartListeners = [];
-export const onCartChanged = fn => cartListeners.push(fn);
-export function saveCart() {
-  if (!state.cart.lines.length) state.cart.restaurantSlug = null;
-  LS.set('morsel.cart', state.cart);
-  cartListeners.forEach(fn => fn());
+const basketListeners = [];
+export const onBasketChanged = fn => basketListeners.push(fn);
+function saveBaskets(slug) {
+  for (const [s, b] of Object.entries(state.baskets)) if (!b.lines.length) delete state.baskets[s];
+  LS.set(BASKETS_KEY, { promo: state.promo, baskets: state.baskets });
+  basketListeners.forEach(fn => fn(slug));
 }
-export function clearCart() { state.cart = emptyCart(); saveCart(); }
-export function resetCartKeepPromo() { state.cart = Object.assign(emptyCart(), { promo: state.cart.promo }); }
-export function setPromo(code) { state.cart.promo = code; LS.set('morsel.cart', state.cart); }
+const touch = slug => {
+  if (!state.baskets[slug]) state.baskets[slug] = { lines: [], updatedAt: Date.now() };
+  state.baskets[slug].updatedAt = Date.now();
+  return state.baskets[slug];
+};
 
-function repriceCart(detail) {
+/* Adds a line, merging it with an identical one. Returns false if the 20-item cap was hit. */
+export function addLine(slug, line) {
+  const b = touch(slug);
+  const same = b.lines.find(l => l.key === line.key);
+  let capped = false;
+  if (same) { capped = same.qty + line.qty > MAX_QTY; same.qty = Math.min(MAX_QTY, same.qty + line.qty); }
+  else b.lines.push(line);
+  saveBaskets(slug);
+  return !capped;
+}
+/* Replaces a line after editing it in the dish window (merging if it now matches another one). */
+export function replaceLine(slug, oldKey, line) {
+  const b = touch(slug);
+  const i = b.lines.findIndex(l => l.key === oldKey);
+  if (i < 0) return addLine(slug, line);
+  const twin = b.lines.find((l, j) => j !== i && l.key === line.key);
+  if (twin) { twin.qty = Math.min(MAX_QTY, twin.qty + line.qty); b.lines.splice(i, 1); }
+  else b.lines[i] = line;
+  saveBaskets(slug);
+  return true;
+}
+export function changeQty(slug, key, delta) {
+  const b = touch(slug);
+  const l = b.lines.find(x => x.key === key);
+  if (!l) return;
+  l.qty = Math.min(MAX_QTY, l.qty + delta);
+  if (l.qty <= 0) b.lines = b.lines.filter(x => x !== l);
+  saveBaskets(slug);
+}
+export function removeLine(slug, key) { const b = touch(slug); b.lines = b.lines.filter(x => x.key !== key); saveBaskets(slug); }
+export function clearBasket(slug) { delete state.baskets[slug]; saveBaskets(slug); }
+export function setPromo(code) { state.promo = code; saveBaskets(null); }
+
+/* Drops lines whose dish or choices no longer exist, and updates names and prices. */
+function repriceBasket(detail) {
+  const b = state.baskets[detail.slug];
+  if (!b) return;
   let changed = false;
-  state.cart.lines = state.cart.lines.filter(l => {
+  b.lines = b.lines.filter(l => {
     const it = findItem(detail, l.itemSlug);
-    if (!it || !selIsValid(it, l.sel)) { changed = true; return false; }
-    const { options, unitPrice } = selectedOptions(it, l.sel);
+    if (!it || !selIsValid(it, l.sel, l.remove || [])) { changed = true; return false; }
+    const { options, removed, unitPrice } = selectedOptions(it, l.sel, l.remove || []);
     if (unitPrice !== l.unitPrice || it.name !== l.name) changed = true;
-    Object.assign(l, { name: it.name, unitPrice, options });
+    Object.assign(l, { name: it.name, unitPrice, options, removed });
     return true;
   });
-  if (changed) saveCart();
+  if (changed) saveBaskets(detail.slug);
 }
 
 /* ================= Pricing (display only, the server recalculates everything) ================= */
@@ -151,15 +242,15 @@ export function promoError(code, r) {
   }
   return 'That code isn’t valid. Check the spelling and try again.';
 }
-export function pricing(withExtras) {
-  const r = R(state.cart.restaurantSlug);
-  const subtotal = cartSubtotal();
-  if (!r || !subtotal) return { subtotal: 0, deliveryFee: 0, serviceFee: 0, smallOrderFee: 0, discount: 0, deliveryDiscount: 0, tip: 0, total: 0 };
+export function pricing(slug, withExtras) {
+  const r = R(slug);
+  const subtotal = basketSubtotal(slug);
+  if (!r || !subtotal) return { subtotal: 0, deliveryFee: r ? r.deliveryFee : 0, serviceFee: 0, smallOrderFee: 0, discount: 0, deliveryDiscount: 0, tip: 0, total: 0 };
   const deliveryFee = r.deliveryFee;
   const smallOrderFee = Math.max(0, r.minOrder - subtotal);
   const serviceFee = clamp(Math.round(subtotal * 0.05), 49, 199);
   let discount = 0, deliveryDiscount = 0;
-  const promo = state.cart.promo;
+  const promo = state.promo;
   if (withExtras && promo && !promoError(promo, r)) {
     if (promo === 'WELCOME20') discount = Math.min(800, Math.round(subtotal * 0.2));
     if (promo === 'FREEDEL') deliveryDiscount = deliveryFee;
@@ -171,11 +262,11 @@ export function priceRows(p, opts = {}) {
   const rows = [];
   rows.push(['Subtotal', eur(p.subtotal)]);
   rows.push(['Delivery', p.deliveryFee === 0 ? '<span class="free">Free</span>' : p.deliveryDiscount ? `<span class="strike">${eur(p.deliveryFee)}</span><span class="free">Free</span>` : eur(p.deliveryFee)]);
-  rows.push(['Service fee', eur(p.serviceFee)]);
-  if (p.smallOrderFee) rows.push(['Small order fee', eur(p.smallOrderFee)]);
-  if (p.discount) rows.push([`Promo ${esc(state.cart.promo || opts.promo || '')}`, `<span class="neg">−${eur(p.discount)}</span>`]);
+  if (!opts.noService) rows.push(['Service fee', eur(p.serviceFee)]);
+  if (p.smallOrderFee && !opts.noService) rows.push(['Small order fee', eur(p.smallOrderFee)]);
+  if (p.discount) rows.push([`Promo ${esc(state.promo || opts.promo || '')}`, `<span class="neg">−${eur(p.discount)}</span>`]);
   if (opts.tip) rows.push(['Courier tip', eur(p.tip)]);
-  return `<dl class="rows">${rows.map(([a, b]) => `<div class="row"><dt>${a}</dt><dd>${b}</dd></div>`).join('')}<div class="row total"><dt>${opts.totalLabel || 'Total'}</dt><dd>${eur(p.total)}</dd></div></dl>`;
+  return `<dl class="rows">${rows.map(([a, b]) => `<div class="row"><dt>${a}</dt><dd>${b}</dd></div>`).join('')}${opts.noTotal ? '' : `<div class="row total"><dt>${opts.totalLabel || 'Total'}</dt><dd>${eur(p.total)}</dd></div>`}</dl>`;
 }
 
 export const isFav = r => !!(state.user && r && state.user.favorites.includes(r._id));

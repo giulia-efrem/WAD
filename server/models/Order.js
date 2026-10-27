@@ -14,6 +14,8 @@ const lineSchema = new mongoose.Schema({
   qty: { type: Number, required: true, min: 1, max: 20 },
   unitPrice: { type: Number, required: true, min: 0 },
   options: { type: [optionSchema], default: [] },
+  /* Ingredients left out, e.g. [{ id: 'basil', name: 'Basil' }] */
+  removed: { type: [new mongoose.Schema({ id: String, name: String }, { _id: false })], default: [] },
   note: { type: String, default: '' }
 }, { _id: false });
 
@@ -37,8 +39,9 @@ const orderSchema = new mongoose.Schema({
   etaMin: { type: Number, required: true },
   startAt: { type: Date, required: true },
   courier: { name: String, vehicle: String },
-  rating: {
-    type: new mongoose.Schema({ stars: { type: Number, min: 1, max: 5 }, comment: String, ratedAt: Date }, { _id: false }),
+  /* The customer's feedback, also saved as a Review. food is 1-5 stars, delivery is 'up' or 'down'. */
+  review: {
+    type: new mongoose.Schema({ food: { type: Number, min: 1, max: 5 }, delivery: { type: String, enum: ['up', 'down'] }, comment: String, reviewedAt: Date }, { _id: false }),
     default: null
   }
 }, { timestamps: true });

@@ -13,6 +13,10 @@ const db = require('../server/db');
 const User = require('../server/models/User');
 const Restaurant = require('../server/models/Restaurant');
 const Order = require('../server/models/Order');
+const Review = require('../server/models/Review');
+const INGREDIENTS = require('./ingredients');
+const { reviewsFor } = require('./reviews');
+const { refreshRating } = require('../server/lib/reviews');
 const { fieldsFromImagesEntry } = require('../server/lib/photos');
 const { OPTION_GROUPS, RESTAURANTS } = require('./catalog');
 
@@ -27,6 +31,18 @@ function loadImages() {
     if (!known.has(key)) console.warn(`  images.json: “${key}” doesn’t match any restaurant or dish, skipped`);
   }
   return images;
+}
+
+const idOf = name => name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+/* "~Basil" is removable, "Pizza dough" is not. */
+function ingredientsFor(key) {
+  const list = INGREDIENTS[key];
+  if (!list) throw new Error(`No ingredients for ${key} in seed/ingredients.js`);
+  return list.map(entry => {
+    const removable = entry.startsWith('~');
+    const name = removable ? entry.slice(1) : entry;
+    return { id: idOf(name), name, removable };
+  });
 }
 
 /* Photo fields for a key: a plain URL, or a full Unsplash entry with colour and credit. */
@@ -60,6 +76,7 @@ function buildRestaurant(r, i, images) {
         price: it.price,
         popular: it.popular,
         ...photoFor(images, `${r.slug}/${it.slug}`),
+        ingredients: ingredientsFor(`${r.slug}/${it.slug}`),
         optionGroups: it.options.map(key => {
           if (!OPTION_GROUPS[key]) throw new Error(`Unknown option group “${key}” on ${r.slug}/${it.slug}`);
           return OPTION_GROUPS[key];
@@ -90,6 +107,7 @@ async function seedDemo(bySlug) {
   const existing = await User.findOne({ email: DEMO.email });
   if (existing) {
     await Order.deleteMany({ user: existing._id });
+    await Review.deleteMany({ user: existing._id });
     await existing.deleteOne();
   }
   const user = await User.create({
@@ -119,21 +137,42 @@ async function seedDemo(bySlug) {
     etaMin: 35,
     startAt: when,
     courier: { name: 'Maya', vehicle: 'bike' },
-    rating: { stars: 5, comment: 'The broth was incredible.', ratedAt: new Date(when.getTime() + 3600000) },
+    review: { food: 5, delivery: 'up', comment: 'The broth was incredible.', reviewedAt: new Date(when.getTime() + 3600000) },
     createdAt: when,
     updatedAt: new Date(when.getTime() + 3600000)
   });
   await order.save({ timestamps: false });
-  console.log(`  Demo account ${DEMO.email} (password ${DEMO.password}) with 1 saved address and 1 delivered, rated order`);
+  const reviewed = new Date(when.getTime() + 3600000);
+  await new Review({
+    restaurant: r._id, user: user._id, order: order._id, author: 'Alex M.', food: 5, delivery: 'up',
+    comment: 'The broth was incredible.', ordered: '2× Tonkotsu ramen, Pork belly bao (2)', createdAt: reviewed, updatedAt: reviewed
+  }).save({ timestamps: false });
+  console.log(`  Demo account ${DEMO.email} (password ${DEMO.password}) with 1 saved address and 1 delivered, reviewed order`);
+}
+
+/* Replaces the seeded reviews (customer reviews are kept) and recalculates every rating. */
+async function seedReviews(bySlug) {
+  await Review.deleteMany({ seeded: true });
+  let total = 0;
+  for (const r of RESTAURANTS) {
+    const doc = bySlug[r.slug];
+    const docs = reviewsFor(r).map(x => ({ ...x, restaurant: doc._id, seeded: true }));
+    await Review.insertMany(docs, { timestamps: false });
+    total += docs.length;
+  }
+  const ratings = [];
+  for (const r of RESTAURANTS) { const res = await refreshRating(bySlug[r.slug]._id); ratings.push(`${r.slug} ${res.rating} (${res.reviewCount})`); }
+  console.log(`  ${total} seeded reviews. Ratings: ${ratings.join(', ')}`);
 }
 
 (async () => {
   try {
     await db.connect();
     console.log('Seeding Morsel…');
-    await Promise.all([User.init(), Restaurant.init(), Order.init()]);
+    await Promise.all([User.init(), Restaurant.init(), Order.init(), Review.init()]);
     const bySlug = await seedRestaurants();
     await seedDemo(bySlug);
+    await seedReviews(bySlug);
     console.log('Done.');
   } catch (err) {
     console.error('Seed failed:', err.message);

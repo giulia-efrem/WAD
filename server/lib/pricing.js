@@ -22,8 +22,8 @@ function findItem(restaurant, itemSlug) {
   return null;
 }
 
-/* Turns one requested line ({ itemSlug, qty, options: { groupKey: choiceId | [choiceIds] }, note })
-   into a priced order line, or throws a 400 that says what was wrong. */
+/* Turns one requested line ({ itemSlug, qty, options: { groupKey: choiceId | [choiceIds] }, remove: [ingredientIds], note })
+   into a priced order line, or throws a 400 that says what was wrong. Removing an ingredient is free. */
 function priceLine(restaurant, line) {
   const item = findItem(restaurant, line.itemSlug);
   if (!item) throw badRequest(`“${line.itemSlug}” isn’t on the menu at ${restaurant.name}.`, 'unknown_item');
@@ -62,7 +62,17 @@ function priceLine(restaurant, line) {
       if (unknown) throw badRequest(`“${unknown}” isn’t an option for ${item.name}.`, 'unknown_option');
     }
   }
-  return { itemSlug: item.slug, name: item.name, qty: line.qty, unitPrice, options, note: (line.note || '').trim() };
+  const remove = line.remove || [];
+  if (remove.some(id => typeof id !== 'string')) throw badRequest(`Invalid ingredient for ${item.name}.`, 'invalid_option');
+  if (new Set(remove).size !== remove.length) throw badRequest('Each ingredient can only be removed once.', 'invalid_option');
+  for (const id of remove) {
+    const ing = (item.ingredients || []).find(i => i.id === id);
+    if (!ing) throw badRequest(`“${id}” isn’t an ingredient of ${item.name}.`, 'unknown_ingredient');
+    if (!ing.removable) throw badRequest(`${ing.name} can’t be left out of ${item.name}.`, 'not_removable');
+  }
+  /* In the menu's order, so equal choices always describe the same line. */
+  const removed = (item.ingredients || []).filter(i => remove.includes(i.id)).map(i => ({ id: i.id, name: i.name }));
+  return { itemSlug: item.slug, name: item.name, qty: line.qty, unitPrice, options, removed, note: (line.note || '').trim() };
 }
 
 /* Returns '' when the code can be used, otherwise the message to show (same wording as the reference). */

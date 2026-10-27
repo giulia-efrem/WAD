@@ -1,6 +1,6 @@
 # Morsel
 
-A food delivery web app: browse 9 restaurants, build a bag, check out with promo codes and tips, and track the courier live. Express and MongoDB on the server, plain HTML, CSS and JavaScript in the browser. The original single-file design lives in `reference/morsel.html`.
+A food delivery web app: browse 9 restaurants, customise dishes, keep a basket per restaurant, check out with promo codes and tips, track the courier live, and review the order afterwards. Express and MongoDB on the server, plain HTML, CSS and JavaScript in the browser. The original single-file design lives in `reference/morsel.html`.
 
 ## Setup
 
@@ -98,16 +98,23 @@ reference/          the original single-file app
 
 ### Screenshots
 
-With the server running, `npm run screenshots` saves home, a restaurant, the dish window, the bag, checkout, order tracking, the account page, `/admin/photos` and `/credits` at 375, 768 and 1440 px in light and dark mode to `screenshots/`. It uses the Microsoft Edge already installed (set `PW_CHANNEL=chrome` for Chrome), logs in as the demo account, and creates a temporary admin user and order that it deletes again. Options: `--views=home,restaurant`, `--widths=375,1440`, `--themes=dark`, `--out=folder`.
+With the server running, `npm run screenshots` saves home, a restaurant, the dish window, the basket (the order panel on desktop, the order sheet on phones), checkout, order tracking, the account page, `/admin/photos` and `/credits` at 375, 768 and 1440 px in light and dark mode to `screenshots/`. It uses the Microsoft Edge already installed (set `PW_CHANNEL=chrome` for Chrome), logs in as the demo account, and creates a temporary admin user and order that it deletes again. Options: `--views=home,restaurant`, `--widths=375,1440`, `--themes=dark`, `--out=folder`.
 
 ## How the server keeps orders honest
 
-- **Prices come from the database.** The browser sends only item slugs, quantities, chosen option ids and notes. The server rebuilds each line (base price plus options), then adds delivery, the service fee (5% of the subtotal, min €0.49, max €1.99), a small order fee (the gap to the minimum order), the promo and the tip. Any price fields the browser sends are ignored. If the browser also sends `expectedTotal` and it doesn't match, the order is refused, so the customer never pays an amount they weren't shown.
-- **Requests are rejected** for unknown items or options, a missing required option, too many extras, quantities outside 1 to 20, ASAP orders from a closed restaurant, scheduled times outside opening hours (or less than 30 minutes or more than 24 hours ahead), tips other than €0, €1, €2 or €3, invalid promo codes, and addresses that aren't the user's.
+- **Prices come from the database.** The browser sends only item slugs, quantities, chosen option ids, the ids of ingredients to leave out, and notes. The server rebuilds each line (base price plus options), then adds delivery, the service fee (5% of the subtotal, min €0.49, max €1.99), a small order fee (the gap to the minimum order), the promo and the tip. Any price fields the browser sends are ignored. If the browser also sends `expectedTotal` and it doesn't match, the order is refused, so the customer never pays an amount they weren't shown.
+- **Requests are rejected** for unknown items or options, a missing required option, ingredients a dish doesn't have or that can't be left out, too many extras, quantities outside 1 to 20, ASAP orders from a closed restaurant, scheduled times outside opening hours (or less than 30 minutes or more than 24 hours ahead), tips other than €0, €1, €2 or €3, invalid promo codes, and addresses that aren't the user's.
 - **Promo codes.** `WELCOME20` takes 20% off food, up to €8, on a user's first order only. `FREEDEL` makes delivery free, and is refused where delivery is already free.
 - **Order status** is calculated from `startAt` and `DEMO_SPEED` with the same timeline as the reference: placed, confirmed, preparing, pickup, on the way, delivered. It is returned with every order. The tracking page runs the same timeline locally between server updates, so the courier moves smoothly.
 - **Opening hours** are checked in the server's local time zone.
 - **Ownership.** Users can only read and change their own addresses, favourites and orders. Other people's orders return 404.
+- **Reviews.** One per order, only after delivery: food 1 to 5 stars, delivery thumbs up or down, and an optional comment. A restaurant's `rating` and `reviewCount` are recalculated from its reviews each time one is added (and by `npm run seed`).
+
+## Ordering
+
+- **A basket per restaurant**, kept in the browser like Wolt. On wide screens the restaurant page has a sticky "Your order" panel; on phones and tablets a "View order" bar opens the same order as a bottom sheet. When there are baskets at other restaurants, a "Your baskets" button in the header lists them. Checkout is for one basket at a time (`/#checkout-smash-society`), and placing the order empties only that basket.
+- **Customising a dish.** Each dish has ingredients in MongoDB (`seed/ingredients.js`), some marked removable. The dish window shows the photo, name, description, ingredients and price, then the main choice (size, base...), "Remove ingredients", extras, the other choices (spice level, sauce...) and a note for the kitchen. Required choices start empty and must be picked; the button shows the running price. Basket lines read like "Smoky BBQ, no pickles, crispy bacon", and clicking one reopens the dish window to change it.
+- **Reviews** appear on each restaurant page with the average, the count, a 5-to-1 breakdown and a list sortable by newest, highest and lowest. `npm run seed` adds 20 to 40 generated reviews per restaurant (the same ones on every run) plus the demo account's.
 
 ## API reference
 
@@ -142,7 +149,8 @@ Money is always in cents.
 | Method | Path | Body | Notes |
 |---|---|---|---|
 | GET | `/restaurants` | | Cards with `isOpen` and a compact `dishes` list for search |
-| GET | `/restaurants/:slug` | | Full restaurant with `menu` and option groups |
+| GET | `/restaurants/:slug` | | Full restaurant with `menu`, option groups and each dish's `ingredients: [{ id, name, removable }]` |
+| GET | `/restaurants/:slug/reviews` | `?sort=newest|highest|lowest&page=1` | `{ summary: { average, count, breakdown, deliveryUpShare }, reviews, hasMore }`, 10 per page. Your own reviews have `mine: true` |
 | GET | `/credits` | | Every Unsplash photo in use with its photographer |
 | POST | `/promo/validate` | `{ code, restaurantSlug? }` | Login optional. Returns 200 `{ valid, code, kind }`, or 400 `invalid_promo` with the reason |
 
@@ -153,14 +161,14 @@ Money is always in cents.
 | POST | `/orders` | see below | Returns 201 `{ order }` |
 | GET | `/orders/mine` | | Newest first |
 | GET | `/orders/:id` | | |
-| POST | `/orders/:id/rate` | `{ stars: 1-5, comment? }` | Only once the order is delivered, and only once |
+| POST | `/orders/:id/review` | `{ food: 1-5, delivery: 'up' | 'down', comment? }` | Only after delivery, one per order (409 `already_reviewed`). Updates the restaurant's rating |
 | POST | `/orders/:id/skip` | | Demo only (`DEMO_SPEED` above 1): moves the order to its next stage |
 
 ```json
 {
   "restaurantSlug": "smash-society",
   "items": [
-    { "itemSlug": "classic", "qty": 2, "options": { "sauce": "bbq", "burgerExtras": ["bacon"] }, "note": "No pickles" }
+    { "itemSlug": "classic", "qty": 2, "options": { "sauce": "bbq", "burgerExtras": ["bacon"] }, "remove": ["pickles", "onion"], "note": "Well done" }
   ],
   "addressId": "…",
   "payment": "card",
@@ -194,4 +202,4 @@ Uploads must be JPG, PNG or WebP, up to 8 MB, and the file contents are checked,
 
 ## What stays in the browser
 
-Only the bag (with any promo code waiting to be applied) and dismissed banners are kept in `localStorage`. Accounts, addresses, favourites and orders all live in MongoDB.
+Only the baskets (one per restaurant, with any promo code waiting to be applied) and dismissed banners are kept in `localStorage`. Accounts, addresses, favourites, orders and reviews all live in MongoDB.

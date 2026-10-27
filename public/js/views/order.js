@@ -1,7 +1,7 @@
 import { $, $$, esc, eur, clock, dayTime, clamp, initials, plural } from '../util.js';
 import { ic, ICON, FOOD } from '../art.js';
 import { api } from '../api.js';
-import { state, R, catalog } from '../state.js';
+import { state, R, catalog, describeChoices } from '../state.js';
 import { progress, serverNow } from '../progress.js';
 import { toast } from '../ui.js';
 import { app, onLeave } from '../router.js';
@@ -107,7 +107,7 @@ export async function renderOrder(id) {
           <div id="tr-rate"></div>
           <section class="panel section-gap" aria-labelledby="tr-details" style="margin-top:24px">
             <h2 id="tr-details">Order details</h2>
-            <ul class="sum-items">${o.items.map(l => `<li><span><span class="q">${l.qty}×</span>${esc(l.name)}${l.options.length ? `<br><span class="muted" style="font-size:.85rem">${esc(l.options.map(x => x.choice).join(', '))}</span>` : ''}</span><span>${eur(l.unitPrice * l.qty)}</span></li>`).join('')}</ul>
+            <ul class="sum-items">${o.items.map(l => { const d = describeChoices(l.options, l.removed || []); return `<li><span><span class="q">${l.qty}×</span>${esc(l.name)}${d ? `<br><span class="muted" style="font-size:.85rem">${esc(d)}</span>` : ''}${l.note ? `<br><span class="muted" style="font-size:.85rem">Note: “${esc(l.note)}”</span>` : ''}</span><span>${eur(l.unitPrice * l.qty)}</span></li>`; }).join('')}</ul>
             ${priceRowsStatic(o)}
             <ul class="detail-list" style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">
               <li><span class="muted">Deliver to</span><span style="text-align:right">${esc(o.address.street)}${o.address.details ? ', ' + esc(o.address.details) : ''}</span></li>
@@ -149,7 +149,7 @@ export async function renderOrder(id) {
       $('#route-done').setAttribute('stroke-dashoffset', String(1 - pr.frac));
     }
     if (pr.stage !== lastStage) {
-      if (pr.stage === 'delivered') renderRating(order);
+      if (pr.stage === 'delivered') renderFeedback(order);
       lastStage = pr.stage;
     }
   };
@@ -174,40 +174,56 @@ function priceRowsStatic(o) {
   return `<dl class="rows">${rows.map(([a, b]) => `<div class="row"><dt>${a}</dt><dd>${b}</dd></div>`).join('')}<div class="row total"><dt>Total</dt><dd>${eur(p.total)}</dd></div></dl>`;
 }
 
-function renderRating(o) {
+/* After delivery: rate the food (1-5 stars) and the delivery (thumbs up or down), optional comment. */
+function renderFeedback(o) {
   const box = $('#tr-rate');
   if (!box) return;
-  if (o.rating) {
-    box.innerHTML = `<div class="rate"><div class="rated">${ic('check')}You rated this order ${plural(o.rating.stars, 'star', 'stars')}. Thanks for the feedback.</div></div>`;
+  if (o.review) {
+    box.innerHTML = `<div class="rate"><div class="rated">${ic('check')}<span>You rated the food ${plural(o.review.food, 'star', 'stars')} and gave the delivery a thumbs ${o.review.delivery}. Thanks for the feedback.</span></div></div>`;
     return;
   }
-  let stars = 0;
+  let food = 0, delivery = '';
   box.innerHTML = `<section class="rate panel" aria-labelledby="rate-h" style="margin-bottom:0">
     <h2 id="rate-h">How was your order?</h2>
-    <div class="stars" role="radiogroup" aria-label="Rating">${[1, 2, 3, 4, 5].map(n => `<button type="button" role="radio" aria-checked="false" data-star="${n}" aria-label="${plural(n, 'star', 'stars')}">${ic('star', 'fill')}</button>`).join('')}</div>
-    <div class="field"><label for="rate-c">Anything to add? <small>Optional</small></label><textarea class="input" id="rate-c" maxlength="240" placeholder="What did you love, or what could be better?"></textarea></div>
-    <button class="btn btn-primary" type="button" id="rate-send" disabled>Send rating</button>
+    <p class="rate-label" id="rate-food-l">The food</p>
+    <div class="stars" role="radiogroup" aria-labelledby="rate-food-l">${[1, 2, 3, 4, 5].map(n => `<button type="button" role="radio" aria-checked="false" data-star="${n}" aria-label="${plural(n, 'star', 'stars')}">${ic('star', 'fill')}</button>`).join('')}</div>
+    <p class="rate-label" id="rate-del-l">The delivery</p>
+    <div class="thumbs" role="radiogroup" aria-labelledby="rate-del-l">
+      <button type="button" role="radio" aria-checked="false" data-thumb="up">${ic('thumb')}<span>Good</span></button>
+      <button type="button" role="radio" aria-checked="false" data-thumb="down">${ic('thumb', 'flip')}<span>Not good</span></button>
+    </div>
+    <div class="field"><label for="rate-c">Anything to add? <small>Optional</small></label><textarea class="input" id="rate-c" maxlength="500" placeholder="What did you love, or what could be better?"></textarea></div>
+    <p class="err" id="rate-err" role="alert"></p>
+    <button class="btn btn-primary" type="button" id="rate-send" disabled>Send feedback</button>
   </section>`;
+  const ready = () => { $('#rate-send').disabled = !(food && delivery); };
   const onClick = async e => {
     const s = e.target.closest('[data-star]');
     if (s) {
-      stars = Number(s.dataset.star);
-      $$('[data-star]', box).forEach(b => { const on = Number(b.dataset.star) <= stars; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(Number(b.dataset.star) === stars)); });
-      $('#rate-send').disabled = false;
+      food = Number(s.dataset.star);
+      $$('[data-star]', box).forEach(b => { const on = Number(b.dataset.star) <= food; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(Number(b.dataset.star) === food)); });
+      ready();
       return;
     }
-    if (e.target.closest('#rate-send') && stars) {
+    const t = e.target.closest('[data-thumb]');
+    if (t) {
+      delivery = t.dataset.thumb;
+      $$('[data-thumb]', box).forEach(b => { const on = b === t; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+      ready();
+      return;
+    }
+    if (e.target.closest('#rate-send') && food && delivery) {
       const btn = $('#rate-send');
       btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Sending…';
       try {
-        const updated = await api.rateOrder(o._id, { stars, comment: $('#rate-c').value.trim() });
+        const updated = await api.reviewOrder(o._id, { food, delivery, comment: $('#rate-c').value.trim() });
         box.removeEventListener('click', onClick);
-        renderRating(updated);
+        renderFeedback(updated);
         if (state.refreshOrder) state.refreshOrder(updated);
-        toast('Thanks for rating your order');
+        toast('Thanks for your feedback');
       } catch (err) {
-        btn.disabled = false; btn.textContent = 'Send rating';
-        toast(err.message);
+        btn.disabled = false; btn.textContent = 'Send feedback';
+        $('#rate-err').textContent = err.message;
       }
     }
   };

@@ -1,7 +1,7 @@
-import { $, esc, eur, clock, plural, reduced } from '../util.js';
+import { $, esc, eur, clock, plural, reduced, logoBadge } from '../util.js';
 import { ic, art } from '../art.js';
 import { api } from '../api.js';
-import { state, R, menuOf, loadMenu, isOpen, etaText, cartCount, clearCart, setPromo, pricing, priceRows, promoError } from '../state.js';
+import { state, R, menuOf, loadMenu, isOpen, etaText, basketLines, basketCount, allBaskets, clearBasket, setPromo, pricing, priceRows, promoError, describeChoices } from '../state.js';
 import { hasPhoto, photoImg, photoStyle } from '../photos.js';
 import { toast } from '../ui.js';
 import { openAuth } from './auth.js';
@@ -20,21 +20,33 @@ function scheduleSlots(r) {
   return slots;
 }
 
+/* Checkout is for one restaurant's basket. Without one (an old #checkout link), pick a basket first. */
+const checkoutSlug = () => {
+  if (state.params.slug) return state.params.slug;
+  const list = allBaskets().filter(b => R(b.slug));
+  return list.length === 1 ? list[0].slug : null;
+};
+
 export function renderCheckout() {
-  const r = R(state.cart.restaurantSlug);
-  if (!r || !state.cart.lines.length) {
-    app().innerHTML = `<div class="wrap"><div class="empty"><div class="empty-art">${art('cupcake')}</div><h3>Your bag is empty</h3><p>Pick a restaurant and add a few things, then come back to check out.</p><button class="btn btn-primary" type="button" data-act="home">Browse restaurants</button></div></div>`;
+  const slug = checkoutSlug();
+  const r = slug ? R(slug) : null;
+  if (!r || !basketLines(slug).length) {
+    const list = allBaskets().filter(b => R(b.slug));
+    app().innerHTML = list.length
+      ? `<div class="wrap page"><h1 class="page-title">Which order?</h1><p class="lead">Each restaurant has its own basket. Choose one to check out.</p>
+          <ul class="basket-choices">${list.map(b => { const x = R(b.slug); return `<li><button class="radio-card" type="button" data-act="checkout-basket" data-r="${esc(b.slug)}">${logoBadge(x)}<span class="rc-main"><strong>${esc(x.name)}</strong><span class="sub">${plural(b.count, 'item', 'items')} · ${eur(b.subtotal)}</span></span>${ic('back', 'chev-r')}</button></li>`; }).join('')}</ul></div>`
+      : `<div class="wrap"><div class="empty"><div class="empty-art">${art('cupcake')}</div><h3>Nothing to check out yet</h3><p>Pick a restaurant and add a few things, then come back to check out.</p><button class="btn btn-primary" type="button" data-act="home">Browse restaurants</button></div></div>`;
     return;
   }
   /* Brings bag prices up to date with the menu before the customer pays. */
   if (!menuOf(r.slug)) loadMenu(r.slug).catch(() => {});
   const u = state.user;
-  const p = pricing(true);
+  const p = pricing(slug, true);
   const open = isOpen(r);
   const slots = scheduleSlots(r);
   if (!open && state.co.when === 'asap') state.co.when = 'later';
   if (state.co.when === 'later' && !slots.some(s => String(s.getTime()) === state.co.slot)) state.co.slot = slots[0] ? String(slots[0].getTime()) : '';
-  const promo = state.cart.promo;
+  const promo = state.promo;
   const promoErr = promo ? promoError(promo, r) : '';
   const scroll = window.scrollY;
   app().innerHTML = `
@@ -73,8 +85,8 @@ export function renderCheckout() {
         </div>
         <aside class="sticky-sum">
           <section class="panel" aria-labelledby="co-sum">
-            <div class="sum-r"><span class="thumb ${hasPhoto(r) ? 'has-photo' : ''}" style="--cv:${r.color};${photoStyle(r)}">${art(r.illustration)}${photoImg(r, { size: 'thumb' })}</span><div><h2 id="co-sum" style="margin:0">${esc(r.name)}</h2><span class="muted" style="font-size:.92rem">${plural(cartCount(), 'item', 'items')}</span></div></div>
-            <ul class="sum-items">${state.cart.lines.map(l => `<li><span><span class="q">${l.qty}×</span>${esc(l.name)}${l.options.length ? `<br><span class="muted" style="font-size:.85rem">${esc(l.options.map(o => o.choice).join(', '))}</span>` : ''}</span><span>${eur(l.unitPrice * l.qty)}</span></li>`).join('')}</ul>
+            <div class="sum-r"><span class="thumb ${hasPhoto(r) ? 'has-photo' : ''}" style="--cv:${r.color};${photoStyle(r)}">${art(r.illustration)}${photoImg(r, { size: 'thumb' })}</span><div><h2 id="co-sum" style="margin:0">${esc(r.name)}</h2><span class="muted" style="font-size:.92rem">${plural(basketCount(slug), 'item', 'items')}</span></div></div>
+            <ul class="sum-items">${basketLines(slug).map(l => { const d = describeChoices(l.options, l.removed || []); return `<li><span><span class="q">${l.qty}×</span>${esc(l.name)}${d ? `<br><span class="muted" style="font-size:.85rem">${esc(d)}</span>` : ''}${l.note ? `<br><span class="muted" style="font-size:.85rem">Note: “${esc(l.note)}”</span>` : ''}</span><span>${eur(l.unitPrice * l.qty)}</span></li>`; }).join('')}</ul>
             <p class="sub-label">Promo code</p>
             ${promo && !promoErr ? `<div class="applied"><span>${ic('tag')} ${esc(promo)} applied</span><button class="link-btn" type="button" data-act="remove-promo">Remove</button></div>`
               : `<div class="promo-row"><label class="visually-hidden" for="promo">Promo code</label><input class="input" id="promo" placeholder="Enter code" value="${esc(promo || '')}" autocomplete="off"><button class="btn btn-secondary" type="button" data-act="apply-promo" style="min-height:46px">Apply</button></div>
@@ -105,7 +117,7 @@ export async function applyPromo() {
   if (!code) { errEl.textContent = 'Enter a promo code.'; input.focus(); return; }
   applying = true;
   try {
-    await api.validatePromo(code, state.cart.restaurantSlug);
+    await api.validatePromo(code, checkoutSlug());
   } catch (err) {
     applying = false;
     errEl.textContent = err.message;
@@ -120,7 +132,8 @@ export async function applyPromo() {
 
 export async function placeOrder() {
   if (!state.user) { openAuth('login', { reason: 'Log in to place your order. Your bag is saved.' }); return; }
-  const r = R(state.cart.restaurantSlug);
+  const slug = checkoutSlug();
+  const r = R(slug);
   const addr = state.user.addresses.find(a => a._id === state.co.addressId);
   if (!addr) {
     const err = $('#err-addr');
@@ -133,13 +146,13 @@ export async function placeOrder() {
   const btn = $('#place-btn');
   btn.disabled = true;
   btn.innerHTML = '<span><span class="spinner" style="display:inline-block;vertical-align:-3px;margin-right:8px"></span>Placing order…</span>';
-  const p = pricing(true);
+  const p = pricing(slug, true);
   const later = state.co.when === 'later';
-  const promo = state.cart.promo;
+  const promo = state.promo;
   try {
     const order = await api.createOrder({
       restaurantSlug: r.slug,
-      items: state.cart.lines.map(l => ({ itemSlug: l.itemSlug, qty: l.qty, options: l.sel, note: l.note })),
+      items: basketLines(slug).map(l => ({ itemSlug: l.itemSlug, qty: l.qty, options: l.sel, remove: l.remove || [], note: l.note })),
       addressId: addr._id,
       payment: state.co.pay,
       courierNote: state.co.note.trim(),
@@ -150,7 +163,8 @@ export async function placeOrder() {
     });
     state.orderCount += 1;
     state.tip = 100; state.co.note = ''; state.co.when = 'asap';
-    clearCart();
+    clearBasket(slug);
+    setPromo(null);
     go('order', { id: order._id });
     toast('Order placed');
   } catch (err) {

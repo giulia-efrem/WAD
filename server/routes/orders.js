@@ -6,6 +6,8 @@ const { z } = require('zod');
 const config = require('../config');
 const Restaurant = require('../models/Restaurant');
 const Order = require('../models/Order');
+const Review = require('../models/Review');
+const { authorName, orderedText, refreshRating } = require('../lib/reviews');
 const validate = require('../middleware/validate');
 const { requireUser } = require('../middleware/auth');
 const { objectId, slug } = require('../lib/schemas');
@@ -27,6 +29,7 @@ const lineSchema = z.object({
   itemSlug: slug,
   qty: z.number({ error: 'Each item needs a quantity.' }).int('Quantities must be whole numbers.').min(1, 'Quantities must be between 1 and 20.').max(20, 'Quantities must be between 1 and 20.'),
   options: z.record(z.string().max(40), z.union([z.string().max(40), z.array(z.string().max(40)).max(10)])).optional().default({}),
+  remove: z.array(z.string().max(40)).max(20, 'That’s too many ingredients to remove.').optional().default([]),
   note: z.string().trim().max(140, 'Kitchen notes can be up to 140 characters.').optional().default('')
 });
 
@@ -47,9 +50,10 @@ const createSchema = z.object({
 });
 
 const idParams = z.object({ id: objectId('order') });
-const rateSchema = z.object({
-  stars: z.number({ error: 'Choose from 1 to 5 stars.' }).int().min(1, 'Choose from 1 to 5 stars.').max(5, 'Choose from 1 to 5 stars.'),
-  comment: z.string().trim().max(240, 'Comments can be up to 240 characters.').optional().default('')
+const reviewSchema = z.object({
+  food: z.number({ error: 'Rate the food from 1 to 5 stars.' }).int().min(1, 'Rate the food from 1 to 5 stars.').max(5, 'Rate the food from 1 to 5 stars.'),
+  delivery: z.enum(['up', 'down'], { error: 'Give the delivery a thumbs up or down.' }),
+  comment: z.string().trim().max(500, 'Comments can be up to 500 characters.').optional().default('')
 });
 
 async function findMine(req) {
@@ -131,12 +135,22 @@ router.get('/:id', validate(idParams, 'params'), async (req, res) => {
   res.json({ order: orderOut(await findMine(req)) });
 });
 
-router.post('/:id/rate', validate(idParams, 'params'), validate(rateSchema), async (req, res) => {
+/* Feedback after delivery: food 1-5 stars, delivery thumbs up or down, optional comment. One per order. */
+router.post('/:id/review', validate(idParams, 'params'), validate(reviewSchema), async (req, res) => {
   const order = await findMine(req);
-  if (progress(order).stage !== 'delivered') throw badRequest('You can rate your order once it has been delivered.', 'not_delivered');
-  if (order.rating && order.rating.stars) throw conflict('You’ve already rated this order.', 'already_rated');
-  order.rating = { stars: req.body.stars, comment: req.body.comment, ratedAt: new Date() };
+  if (progress(order).stage !== 'delivered') throw badRequest('You can review your order once it has been delivered.', 'not_delivered');
+  if ((order.review && order.review.food) || await Review.exists({ order: order._id })) throw conflict('You’ve already reviewed this order.', 'already_reviewed');
+  const { food, delivery, comment } = req.body;
+  const restaurantId = order.restaurant._id || order.restaurant;
+  try {
+    await Review.create({ restaurant: restaurantId, user: req.user._id, order: order._id, author: authorName(req.user.name), food, delivery, comment, ordered: orderedText(order.items) });
+  } catch (err) {
+    if (err.code === 11000) throw conflict('You’ve already reviewed this order.', 'already_reviewed');
+    throw err;
+  }
+  order.review = { food, delivery, comment, reviewedAt: new Date() };
   await order.save();
+  await refreshRating(restaurantId);
   res.json({ order: orderOut(order) });
 });
 

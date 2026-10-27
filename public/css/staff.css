@@ -362,3 +362,5 @@
 }
 /* Partner menu: a narrower list keeps each dish close to its switch on wide screens. */
 .panel.avail { max-width: 860px; }
+/* Courier: empty lists read as a calm placeholder rather than loose text. */
+.c-h ~ .col-empty { margin: 0 0 8px; padding: 20px 16px; border: 1px dashed var(--line-strong); border-radius: 16px; background: var(--surface); text-align: center; text-wrap: pretty; }

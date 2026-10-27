@@ -10,8 +10,8 @@ import { renderNotFound } from './pages.js';
 
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-/* Shown while a menu loads. */
-function skeleton() {
+/* Shown while a menu loads (and while the app starts on a restaurant's address). */
+export function skeleton() {
   return `<div aria-busy="true" aria-label="Loading menu"><div class="sk sk-hero"></div>
     <div class="wrap"><div class="sk sk-title"></div><div class="sk sk-text w40" style="margin-top:14px"></div><div class="sk sk-text w60"></div>
       <div class="items" style="margin-top:40px">${'<div class="sk sk-item"></div>'.repeat(4)}</div></div></div>`;

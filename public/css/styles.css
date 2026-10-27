@@ -1077,3 +1077,11 @@ legend.opt-head + * { clear: both; }
 /* The "also used" note is its own line already, so the break after it would leave a gap. */
 .credit-list .also + br { display: none; }
 .credit-list .muted { display: inline-block; margin-top: 2px; }
+
+/* ================= Polish: loading skeletons ================= */
+.sk-cat { width: 72px; height: 72px; border-radius: 50%; }
+.cats .cat:has(.sk) { cursor: default; }
+/* The hero photo's own background rule would otherwise hide its shimmer. */
+.hero-photo.sk { background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%); background-size: 200% 100%; }
+.hero-photo.sk::before { display: none; }
+.hero-sub, .r-tag, .modal-head p { text-wrap: balance; }

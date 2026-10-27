@@ -9,7 +9,7 @@ import { updateHeader } from './views/header.js';
 import { openAuth, requireAuth } from './views/auth.js';
 import { openAddressForm, openAddressPicker } from './views/addresses.js';
 import { renderHome, renderHomeSkeleton, updateResults } from './views/home.js';
-import { openItem, editLine, refreshItemBadges } from './views/restaurant.js';
+import { openItem, editLine, refreshItemBadges, skeleton as restaurantSkeleton } from './views/restaurant.js';
 import { renderCheckout, applyPromo, placeOrder } from './views/checkout.js';
 
 /* Whatever shows a basket redraws when one changes. */
@@ -242,7 +242,10 @@ window.addEventListener('morsel:account-deleted', () => {
 (async () => {
   updateHeader();
   const route = routeOf(new URL(location.href));
+  /* Something shaped like the page shows while the account and restaurants load. */
   if (route.view === 'home') renderHomeSkeleton();
+  else if (route.view === 'restaurant') app().innerHTML = restaurantSkeleton();
+  else if (!PATH_VIEWS[location.pathname]) app().innerHTML = `<div class="wrap" aria-busy="true" aria-label="Loading"><div class="sk sk-text w40" style="margin-top:28px;max-width:200px"></div><div class="sk sk-title" style="margin-top:16px"></div><div class="sk sk-item" style="margin-top:28px"></div><div class="sk sk-item" style="margin-top:14px"></div></div>`;
   try {
     const [user] = await Promise.all([api.me(), loadRestaurants()]);
     state.user = user;

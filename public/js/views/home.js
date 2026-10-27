@@ -163,6 +163,7 @@ function catHTML(c) {
 export function renderHomeSkeleton() {
   app().innerHTML = `${heroHTML()}
     <section class="wrap" aria-busy="true" aria-label="Loading restaurants">
+      <div class="cats" aria-hidden="true">${'<div class="cat"><div class="sk sk-cat"></div><div class="sk sk-text" style="width:48px;margin:0"></div></div>'.repeat(8)}</div>
       <div class="row-sec"><div class="sk sk-text w40" style="height:24px;max-width:240px"></div>
         <div class="grid" style="margin-top:14px;padding-bottom:40px">${skeletonCard().repeat(4)}</div></div>
     </section>`;

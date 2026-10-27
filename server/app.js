@@ -58,7 +58,8 @@ app.get('/admin/photos', (req, res) => res.sendFile(path.join(config.publicDir, 
 app.get('/partner', (req, res) => res.sendFile(path.join(config.publicDir, 'partner.html')));
 app.get('/courier', (req, res) => res.sendFile(path.join(config.publicDir, 'courier.html')));
 /* Pages of the main app with their own address. The front end picks the view from the path. */
-app.get(['/credits', '/about', '/help', '/terms', '/privacy'], (req, res) => res.sendFile(path.join(config.publicDir, 'index.html')));
+app.get(['/credits', '/about', '/help', '/terms', '/privacy', '/account', '/checkout', '/checkout/:slug', '/r/:slug', '/order/:id'],
+  (req, res) => res.sendFile(path.join(config.publicDir, 'index.html')));
 app.use(express.static(config.publicDir, { extensions: ['html'] }));
 
 /* Any other page: the app with a 404 status, so it shows its "page not found" view. */

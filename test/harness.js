@@ -58,6 +58,9 @@ async function waitForServer(base, child, log) {
 async function startTestServer({ port = Number(process.env.TEST_PORT || 3100) } = {}) {
   const uri = testUri();
   assertTestDb(uri);
+  /* Something already answering on the port would be tested instead of this code. */
+  try { await fetch(`http://localhost:${port}/`); throw new Error(`Port ${port} is already in use. Stop whatever runs there (an earlier test server?) or set TEST_PORT.`); }
+  catch (err) { if (err.message.startsWith('Port ')) throw err; }
   await resetDb(uri);
   const log = [];
   const child = spawn(process.execPath, ['server/app.js'], { cwd: ROOT, env: env(uri, port), stdio: ['ignore', 'pipe', 'pipe'] });

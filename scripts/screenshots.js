@@ -117,26 +117,26 @@ async function shoot(page, file, full) {
 
 const VIEW_STEPS = {
   async home(page) { await page.goto(BASE + '/'); await page.waitForSelector('.card'); return true; },
-  async restaurant(page) { await page.goto(BASE + '/#r-forno-sette'); await page.waitForSelector('.item'); return true; },
+  async restaurant(page) { await page.goto(BASE + '/r/forno-sette'); await page.waitForSelector('.item'); return true; },
   async dish(page) {
-    await page.goto(BASE + '/#r-forno-sette'); await page.waitForSelector('.item[data-i="margherita"]');
+    await page.goto(BASE + '/r/forno-sette'); await page.waitForSelector('.item[data-i="margherita"]');
     await page.click('.item[data-i="margherita"]'); await page.waitForSelector('#item-add'); return false;
   },
   /* Desktop: the order panel next to the menu. Phones and tablets: the order opened as a sheet. */
   async basket(page) {
-    await page.goto(BASE + '/#r-smash-society'); await page.waitForSelector('.item');
+    await page.goto(BASE + '/r/smash-society'); await page.waitForSelector('.item');
     if (page.viewportSize().width < 1100) { await page.click('#orderbar'); await page.waitForSelector('#sheet-order .oline'); }
     else { await page.waitForSelector('#order-panel .oline'); }
     return false;
   },
-  async checkout(page) { await page.goto(BASE + '/#checkout-smash-society'); await page.waitForSelector('#place-btn'); return true; },
+  async checkout(page) { await page.goto(BASE + '/checkout/smash-society'); await page.waitForSelector('#place-btn'); return true; },
   async order(page, ctx) {
     /* Put the order back to “on the way” for every shot, since demo time keeps running. */
     await onTheWay(ctx.orderId);
-    await page.goto(`${BASE}/#order-${ctx.orderId}`); await page.waitForSelector('#tr-title:not(:empty)'); await page.waitForTimeout(800); return true; },
+    await page.goto(`${BASE}/order/${ctx.orderId}`); await page.waitForSelector('#tr-title:not(:empty)'); await page.waitForTimeout(800); return true; },
   /* Logged out: the login window over the home page. */
   async login(page) { await page.goto(BASE + '/'); await page.waitForSelector('.card'); await page.click('#acct-btn'); await page.waitForSelector('#auth-form'); await page.waitForTimeout(300); return false; },
-  async account(page) { await page.goto(BASE + '/#account'); await page.waitForSelector('.order-row'); return true; },
+  async account(page) { await page.goto(BASE + '/account'); await page.waitForSelector('.order-row'); return true; },
   async admin(page) { await page.goto(BASE + '/admin'); await page.waitForSelector('.cols-chart'); return true; },
   async partner(page, ctx) { await onTheWay(ctx.orderId); await page.goto(BASE + '/partner'); await page.waitForSelector('.board'); return true; },
   async courier(page) { await page.goto(BASE + '/courier'); await page.waitForSelector('.c-tiles'); return true; },

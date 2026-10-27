@@ -53,7 +53,7 @@ const PAGES = {
   help: {
     title: 'Help',
     lead: 'Answers to the questions people ask most.',
-    body: `<h2>Where is my order?</h2><p>Open <a href="/#account">your account</a> and choose the order to see it live on the map, with an estimated arrival time.</p>
+    body: `<h2>Where is my order?</h2><p>Open <a href="/account">your account</a> and choose the order to see it live on the map, with an estimated arrival time.</p>
       <h2>Can I change my delivery address?</h2><p>Use the address button at the top of any page to pick a saved address or add a new one before you check out.</p>
       <h2>How do promo codes work?</h2><p>Enter a code at checkout. WELCOME20 takes 20% off your first order, up to €8. FREEDEL makes delivery free where there is a delivery fee.</p>
       <h2>Something else?</h2><p>This is a demo, so there is no support team yet. In a real app, this is where you would contact us.</p>`

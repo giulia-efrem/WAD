@@ -4,7 +4,7 @@ import { art } from './art.js';
 import { api } from './api.js';
 import { state, R, loadRestaurants, loadMenu, findItem, selectedOptions, dealPrice, mainPart, lineKey, isFav, addLine, changeQty, onBasketChanged, setPromo } from './state.js';
 import { confirmDialog, closeAllModals, toast } from './ui.js';
-import { app, render, go, PATH_VIEWS } from './router.js';
+import { app, render, go, PATH_VIEWS, routeOf, pathFor } from './router.js';
 import { refreshOrderUI, openOrderSheet, toggleBasketsMenu } from './views/basket.js';
 import { updateHeader } from './views/header.js';
 import { openAuth, requireAuth } from './views/auth.js';
@@ -72,25 +72,15 @@ async function reorder(id) {
   toast(added ? `Added ${added} ${added === 1 ? 'item' : 'items'} to your ${r.name} order` : 'Those dishes aren’t on the menu any more.');
 }
 
-/* Works out which view a URL shows: /credits and friends by path, the rest by hash as before. */
-function routeOf(url) {
-  if (PATH_VIEWS[url.pathname]) return { view: PATH_VIEWS[url.pathname], params: {} };
-  if (url.pathname !== '/' && url.pathname !== '/index.html') return { view: 'notfound', params: {} };
-  const hash = (url.hash || '').slice(1);
-  if (hash.startsWith('r-')) return { view: 'restaurant', params: { id: hash.slice(2) } };
-  if (hash.startsWith('order-')) return { view: 'order', params: { id: hash.slice(6) } };
-  if (hash.startsWith('checkout-')) return { view: 'checkout', params: { slug: hash.slice(9) } };
-  if (['checkout', 'account'].includes(hash)) return { view: hash, params: {} };
-  return { view: 'home', params: {} };
-}
-
 /* In-app links (footer, help page) switch views without reloading the page. */
 document.addEventListener('click', e => {
   const a = e.target.closest('a[href]');
   if (!a || a.target || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
   const url = new URL(a.href, location.href);
-  if (url.origin !== location.origin || url.pathname.startsWith('/admin') || url.pathname.startsWith('/api')) return;
+  if (url.origin !== location.origin) return;
+  /* Only the app's own pages; /admin, /partner, /courier and anything else load normally. */
   const route = routeOf(url);
+  if (route.view === 'notfound') return;
   e.preventDefault();
   closeAllModals();
   go(route.view, route.params);
@@ -216,6 +206,9 @@ window.addEventListener('morsel:signed-out', e => {
   toast(e.detail === 'account_disabled' ? 'This account has been disabled. Contact Morsel support.' : 'Your session has ended. Log in again.');
 });
 window.addEventListener('morsel:user-changed', () => updateHeader());
+/* A page restored from the back/forward cache (say, after a demo login opened a staff page) can show
+   a login window with its buttons still busy, or a session that has since ended. Load it fresh. */
+window.addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
 window.addEventListener('morsel:account-deleted', () => {
   state.user = null; state.orderCount = 0; state.co.addressId = null;
   updateHeader();
@@ -240,6 +233,8 @@ window.addEventListener('morsel:account-deleted', () => {
 (async () => {
   updateHeader();
   const route = routeOf(new URL(location.href));
+  /* An old link such as /#r-forno-sette gets the page's new address. */
+  if (location.hash && route.view !== 'home' && location.pathname === '/') history.replaceState(null, '', pathFor(route.view, route.params));
   /* Something shaped like the page shows while the account and restaurants load. */
   if (route.view === 'home') renderHomeSkeleton();
   else if (route.view === 'restaurant') app().innerHTML = restaurantSkeleton();

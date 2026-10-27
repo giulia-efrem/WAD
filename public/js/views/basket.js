@@ -109,7 +109,7 @@ export function toggleBasketsMenu() {
   pop.innerHTML = `<p class="pop-title">Your baskets</p>
     <ul>${list.map(b => {
       const r = R(b.slug);
-      return `<li><a href="/#r-${esc(b.slug)}" class="pop-item ${b.slug === here ? 'is-here' : ''}" data-basket="${esc(b.slug)}">
+      return `<li><a href="/r/${esc(b.slug)}" class="pop-item ${b.slug === here ? 'is-here' : ''}" data-basket="${esc(b.slug)}">
         ${logoBadge(r)}<span><strong>${esc(r.name)}</strong><small>${plural(b.count, 'item', 'items')} · ${eur(b.subtotal)}${b.slug === here ? ' · on screen' : ''}</small></span>${ic('back', 'chev-r')}</a></li>`;
     }).join('')}</ul>`;
   pop.hidden = false;

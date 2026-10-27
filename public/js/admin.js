@@ -291,7 +291,7 @@ async function drawRestaurants() {
         <button class="btn btn-sm btn-secondary" type="button" data-act="edit-rest" data-slug="${esc(r.slug)}">Edit</button>
         <a class="btn btn-sm btn-secondary" href="#menus/${esc(r.slug)}">Menu</a>
         <button class="btn btn-sm btn-outline" type="button" data-act="pause-rest" data-slug="${esc(r.slug)}" data-paused="${r.paused}">${r.paused ? 'Resume orders' : 'Pause orders'}</button>
-        <a class="link-btn" href="/#r-${esc(r.slug)}" target="_blank" rel="noopener">View page</a>
+        <a class="link-btn" href="/r/${esc(r.slug)}" target="_blank" rel="noopener">View page</a>
       </div>
     </article>`).join('')}</div>`;
 }

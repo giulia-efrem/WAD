@@ -1,7 +1,8 @@
 /* Login window demo accounts. Run with npm run test:e2e. */
 const { chromium } = require('playwright');
 const B = process.env.MORSEL_TEST_BASE;
-const out = process.argv[2];
+const out = require('path').join(require('os').tmpdir(), 'morsel-e2e', 'demo-logins');
+require('fs').mkdirSync(out, { recursive: true });
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) { pass++; console.log('  ok', m); } else { fail++; console.log('  FAIL', m); } };
 (async () => {

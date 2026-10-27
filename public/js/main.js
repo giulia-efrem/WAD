@@ -104,6 +104,7 @@ document.addEventListener('click', async e => {
   try {
     switch (act) {
       case 'reload': location.reload(); break;
+      case 'to-top': window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' }); break;
       case 'home': go('home'); break;
       case 'see-all': {
         Object.assign(state, { q: '', cat: 'all', openNow: false, freeDel: false, topRated: false, sort: 'recommended' }, JSON.parse(el.dataset.see));
@@ -221,6 +222,21 @@ window.addEventListener('morsel:account-deleted', () => {
   go('home');
   toast('Your account has been deleted');
 });
+
+/* The header gains a soft edge once content scrolls under it; long pages get a back-to-top button. */
+{
+  const topbar = $('.topbar'), toTop = $('#to-top');
+  let ticking = false;
+  const onScroll = () => {
+    ticking = false;
+    const y = window.scrollY;
+    topbar.classList.toggle('scrolled', y > 4);
+    const show = y > window.innerHeight * 1.5;
+    if (show !== toTop.classList.contains('show')) { toTop.classList.toggle('show', show); toTop.inert = !show; }
+  };
+  window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+  onScroll();
+}
 
 /* ================= Start ================= */
 (async () => {

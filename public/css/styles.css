@@ -143,8 +143,9 @@ h1, h2, h3 { text-wrap: balance; }
 .topbar {
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30;
   background: var(--header-bg); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid transparent; transition: border-color .2s, box-shadow .2s;
 }
+.topbar.scrolled { border-bottom-color: var(--line); box-shadow: 0 6px 20px -12px rgba(29, 20, 40, 0.28); }
 .topbar-inner { display: flex; align-items: center; gap: 14px; height: 68px; }
 .logo { display: inline-flex; align-items: center; gap: 9px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--ink); flex: none; }
 .logo-mark { width: 36px; height: 36px; display: block; }
@@ -295,7 +296,8 @@ h1, h2, h3 { text-wrap: balance; }
 /* Restaurant cards (same proportions in rows and the grid) */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 32px 22px; padding-bottom: 72px; }
 .card { position: relative; border-radius: var(--r-lg); }
-.cover { position: relative; aspect-ratio: 16 / 10; border-radius: var(--r-lg); overflow: hidden; background: var(--cv); transition: box-shadow .25s; }
+.cover { position: relative; aspect-ratio: 16 / 10; border-radius: var(--r-lg); overflow: hidden; background: var(--cv); transition: box-shadow .25s, transform .15s; }
+.card:active .cover { transform: scale(0.985); }
 .cover::before, .r-hero::before, .item-band::before, .item-media::before {
   content: ""; position: absolute; inset: 0; opacity: 0.16;
   background-image: radial-gradient(var(--cvi) 1.5px, transparent 1.8px); background-size: 18px 18px;
@@ -304,7 +306,10 @@ h1, h2, h3 { text-wrap: balance; }
 .cover .art svg, .r-hero .art svg, .item-band .art svg, .item-media .art svg { display: block; width: 100%; height: auto; }
 .card:hover .cover { box-shadow: var(--shadow-hover); }
 .card:hover .cover .art { transform: rotate(-3deg) scale(1.05); }
-.veil { position: absolute; inset: 0; z-index: 2; background: var(--veil); color: var(--veil-ink); display: grid; place-items: center; font-weight: 700; text-align: center; padding: 16px; line-height: 1.35; }
+.veil { position: absolute; inset: 0; z-index: 2; background: var(--veil); color: var(--veil-ink); display: grid; place-items: center; text-align: center; padding: 16px; line-height: 1.35; }
+.veil span { display: grid; gap: 2px; }
+.veil strong { font-size: 1.05rem; font-weight: 700; }
+.veil small { font-size: 0.88rem; font-weight: 500; opacity: 0.88; }
 .card-link { position: absolute; inset: 0; z-index: 3; border: 0; border-radius: var(--r-lg); background: transparent; cursor: pointer; }
 .card-link:focus-visible { outline: 3px solid var(--brand); outline-offset: 4px; }
 .fav {
@@ -599,7 +604,7 @@ select.input { appearance: auto; }
 @media (max-width: 600px) { .addr-row { flex-wrap: wrap; } .addr-row .acts { width: 100%; justify-content: flex-start; padding-left: 56px; } }
 
 /* Footer, toast */
-.site-footer { margin-top: 24px; border-top: 1px solid var(--line); background: var(--surface); padding: 44px 0 calc(110px + env(safe-area-inset-bottom, 0px)); color: var(--muted); font-size: var(--fs-sm); }
+.site-footer { margin-top: 24px; border-top: 1px solid var(--line); background: var(--surface); padding: 48px 0 calc(48px + env(safe-area-inset-bottom, 0px)); color: var(--muted); font-size: var(--fs-sm); }
 .footer-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr)); gap: 32px 24px; }
 .footer-brand .logo { text-decoration: none; }
 .footer-brand p { margin: 12px 0 0; max-width: 32ch; }
@@ -959,3 +964,36 @@ legend.opt-head { display: flex; width: 100%; padding: 0; }
 .demo-txt strong { display: block; font-size: 0.9rem; line-height: 1.25; }
 .demo-txt small { display: block; overflow: hidden; color: var(--muted); font-size: 0.78rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 380px) { .demo-grid { grid-template-columns: 1fr; } }
+
+/* ================= Polish: shared states ================= */
+p, li, dd { text-wrap: pretty; }
+/* Short, consistent transitions on every small control */
+.icon-btn, .addr-btn, .round-btn, .close-btn, .see-all, .row-nav button, .select-wrap select, .qty button, .promo-card .x,
+.menu-tabs button, .tabs button, .back-link, .footer-col a, .cat-name, .link-btn, .seg button, .pw-toggle, .search-clear,
+.stars button, .input, .search input, .live-banner, .oline-main {
+  transition: color .15s, background-color .15s, border-color .15s, box-shadow .15s, transform .1s;
+}
+/* Pressed: a small dip. (Controls centred with translate keep their position.) */
+.icon-btn:active, .round-btn:active, .close-btn:active, .row-nav button:active:not(:disabled), .qty button:active:not(:disabled),
+.fav:active, .promo-card .x:active, .pill:active, .see-all:active, .cat:active .ic { transform: scale(0.96); }
+.addr-btn:active { background: var(--surface-3); }
+/* Back to top on long pages, lifted above the order bar when it shows */
+.to-top {
+  position: fixed; right: var(--gutter); bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); z-index: 24;
+  width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  display: grid; place-items: center; cursor: pointer; box-shadow: var(--shadow-sm);
+  opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity .2s, transform .2s, visibility .2s, border-color .15s;
+}
+.to-top.show { opacity: 1; visibility: visible; transform: none; }
+.to-top:hover { border-color: var(--line-strong); }
+.to-top:active { transform: scale(0.96); }
+body:has(#orderbar:not([hidden])) .to-top { bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); }
+body:has(#orderbar:not([hidden])) .site-footer { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+/* Dark mode: photos and the pastel logo badges sit a little quieter */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .photo { filter: brightness(0.9) saturate(0.96); }
+  :root:not([data-theme="light"]) .logo-badge { background: color-mix(in srgb, var(--lb-bg) 82%, var(--surface)); }
+}
+:root[data-theme="dark"] .photo { filter: brightness(0.9) saturate(0.96); }
+:root[data-theme="dark"] .logo-badge { background: color-mix(in srgb, var(--lb-bg) 82%, var(--surface)); }
+.pill { transition: color .15s, background-color .15s, border-color .15s, transform .1s; }

@@ -105,7 +105,7 @@ export const opensAt = r => hhmm(r.hours[0].open);
 export const closesAt = r => hhmm(r.hours[0].close);
 export const is247 = r => r.hours[0].open === 0 && r.hours[0].close === 1440;
 export const hoursText = r => is247(r) ? 'Open 24 hours' : `${opensAt(r)} to ${closesAt(r)}`;
-export const etaText = r => `${r.eta.min}-${r.eta.max} min`;
+export const etaText = r => `${r.eta.min}–${r.eta.max} min`;
 /* Why a dish can't be added right now, or '' when it can. */
 export const blockReason = (r, it) => r.paused ? 'Not taking orders right now' : !isOpen(r) ? `Opens at ${opensAt(r)}` : it && it.soldOut ? 'Sold out' : '';
 export const feeText = r => r.deliveryFee ? `${eur(r.deliveryFee)} delivery` : 'Free delivery';

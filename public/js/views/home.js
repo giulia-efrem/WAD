@@ -72,7 +72,7 @@ export function cardHTML({ r, match, open }, { size = 'card' } = {}) {
   const fee = r.deliveryFee ? `${eur(r.deliveryFee)} delivery` : 'Free delivery';
   return `<article class="card ${open && !r.paused ? '' : 'is-closed'}" style="--cv:${r.color};--cvi:${r.ink}">
     <div class="cover ${hasPhoto(r) ? 'has-photo' : ''}" style="${photoStyle(r)}"><div class="art">${art(r.illustration)}</div>${photoImg(r, { size })}
-      ${r.paused ? '<div class="veil"><span>Not taking orders<br>Back soon</span></div>' : open ? '' : `<div class="veil"><span>Closed now<br>Opens at ${opensAt(r)}</span></div>`}
+      ${r.paused ? '<div class="veil"><span><strong>Not taking orders</strong><small>Back soon</small></span></div>' : open ? '' : `<div class="veil"><span><strong>Closed now</strong><small>Opens at ${opensAt(r)}</small></span></div>`}
     </div>
     <div class="card-body">
       ${logoBadge(r)}

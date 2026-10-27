@@ -250,5 +250,9 @@ async function loadLiveOrder() {
   const box = $('#live-order');
   if (!live || !box) return;
   const p = progress(live);
-  box.innerHTML = `<div class="live-banner"><span class="pulse" aria-hidden="true"></span><p><strong>${esc(live.restaurantName)}</strong>: ${esc(stageCopy(live, p).title.toLowerCase())}</p><button class="btn btn-sm btn-primary" type="button" data-act="track" data-id="${esc(live._id)}">Track order</button></div>`;
+  /* Lower-case the first letter to follow the colon, unless the line starts with the courier's name. */
+  const title = stageCopy(live, p).title;
+  const who = live.courier && live.courier.name;
+  const line = who && title.split(' ')[0] === who.split(' ')[0] ? title : title.charAt(0).toLowerCase() + title.slice(1);
+  box.innerHTML = `<div class="live-banner"><span class="pulse" aria-hidden="true"></span><p><strong>${esc(live.restaurantName)}</strong>: ${esc(line)}</p><button class="btn btn-sm btn-primary" type="button" data-act="track" data-id="${esc(live._id)}">Track order</button></div>`;
 }

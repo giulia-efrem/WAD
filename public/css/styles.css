@@ -500,7 +500,7 @@ select.input { appearance: auto; }
 .back-link:hover { color: var(--ink); }
 .back-link .i { width: 18px; height: 18px; }
 .checkout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: 24px; align-items: start; padding-bottom: 90px; }
-.panel { padding: 22px; margin-bottom: 16px; border-radius: 20px; border: 1px solid var(--line); background: var(--surface); }
+.panel { padding: 22px; margin-bottom: 16px; border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--surface); }
 .panel h2 { margin: 0 0 14px; font-size: 1.18rem; font-weight: 700; letter-spacing: -0.015em; }
 .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
 .panel-head h2 { margin: 0; }
@@ -526,7 +526,7 @@ select.input { appearance: auto; }
 .applied { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--ok-soft); color: var(--ok); font-weight: 600; }
 .sub-label { margin: 16px 0 8px; font-weight: 600; font-size: 0.93rem; }
 .fine { margin: 12px 0 0; color: var(--muted); font-size: 0.84rem; text-align: center; }
-.login-card { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; padding: 20px 22px; margin-bottom: 16px; border-radius: 20px; background: var(--brand-soft); border: 1px solid color-mix(in srgb, var(--brand) 25%, transparent); }
+.login-card { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; padding: 20px 22px; margin-bottom: 16px; border-radius: var(--r-lg); background: var(--brand-soft); border: 1px solid color-mix(in srgb, var(--brand) 25%, transparent); }
 .login-card p { margin: 0; flex: 1 1 220px; }
 .login-card strong { display: block; font-size: 1.08rem; }
 @media (max-width: 920px) { .checkout { grid-template-columns: 1fr; } .sticky-sum { position: static; } }
@@ -1087,3 +1087,5 @@ legend.opt-head + * { clear: both; }
 .hero-sub, .r-tag, .modal-head p { text-wrap: balance; }
 /* Photo credit links: the pill clips outlines, so their focus ring sits inside the text box. */
 .credit.on-photo a:focus-visible { outline: 2px solid #fff; outline-offset: -1px; border-radius: 3px; }
+/* Toasts float with a soft shadow, like the rest of the overlays. */
+.toast { box-shadow: var(--shadow); border-radius: var(--r-md); }

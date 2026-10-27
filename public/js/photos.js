@@ -30,7 +30,7 @@ export const SIZES = {
   band: { ratio: 9 / 16, widths: [480, 640, 960, 1280], sizes: '(max-width: 600px) 100vw, 640px' },
   square: { ratio: 1, widths: [160, 240, 320, 480], sizes: '(max-width: 600px) 30vw, 140px' },
   thumb: { ratio: 1, widths: [64, 104, 156], sizes: '52px' },
-  hero: { ratio: 4 / 5, widths: [480, 640, 800, 1000, 1200], sizes: '(max-width: 759px) 1px, (max-width: 1023px) 320px, 520px' },
+  promo: { ratio: 10 / 21, widths: [360, 480, 640, 840, 1000], sizes: '(max-width: 1023px) min(84vw, 360px), 420px' },
   cat: { ratio: 1, widths: [72, 144, 216], sizes: '72px' }
 };
 

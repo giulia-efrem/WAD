@@ -1,12 +1,12 @@
 import { esc } from '../util.js';
 import { art } from '../art.js';
-import { R, CATS, HERO } from '../state.js';
+import { R, CATS, PROMOS } from '../state.js';
 import { photoImg, photoStyle, withUtm, UNSPLASH_HOME } from '../photos.js';
 import { app } from '../router.js';
 
 /* Where a photo is reused on the home page, so the credit says so. */
 function alsoUsed(c) {
-  if (c.dishSlug) return c.restaurantSlug === HERO.slug && c.dishSlug === HERO.item ? 'Also the large photo at the top of the home page' : '';
+  if (c.dishSlug) return PROMOS.some(p => p.slug === c.restaurantSlug && p.item === c.dishSlug) ? 'Also an offer banner on the home page' : '';
   const cats = CATS.filter(x => x.from === c.restaurantSlug).map(x => x.name);
   return cats.length ? `Also the ${cats.join(' and ')} photo in the home page’s cuisine row` : '';
 }

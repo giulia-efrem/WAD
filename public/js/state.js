@@ -53,7 +53,6 @@ export const state = {
   promoRule: null,
   /* The last server check of the code: { key, error }. The key changes with the user, order count and restaurant. */
   promoCheck: { key: '', error: '' },
-  promoDismissed: LS.get('morsel.promoDismissed', false),
   tip: 100,
   co: { addressId: null, when: 'asap', slot: '', pay: 'card', note: '' },
   acctTab: 'orders',
@@ -75,8 +74,18 @@ export const CATS = [
   { id: 'desserts', name: 'Desserts', art: 'cupcake', color: '#FCE0EC', from: 'sweet-spot' }
 ];
 
-/* The dish photographed at the top of the home page. If it has no photo, the restaurant's cover is used. */
-export const HERO = { slug: 'forno-sette', item: 'margherita' };
+/* The three offer banners at the top of the home page. Each shows a dish photo from that restaurant's
+   menu (its cover if the dish has none). `show` hides a banner whose offer the data no longer backs. */
+export const PROMOS = [
+  { id: 'welcome', slug: 'smash-society', item: 'classic', act: 'use-promo', label: 'New to Morsel',
+    title: () => '20% off your first order', sub: () => 'Use code WELCOME20' },
+  { id: 'sweet', slug: 'sweet-spot', item: 'pistachio', label: 'Free delivery',
+    title: r => `Free delivery from ${r.name}`, sub: () => 'Cakes, pastries and gelato', show: r => r.deliveryFee === 0 },
+  { id: 'tacos', slug: 'taqueria-luna', item: 'birria', label: 'Late night',
+    title: r => `Late-night tacos until ${clock12(r.hours[0].close)}`, sub: r => `${r.name} · ${etaText(r)}`, show: r => r.hours[0].close > 1440 }
+];
+/* 1560 → "2 am", 1410 → "11:30 pm". */
+const clock12 = mins => { const m = mins % 1440, h = Math.floor(m / 60), mm = m % 60; return `${h % 12 || 12}${mm ? ':' + String(mm).padStart(2, '0') : ''} ${h < 12 ? 'am' : 'pm'}`; };
 
 export const catalog = { list: [], menus: new Map() };
 export const R = slug => catalog.list.find(r => r.slug === slug) || null;

@@ -117,7 +117,7 @@ Log in with an admin account to use them (the header shows an **Admin** button).
 
 | Address | What it is |
 |---|---|
-| `/` | Home: search, cuisines, the "Popular right now", "Under 25 minutes" and "Free delivery" rows, then every restaurant |
+| `/` | Home: a short heading with the search field, three offer banners (WELCOME20, free delivery from The Sweet Spot, late-night tacos), cuisines, the "Popular near you", "Fast delivery", "Free delivery" and "Top rated" rows, then every restaurant |
 | `/#r-forno-sette` | A restaurant and its menu (`#checkout`, `#account` and `#order-<id>` work the same way) |
 | `/about`, `/help`, `/terms`, `/privacy` | Placeholder content pages |
 | `/credits` | Every Unsplash photo with its photographer |
@@ -359,4 +359,4 @@ Uploads must be JPG, PNG or WebP, up to 8 MB, and the file contents are checked,
 
 ## What stays in the browser
 
-Only the baskets (one per restaurant, with any promo code waiting to be applied) and dismissed banners are kept in `localStorage`. Accounts, addresses, favourites, orders, reviews, promo codes and settings all live in MongoDB.
+Only the baskets (one per restaurant, with any promo code waiting to be applied) are kept in `localStorage`. Accounts, addresses, favourites, orders, reviews, promo codes and settings all live in MongoDB.

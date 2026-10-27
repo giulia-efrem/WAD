@@ -2,7 +2,7 @@ import { $, $$, esc, reduced } from './util.js';
 import './topbar.js';
 import { art } from './art.js';
 import { api } from './api.js';
-import { state, LS, R, loadRestaurants, loadMenu, findItem, selectedOptions, dealPrice, mainPart, lineKey, isFav, addLine, changeQty, onBasketChanged, setPromo } from './state.js';
+import { state, R, loadRestaurants, loadMenu, findItem, selectedOptions, dealPrice, mainPart, lineKey, isFav, addLine, changeQty, onBasketChanged, setPromo } from './state.js';
 import { confirmDialog, closeAllModals, toast } from './ui.js';
 import { app, render, go, PATH_VIEWS } from './router.js';
 import { refreshOrderUI, openOrderSheet, toggleBasketsMenu } from './views/basket.js';
@@ -127,7 +127,6 @@ document.addEventListener('click', async e => {
         Object.assign(state, { q: '', cat: 'all', openNow: false, freeDel: false, topRated: false, sort: 'recommended' });
         renderHome(); break;
       case 'use-promo': setPromo('WELCOME20'); toast('WELCOME20 will be applied at checkout'); break;
-      case 'dismiss-promo': state.promoDismissed = true; LS.set('morsel.promoDismissed', true); $('#promo-banner').remove(); break;
       case 'fav':
         requireAuth('Log in to save your favourite restaurants.', async () => {
           try {

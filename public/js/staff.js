@@ -1,4 +1,4 @@
-import { $, esc, clock } from './util.js';
+import { $, esc, clock, ingredientWords } from './util.js';
 import { api, request } from './api.js';
 
 /* Shared by the staff pages (/admin, /partner, /courier): sign-in gate, toasts, status chips
@@ -27,7 +27,7 @@ export function lineDetail(l) {
   const bits = [];
   if (l.parts && l.parts.length) bits.push(l.parts.map(p => p.name).join(' + '));
   for (const o of l.options || []) bits.push(`${o.group}: ${o.choice}`);
-  for (const r of l.removed || []) bits.push(`No ${r.name.toLowerCase()}`);
+  for (const r of l.removed || []) bits.push(`No ${ingredientWords(r.name)}`);
   return bits;
 }
 export const linesHTML = items => `<ul class="o-lines">${items.map(l => {

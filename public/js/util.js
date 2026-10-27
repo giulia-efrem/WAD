@@ -21,3 +21,7 @@ export function monogram(name) {
   return /&/.test(name) && letters.length === 2 ? letters.join('&') : letters.join('');
 }
 export const logoBadge = (r, cls = '') => `<span class="logo-badge ${cls}" style="--lb-bg:${esc(r.color)};--lb-ink:${esc(r.ink)}" aria-hidden="true">${esc(monogram(r.name))}</span>`;
+
+/* "Basil" -> "basil", but names that start with a proper noun keep it: "San Marzano tomato", "American cheese". */
+const PROPER = ['American', 'Swiss', 'San', 'Norwegian', 'Kashmiri', 'Alphonso', 'Ligurian'];
+export const ingredientWords = name => (PROPER.includes(name.split(' ')[0]) ? name : name.charAt(0).toLowerCase() + name.slice(1));

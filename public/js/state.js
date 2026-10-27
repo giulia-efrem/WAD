@@ -1,5 +1,5 @@
 import { api } from './api.js';
-import { esc, eur, clamp, hhmm } from './util.js';
+import { esc, eur, clamp, hhmm, ingredientWords } from './util.js';
 
 /* ================= Browser storage =================
    Only the baskets (with a promo code waiting to be applied) and dismissed banners live in
@@ -171,9 +171,7 @@ export function dealSaving(detail, item) {
 }
 
 const lowerFirst = s => (/^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
-/* "Basil" -> "basil", but names that start with a proper noun keep it: "San Marzano tomato", "American cheese". */
-const PROPER = ['American', 'Swiss', 'San', 'Norwegian', 'Kashmiri', 'Alphonso', 'Ligurian'];
-export const ingredientWords = name => (PROPER.includes(name.split(' ')[0]) ? name : name.charAt(0).toLowerCase() + name.slice(1));
+export { ingredientWords };
 /* A basket or order line in plain words. Meal deals: "Classic smash (Smoky BBQ, no pickles) + Fries + House cola". */
 export function describeLine(line) {
   const choices = describeChoices(line.options || [], line.removed || []);

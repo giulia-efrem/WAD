@@ -17,9 +17,10 @@ const loginLimiter = rateLimit({
   handler
 });
 
+/* SIGNUP_LIMIT exists for the test server, which creates many accounts in one run. */
 const signupLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  limit: 10,
+  limit: Number(process.env.SIGNUP_LIMIT) || 10,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: 'Too many accounts created from this network. Try again in an hour.',

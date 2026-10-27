@@ -13,7 +13,11 @@
     "seed": "node seed/seed.js",
     "photos": "node scripts/fetch-photos.js",
     "screenshots": "node scripts/screenshots.js",
-    "make-admin": "node scripts/make-admin.js"
+    "make-admin": "node scripts/make-admin.js",
+    "test": "node test/run.js api",
+    "test:e2e": "node test/run.js e2e",
+    "test:all": "node test/run.js all",
+    "remove-test-data": "node scripts/remove-test-data.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -340,3 +340,14 @@
 .c-today li:first-child { border-top: 0; }
 .c-today li > div { display: grid; min-width: 0; }
 .c-today .muted { font-size: 0.86rem; }
+
+/* ================= Polish ================= */
+/* Phones: the four figures sit two by two instead of one tall column. */
+@media (max-width: 599px) {
+  .tiles-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tiles-4 .tile { padding: 14px 16px; border-radius: 16px; }
+  .tiles-4 .tile-value, .tiles-4 .tile-hero .tile-value { font-size: 1.55rem; }
+  .tiles-4 .tile-label { font-size: 0.84rem; }
+}
+.tile-sub { text-wrap: pretty; }
+.data-table tbody tr { transition: background-color .15s; }

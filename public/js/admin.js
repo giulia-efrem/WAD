@@ -187,7 +187,7 @@ async function drawOrders() {
       ${selectHTML('of-rest', 'Restaurant', restaurantOptions(f.restaurant))}
       <label class="date-field"><span>From</span><input class="input" type="date" id="of-from" value="${esc(f.from)}"></label>
       <label class="date-field"><span>To</span><input class="input" type="date" id="of-to" value="${esc(f.to)}"></label>
-      <label class="search-field"><span class="visually-hidden">Search orders</span>${ic('search')}<input class="input" type="search" id="of-q" placeholder="Customer, street or order number" value="${esc(f.q)}"></label>
+      <label class="search-field"><span class="visually-hidden">Search orders</span>${ic('search')}<input class="input" type="search" id="of-q" placeholder="Search orders" title="Search by customer, street or order number" value="${esc(f.q)}"></label>
     </form>
     <div class="table-wrap"><table class="data-table orders-table"><thead><tr><th scope="col">Order</th><th scope="col">Placed</th><th scope="col">Restaurant</th><th scope="col">Customer</th><th scope="col" class="num">Total</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead><tbody id="o-rows"></tbody></table></div>
     <button class="btn btn-secondary" type="button" id="o-more" hidden>Show more orders</button>`;
@@ -653,7 +653,7 @@ async function drawReviews() {
     <form class="filter-bar" id="rv-filters" role="search">
       ${selectHTML('rf-rest', 'Restaurant', restaurantOptions(f.restaurant))}
       ${selectHTML('rf-show', 'Show', [['all', 'All reviews'], ['visible', 'Visible'], ['hidden', 'Hidden'], ['low', '1 or 2 stars']].map(([k, l]) => `<option value="${k}" ${f.show === k ? 'selected' : ''}>${l}</option>`).join(''))}
-      <label class="search-field"><span class="visually-hidden">Search reviews</span>${ic('search')}<input class="input" type="search" id="rf-q" placeholder="Words in the review or author" value="${esc(f.q)}"></label>
+      <label class="search-field"><span class="visually-hidden">Search reviews</span>${ic('search')}<input class="input" type="search" id="rf-q" placeholder="Search reviews" title="Search the review text or the author" value="${esc(f.q)}"></label>
     </form>
     <ul class="admin-reviews" id="rv-rows"></ul>
     <button class="btn btn-secondary" type="button" id="rv-more" hidden>Show more</button>`;

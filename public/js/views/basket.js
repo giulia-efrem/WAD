@@ -1,6 +1,6 @@
 import { $, esc, eur, plural, logoBadge } from '../util.js';
 import { ic, art } from '../art.js';
-import { state, R, menuOf, findItem, MAX_QTY, basketLines, basketCount, basketSubtotal, allBaskets, pricing, priceRows, describeChoices } from '../state.js';
+import { state, R, menuOf, findItem, MAX_QTY, basketLines, basketCount, basketSubtotal, allBaskets, pricing, priceRows, describeLine } from '../state.js';
 import { hasPhoto, photoImg, photoStyle } from '../photos.js';
 import { openModal, closeModal } from '../ui.js';
 
@@ -27,7 +27,7 @@ export function orderHTML(slug) {
     <div class="order-head"><h2>Your order</h2><span class="muted">${plural(basketCount(slug), 'item', 'items')}</span></div>
     <ul class="order-lines">${lines.map(l => {
       const it = menu && findItem(menu, l.itemSlug);
-      const desc = describeChoices(l.options, l.removed || []);
+      const desc = describeLine(l);
       return `<li class="oline">
         <span class="thumb oline-thumb ${hasPhoto(it) ? 'has-photo' : ''}" style="--cv:${r.color};${photoStyle(it)}">${art(r.illustration)}${photoImg(it, { size: 'thumb', eager: true })}</span>
         <button class="oline-main" type="button" data-act="edit-line" data-r="${esc(slug)}" data-key="${esc(l.key)}" aria-label="Edit ${esc(l.name)}${desc ? ', ' + esc(desc) : ''}">

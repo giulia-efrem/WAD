@@ -14,7 +14,6 @@ const User = require('../server/models/User');
 const Restaurant = require('../server/models/Restaurant');
 const Order = require('../server/models/Order');
 const Review = require('../server/models/Review');
-const INGREDIENTS = require('./ingredients');
 const { reviewsFor } = require('./reviews');
 const { refreshRating } = require('../server/lib/reviews');
 const { fieldsFromImagesEntry } = require('../server/lib/photos');
@@ -31,18 +30,6 @@ function loadImages() {
     if (!known.has(key)) console.warn(`  images.json: “${key}” doesn’t match any restaurant or dish, skipped`);
   }
   return images;
-}
-
-const idOf = name => name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-/* "~Basil" is removable, "Pizza dough" is not. */
-function ingredientsFor(key) {
-  const list = INGREDIENTS[key];
-  if (!list) throw new Error(`No ingredients for ${key} in seed/ingredients.js`);
-  return list.map(entry => {
-    const removable = entry.startsWith('~');
-    const name = removable ? entry.slice(1) : entry;
-    return { id: idOf(name), name, removable };
-  });
 }
 
 /* Photo fields for a key: a plain URL, or a full Unsplash entry with colour and credit. */
@@ -76,7 +63,11 @@ function buildRestaurant(r, i, images) {
         price: it.price,
         popular: it.popular,
         ...photoFor(images, `${r.slug}/${it.slug}`),
-        ingredients: ingredientsFor(`${r.slug}/${it.slug}`),
+        kind: it.kind,
+        tags: it.tags,
+        allergens: it.allergens,
+        deal: it.deal || null,
+        ingredients: it.ingredients,
         optionGroups: it.options.map(key => {
           if (!OPTION_GROUPS[key]) throw new Error(`Unknown option group “${key}” on ${r.slug}/${it.slug}`);
           return OPTION_GROUPS[key];

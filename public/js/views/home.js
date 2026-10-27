@@ -32,7 +32,7 @@ function filteredRestaurants() {
     if (q) {
       const inName = (r.name + ' ' + r.label + ' ' + r.tagline + ' ' + r.cuisines.join(' ')).toLowerCase().includes(q);
       if (!inName) {
-        const hit = r.dishes.find(d => d.name.toLowerCase().includes(q) || d.description.toLowerCase().includes(q));
+        const hit = r.dishes.find(d => d.name.toLowerCase().includes(q) || d.description.toLowerCase().includes(q) || (d.tags || []).some(t => t.replace('-', ' ').includes(q) || t.includes(q)));
         if (hit) match = hit.name;
         if (!match) return null;
       }

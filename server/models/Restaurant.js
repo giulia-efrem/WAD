@@ -45,12 +45,34 @@ const ingredientSchema = new mongoose.Schema({
   removable: { type: Boolean, default: false }
 }, { _id: false });
 
+/* A meal deal is a dish made of parts (burger, side, drink...). Each part lists the dishes the
+   customer can pick, with a surcharge (delta, in cents). The first part is the main dish. */
+const dealSchema = new mongoose.Schema({
+  parts: {
+    type: [new mongoose.Schema({
+      key: { type: String, required: true },
+      name: { type: String, required: true },
+      main: { type: Boolean, default: false },
+      choices: { type: [new mongoose.Schema({ itemSlug: { type: String, required: true }, delta: { type: Number, default: 0, min: 0 } }, { _id: false })], default: [] }
+    }, { _id: false })],
+    default: []
+  }
+}, { _id: false });
+
+const KINDS = ['main', 'starter', 'side', 'drink', 'dessert', 'deal'];
+const TAGS = ['vegetarian', 'vegan', 'spicy', 'gluten-free', 'contains-nuts'];
+
 const itemSchema = new mongoose.Schema({
   slug: { type: String, required: true },
   name: { type: String, required: true },
   description: { type: String, default: '' },
   price: { type: Number, required: true, min: 0 },
   popular: { type: Boolean, default: false },
+  kind: { type: String, enum: KINDS, default: 'main' },
+  tags: { type: [{ type: String, enum: TAGS }], default: [] },
+  /* From the 14 EU allergens, e.g. ['gluten', 'milk'] */
+  allergens: { type: [String], default: [] },
+  deal: { type: dealSchema, default: null },
   ...photoFields,
   ingredients: { type: [ingredientSchema], default: [] },
   optionGroups: { type: [optionGroupSchema], default: [] }

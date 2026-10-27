@@ -140,7 +140,12 @@ router.get('/photos', async (req, res) => {
   const entries = [];
   for (const r of list) {
     entries.push(entryOut(r, r, null, saved[r.slug], used));
-    for (const s of r.menu) for (const it of s.items) entries.push(entryOut(r, it, it.slug, saved[photos.keyOf(r.slug, it.slug)], used));
+    for (const s of r.menu) for (const it of s.items) {
+      /* Mains, starters and desserts get photos. Deals use their main dish's photo; drinks and sides only if they already have one. */
+      const kind = it.kind || 'main';
+      if (kind === 'deal' || ((kind === 'drink' || kind === 'side') && !it.image)) continue;
+      entries.push(entryOut(r, it, it.slug, saved[photos.keyOf(r.slug, it.slug)], used));
+    }
   }
   res.json({ quota: quotaOut(), entries });
 });

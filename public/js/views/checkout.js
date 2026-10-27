@@ -1,7 +1,7 @@
 import { $, esc, eur, clock, plural, reduced, logoBadge } from '../util.js';
 import { ic, art } from '../art.js';
 import { api } from '../api.js';
-import { state, R, menuOf, loadMenu, isOpen, etaText, basketLines, basketCount, allBaskets, clearBasket, setPromo, pricing, priceRows, promoError, describeChoices } from '../state.js';
+import { state, R, menuOf, loadMenu, isOpen, etaText, basketLines, basketCount, allBaskets, clearBasket, setPromo, pricing, priceRows, promoError, describeLine } from '../state.js';
 import { hasPhoto, photoImg, photoStyle } from '../photos.js';
 import { toast } from '../ui.js';
 import { openAuth } from './auth.js';
@@ -86,7 +86,7 @@ export function renderCheckout() {
         <aside class="sticky-sum">
           <section class="panel" aria-labelledby="co-sum">
             <div class="sum-r"><span class="thumb ${hasPhoto(r) ? 'has-photo' : ''}" style="--cv:${r.color};${photoStyle(r)}">${art(r.illustration)}${photoImg(r, { size: 'thumb' })}</span><div><h2 id="co-sum" style="margin:0">${esc(r.name)}</h2><span class="muted" style="font-size:.92rem">${plural(basketCount(slug), 'item', 'items')}</span></div></div>
-            <ul class="sum-items">${basketLines(slug).map(l => { const d = describeChoices(l.options, l.removed || []); return `<li><span><span class="q">${l.qty}×</span>${esc(l.name)}${d ? `<br><span class="muted" style="font-size:.85rem">${esc(d)}</span>` : ''}${l.note ? `<br><span class="muted" style="font-size:.85rem">Note: “${esc(l.note)}”</span>` : ''}</span><span>${eur(l.unitPrice * l.qty)}</span></li>`; }).join('')}</ul>
+            <ul class="sum-items">${basketLines(slug).map(l => { const d = describeLine(l); return `<li><span><span class="q">${l.qty}×</span>${esc(l.name)}${d ? `<br><span class="muted" style="font-size:.85rem">${esc(d)}</span>` : ''}${l.note ? `<br><span class="muted" style="font-size:.85rem">Note: “${esc(l.note)}”</span>` : ''}</span><span>${eur(l.unitPrice * l.qty)}</span></li>`; }).join('')}</ul>
             <p class="sub-label">Promo code</p>
             ${promo && !promoErr ? `<div class="applied"><span>${ic('tag')} ${esc(promo)} applied</span><button class="link-btn" type="button" data-act="remove-promo">Remove</button></div>`
               : `<div class="promo-row"><label class="visually-hidden" for="promo">Promo code</label><input class="input" id="promo" placeholder="Enter code" value="${esc(promo || '')}" autocomplete="off"><button class="btn btn-secondary" type="button" data-act="apply-promo" style="min-height:46px">Apply</button></div>
@@ -152,7 +152,7 @@ export async function placeOrder() {
   try {
     const order = await api.createOrder({
       restaurantSlug: r.slug,
-      items: basketLines(slug).map(l => ({ itemSlug: l.itemSlug, qty: l.qty, options: l.sel, remove: l.remove || [], note: l.note })),
+      items: basketLines(slug).map(l => ({ itemSlug: l.itemSlug, qty: l.qty, options: l.sel, remove: l.remove || [], ...(l.parts ? { parts: l.parts } : {}), note: l.note })),
       addressId: addr._id,
       payment: state.co.pay,
       courierNote: state.co.note.trim(),

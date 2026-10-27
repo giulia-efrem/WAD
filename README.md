@@ -34,7 +34,7 @@ Never commit `.env`. It is listed in `.gitignore`.
 |---|---|
 | `npm run dev` | Starts the server and restarts it when files change (`node --watch`) |
 | `npm start` | Starts the server |
-| `npm run seed` | Resets the 9 restaurants and menus, applies photos from `seed/images.json`, and recreates the demo account |
+| `npm run seed` | Resets the 9 restaurants and their menus (190 dishes, 21 meal deals), applies photos from `seed/images.json`, regenerates the seeded reviews and recreates the demo account |
 | `npm run photos` | Finds Unsplash photos for every restaurant and dish (see below). Safe to stop and run again |
 | `npm run screenshots` | Screenshots the main views at 375, 768 and 1440 px in light and dark mode into `screenshots/` (needs the server running) |
 
@@ -48,7 +48,7 @@ The seed keeps each restaurant's `_id` stable by slug, so existing favourites an
 
 Each restaurant and dish has an `image` field plus its colour, alt text and photo credit. While a photo loads its colour shows, then it fades in. When there's no photo, or it fails to load, the restaurant's illustration shows instead.
 
-**From Unsplash (`npm run photos`).** `scripts/fetch-photos.js` runs one search per item with the query in `scripts/photo-queries.js`: restaurant covers first, then popular dishes, then the rest. It keeps the 8 best results per item in `seed/photo-candidates.json`, picks a default (right shape, no people, text or logos in its description, never the same photo twice), triggers that photo's Unsplash download event, and saves it to MongoDB and `seed/images.json`.
+**From Unsplash (`npm run photos`).** `scripts/fetch-photos.js` runs one search per item with the query in `scripts/photo-queries.js`: restaurant covers first, then popular dishes, then the rest. Only covers, mains, starters and desserts are queued: drinks and sides use text-only cards, and meal deals show the photo of their main dish. It keeps the 8 best results per item in `seed/photo-candidates.json`, picks a default (right shape, no people, text or logos in its description, never the same photo twice), triggers that photo's Unsplash download event, and saves it to MongoDB and `seed/images.json`.
 
 - **Rate limits.** It uses at most 40 requests in any rolling hour (`PHOTOS_PER_HOUR` changes this), and pauses whenever Unsplash reports 10 or fewer left, so the review page always has some. Rate-limit errors wait for the next hour once; any other error stops the run. Nothing is retried in a loop. A demo key needs about 4 hours for all 77 items.
 - **Resuming.** Run `npm run photos` again at any time. Items with a photo are skipped and saved searches are reused, so no request is wasted. Change a query in `photo-queries.js` and that item is searched again on the next run. Its progress is logged to the console (redirect it to `photos.log` if you like).
@@ -90,7 +90,7 @@ public/
   css/              styles.css, admin.css
   js/               main.js, router.js, api.js, state.js, ui.js, photos.js, ... and views/
 scripts/            fetch-photos.js and photo-queries.js (npm run photos), screenshots.js
-seed/               seed.js, catalog.js, images.json, photo-candidates.json
+seed/               seed.js, catalog.js, options.js, menus/ (one file per restaurant), reviews.js, images.json, photo-candidates.json
 screenshots/        the latest npm run screenshots output
 uploads/            admin uploads (not committed)
 reference/          the original single-file app
@@ -109,6 +109,20 @@ With the server running, `npm run screenshots` saves home, a restaurant, the dis
 - **Opening hours** are checked in the server's local time zone.
 - **Ownership.** Users can only read and change their own addresses, favourites and orders. Other people's orders return 404.
 - **Reviews.** One per order, only after delivery: food 1 to 5 stars, delivery thumbs up or down, and an optional comment. A restaurant's `rating` and `reviewCount` are recalculated from its reviews each time one is added (and by `npm run seed`).
+
+## Menus
+
+Each restaurant has 18 to 25 dishes in categories that fit its cuisine, plus 2 to 4 meal deals, and the restaurant page adds a "Popular" section first. Menus live in `seed/menus/<slug>.js` in a compact notation explained in `seed/menus/_build.js`; shared option groups (sizes, extras, spice level, dips...) are in `seed/options.js`. `seed/catalog.js` assembles them and refuses to load if a deal points at a missing dish, saves nothing, or a menu has too few or too many dishes.
+
+Every dish has:
+
+- `kind`: `main`, `starter`, `side`, `drink`, `dessert` or `deal`
+- `ingredients`: `[{ id, name, removable }]`
+- `tags`: any of `vegetarian`, `vegan`, `spicy`, `gluten-free`, `contains-nuts` (shown as small labels; search finds them too)
+- `allergens`: from the 14 EU allergens (`gluten`, `milk`, `egg`, `fish`, `crustaceans`, `molluscs`, `nuts`, `peanuts`, `soy`, `sesame`, `mustard`, `celery`, `sulphites`, `lupin`), shown as "Contains: ..." in the dish window
+- `optionGroups`, `price`, `popular` and the photo fields
+
+**Meal deals** (`kind: 'deal'`) have `deal.parts`: for example Burger, Side and Drink, each with `choices: [{ itemSlug, delta }]` where `delta` is a surcharge in cents. The first part is the main dish, which keeps its own customisation (sauce, extras, ingredients to leave out); other parts come in their standard version. A deal costs its price plus the chosen parts' surcharges plus the main dish's paid options. The saving shown ("Save €2.50") is what the chosen dishes cost separately minus the deal price.
 
 ## Ordering
 
@@ -149,7 +163,7 @@ Money is always in cents.
 | Method | Path | Body | Notes |
 |---|---|---|---|
 | GET | `/restaurants` | | Cards with `isOpen` and a compact `dishes` list for search |
-| GET | `/restaurants/:slug` | | Full restaurant with `menu`, option groups and each dish's `ingredients: [{ id, name, removable }]` |
+| GET | `/restaurants/:slug` | | Full restaurant with `menu` (Meal deals first). Each dish has `kind`, `tags`, `allergens`, option groups and `ingredients`; deals add `deal.parts` with each choice's name, price and surcharge |
 | GET | `/restaurants/:slug/reviews` | `?sort=newest|highest|lowest&page=1` | `{ summary: { average, count, breakdown, deliveryUpShare }, reviews, hasMore }`, 10 per page. Your own reviews have `mine: true` |
 | GET | `/credits` | | Every Unsplash photo in use with its photographer |
 | POST | `/promo/validate` | `{ code, restaurantSlug? }` | Login optional. Returns 200 `{ valid, code, kind }`, or 400 `invalid_promo` with the reason |
@@ -179,6 +193,14 @@ Money is always in cents.
   "expectedTotal": 2089
 }
 ```
+
+A meal deal line adds `parts`, with `options` and `remove` applying to the main dish:
+
+```json
+{ "itemSlug": "smash-menu", "qty": 1, "parts": { "burger": "double", "side": "rings", "drink": "cola" }, "options": { "sauce": "bbq" }, "remove": ["pickles"] }
+```
+
+Orders store each deal's `parts: [{ group, itemSlug, name, price }]`. Missing or unknown parts return 400 `missing_part` or `unknown_part`.
 
 For a scheduled order, use `"delivery": { "type": "scheduled", "at": "2026-10-27T19:30:00+01:00" }`. `at` can also be milliseconds since the epoch.
 

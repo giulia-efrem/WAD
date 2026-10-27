@@ -14,6 +14,11 @@ const lineSchema = new mongoose.Schema({
   qty: { type: Number, required: true, min: 1, max: 20 },
   unitPrice: { type: Number, required: true, min: 0 },
   options: { type: [optionSchema], default: [] },
+  /* Meal deals: the dish chosen for each part. options and removed above belong to the main one. */
+  parts: {
+    type: [new mongoose.Schema({ group: String, itemSlug: String, name: String, price: Number, options: { type: [optionSchema], default: [] } }, { _id: false })],
+    default: []
+  },
   /* Ingredients left out, e.g. [{ id: 'basil', name: 'Basil' }] */
   removed: { type: [new mongoose.Schema({ id: String, name: String }, { _id: false })], default: [] },
   note: { type: String, default: '' }

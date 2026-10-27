@@ -106,10 +106,10 @@ export const feeText = r => r.deliveryFee ? `${eur(r.deliveryFee)} delivery` : '
 
 /* ================= Choices ================= */
 /* The main choice of a dish (shown first in the dish window and in its description). */
-const PRIMARY_GROUPS = ['size', 'base', 'tortilla', 'gelato', 'milk', 'fries', 'eggs', 'pancake'];
+const PRIMARY_GROUPS = ['size', 'base', 'tortilla', 'gelato', 'milk', 'fries', 'eggs', 'pancake', 'sodaSize', 'coffeeSize', 'protein', 'toastBread', 'eggsWay', 'sorbetFlavour'];
 export const isPrimaryGroup = g => PRIMARY_GROUPS.includes(g.key);
 /* Names of the single-choice groups (size, sauce, spice level...). Extras are the multi-choice ones. */
-const SINGLE_NAMES = ['Size', 'Base', 'Tortilla', 'Flavour', 'Milk', 'Style', 'Topping', 'Sauce', 'Spice level', 'Heat', 'Served with', 'Salsa'];
+const SINGLE_NAMES = ['Size', 'Base', 'Tortilla', 'Flavour', 'Milk', 'Style', 'Topping', 'Sauce', 'Spice level', 'Heat', 'Served with', 'Salsa', 'Dip', 'Protein', 'Bread', 'Eggs', 'Sweetness'];
 
 /* `sel` maps option group keys to a choice id (single choice) or a list of ids (several);
    `remove` lists ingredient ids left out. */
@@ -130,21 +130,71 @@ export function selectedOptions(item, sel, remove = []) {
 /* Required choices still missing, e.g. ['size']. */
 export const missingChoices = (item, sel) => item.optionGroups.filter(g => g.type === 'one' && !sel[g.key]);
 
-/* A function declaration, so loading saved baskets (before this line runs) can use it. */
-export function lineKey(itemSlug, sel, remove, note) {
-  return [itemSlug, Object.entries(sel).flatMap(([g, v]) => (Array.isArray(v) ? v : [v]).filter(Boolean).map(c => g + ':' + c)).sort().join('+'), [...(remove || [])].sort().join('+'), note].join('|');
+/* A function declaration, so loading saved baskets (before this line runs) can use it.
+   parts (meal deals only) is { partKey: dishSlug }. */
+export function lineKey(itemSlug, sel, remove, note, parts) {
+  const partsKey = parts ? Object.entries(parts).map(([k, v]) => k + '=' + v).sort().join('+') : '';
+  return [itemSlug, Object.entries(sel).flatMap(([g, v]) => (Array.isArray(v) ? v : [v]).filter(Boolean).map(c => g + ':' + c)).sort().join('+'), [...(remove || [])].sort().join('+'), note, partsKey].filter((x, i) => i < 4 || x).join('|');
+}
+
+/* ================= Meal deals ================= */
+/* The main part, and the dish chosen for it. */
+export const mainPart = deal => deal.parts.find(p => p.main) || deal.parts[0];
+/* Price of a deal for the chosen parts (plus the main dish's paid options), what those dishes
+   would cost bought separately, and the saving. Mirrors the server's calculation. */
+export function dealPrice(detail, item, parts, sel = {}, remove = []) {
+  let unit = item.price, separately = 0;
+  const info = [];
+  let main = { options: [], removed: [], unitPrice: 0, extra: 0 };
+  for (const part of item.deal.parts) {
+    const choice = part.choices.find(c => c.itemSlug === parts[part.key]);
+    if (!choice) { info.push(null); continue; }
+    const dish = findItem(detail, choice.itemSlug);
+    unit += choice.delta;
+    separately += dish ? dish.price : choice.price;
+    if (part.main && dish) { main = selectedOptions(dish, sel, remove); main.extra = main.unitPrice - dish.price; }
+    info.push({ group: part.name, itemSlug: choice.itemSlug, name: dish ? dish.name : choice.name, price: choice.delta });
+  }
+  /* The main dish's paid options cost the same either way, so they don't change the saving. */
+  return { unitPrice: unit + main.extra, options: main.options, removed: main.removed, parts: info.filter(Boolean), saving: separately - unit };
+}
+/* Saving with the default choices, for the menu card. */
+export function dealSaving(detail, item) {
+  const parts = Object.fromEntries(item.deal.parts.map(p => [p.key, p.choices[0].itemSlug]));
+  return dealPrice(detail, item, parts).saving;
 }
 
 const lowerFirst = s => (/^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
 /* "Basil" -> "basil", but names that start with a proper noun keep it: "San Marzano tomato", "American cheese". */
 const PROPER = ['American', 'Swiss', 'San', 'Norwegian', 'Kashmiri', 'Alphonso', 'Ligurian'];
 export const ingredientWords = name => (PROPER.includes(name.split(' ')[0]) ? name : name.charAt(0).toLowerCase() + name.slice(1));
+/* A basket or order line in plain words. Meal deals: "Classic smash (Smoky BBQ, no pickles) + Fries + House cola". */
+export function describeLine(line) {
+  const choices = describeChoices(line.options || [], line.removed || []);
+  /* Order lines have parts as a list; basket lines keep { partKey: dishSlug } plus partsInfo for display. */
+  const parts = Array.isArray(line.parts) ? line.parts : (line.partsInfo || []);
+  if (!parts.length) return choices;
+  const [first, ...rest] = parts;
+  return [`${first.name}${choices ? ` (${choices})` : ''}`, ...rest.map(p => p.name)].join(' + ');
+}
+
 /* "40 cm, no basil, extra mozzarella": the single choices, then what's left out, then the extras. */
 export function describeChoices(options = [], removed = []) {
   const single = options.filter(o => SINGLE_NAMES.includes(o.group));
   const extras = options.filter(o => !SINGLE_NAMES.includes(o.group));
   const parts = [...single.map(o => o.choice), ...removed.map(r => `No ${ingredientWords(r.name)}`), ...extras.map(o => o.choice)];
   return parts.map((p, i) => (i ? lowerFirst(p) : p)).join(', ');
+}
+
+function dealIsValid(detail, item, parts, sel, remove) {
+  if (!item.deal || !parts) return false;
+  for (const part of item.deal.parts) {
+    const choice = part.choices.find(c => c.itemSlug === parts[part.key]);
+    const dish = choice && findItem(detail, choice.itemSlug);
+    if (!dish) return false;
+    if (part.main && !selIsValid(dish, sel, remove)) return false;
+  }
+  return Object.keys(parts).every(k => item.deal.parts.some(p => p.key === k));
 }
 
 function selIsValid(item, sel, remove = []) {
@@ -220,7 +270,15 @@ function repriceBasket(detail) {
   let changed = false;
   b.lines = b.lines.filter(l => {
     const it = findItem(detail, l.itemSlug);
-    if (!it || !selIsValid(it, l.sel, l.remove || [])) { changed = true; return false; }
+    if (!it) { changed = true; return false; }
+    if (it.kind === 'deal') {
+      if (!dealIsValid(detail, it, l.parts, l.sel, l.remove || [])) { changed = true; return false; }
+      const p = dealPrice(detail, it, l.parts, l.sel, l.remove || []);
+      if (p.unitPrice !== l.unitPrice || it.name !== l.name) changed = true;
+      Object.assign(l, { name: it.name, unitPrice: p.unitPrice, options: p.options, removed: p.removed, partsInfo: p.parts });
+      return true;
+    }
+    if (!selIsValid(it, l.sel, l.remove || [])) { changed = true; return false; }
     const { options, removed, unitPrice } = selectedOptions(it, l.sel, l.remove || []);
     if (unitPrice !== l.unitPrice || it.name !== l.name) changed = true;
     Object.assign(l, { name: it.name, unitPrice, options, removed });

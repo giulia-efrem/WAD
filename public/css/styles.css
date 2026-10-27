@@ -883,3 +883,32 @@ legend.opt-head { display: flex; width: 100%; padding: 0; }
 .thumbs .i { width: 20px; height: 20px; }
 .r-facts a.rating { color: inherit; text-decoration: none; border-radius: 6px; }
 .r-facts a.rating:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ================= Fuller menus ================= */
+/* Dietary labels */
+.dish-tags { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; }
+.modal-head .dish-tags { margin: 8px 0 0; }
+.dtag { padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; background: var(--surface-2); color: var(--muted); }
+.dtag-vegan, .dtag-vegetarian { background: var(--ok-soft); color: var(--ok); }
+.dtag-spicy { background: var(--danger-soft); color: var(--danger); }
+.dtag-gluten-free { background: var(--brand-soft); color: var(--brand-text); }
+.dtag-contains-nuts { background: var(--accent-soft); color: var(--accent-text); }
+/* Allergens in the dish window */
+.allergens { display: flex; align-items: flex-start; gap: 7px; margin: 10px 0 0; color: var(--muted); font-size: var(--fs-sm); }
+.allergens .i { width: 16px; height: 16px; margin-top: 2px; }
+/* Drinks and sides without a photo: a clean text-only card */
+.item.text-only { min-height: 0; align-items: center; }
+.add.add-inline { position: static; align-self: center; background: var(--surface-2); color: var(--brand-text); box-shadow: none; }
+.item.in-cart .add.add-inline { background: var(--brand); color: var(--brand-ink); }
+/* Meal deals */
+.item.is-deal { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.deal-parts { display: block; margin: 0 0 8px; color: var(--ink); font-size: var(--fs-sm); font-weight: 600; }
+.save-tag { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--ok-soft); color: var(--ok); font-size: 0.75rem; font-weight: 800; vertical-align: 1px; }
+.save-tag:empty { display: none; }
+.save-tag.lg { font-size: 0.82rem; }
+.deal-badge { position: absolute; left: 8px; top: 8px; z-index: 2; padding: 3px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 0.7rem; font-weight: 800; }
+.deal-badge.lg { left: 14px; top: 14px; font-size: 0.8rem; padding: 4px 10px; }
+.deal-main-custom { margin: 0 0 4px; padding: 4px 14px 2px; border-radius: var(--r-md); background: var(--surface-2); }
+.deal-main-custom .opt-group { border-top-color: var(--line-strong); }
+.deal-main-custom .opt-group:first-of-type { border-top: 0; }
+.sub-head { margin: 10px 0 0; font-weight: 800; }

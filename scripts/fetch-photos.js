@@ -1,8 +1,9 @@
 'use strict';
 
 /* npm run photos [-- --max=N]
-   Finds an Unsplash photo for every restaurant cover and dish, in this order: covers, popular
-   dishes, then the rest. For each item it runs one search (the best 8 results are kept in
+   Finds an Unsplash photo for every restaurant cover and for the mains, starters and desserts
+   (drinks and sides use text-only cards, and meal deals show their main dish's photo), in this
+   order: covers, popular dishes, then the rest. For each item it runs one search (the best 8 results are kept in
    seed/photo-candidates.json), picks a default, triggers that photo's download event and saves
    it to MongoDB and seed/images.json.
 
@@ -74,12 +75,15 @@ async function request(fn, label) {
 }
 
 /* ---------- Work list ---------- */
+const PHOTO_KINDS = ['main', 'starter', 'dessert'];
+
 async function workList() {
   const list = await Restaurant.find().sort({ sortOrder: 1 });
   const covers = [], popular = [], rest = [];
   for (const r of list) {
     covers.push({ slug: r.slug, itemSlug: null, name: `${r.name} cover`, kind: 'cover', entity: r });
     for (const s of r.menu) for (const it of s.items) {
+      if (!PHOTO_KINDS.includes(it.kind || 'main')) continue;
       (it.popular ? popular : rest).push({ slug: r.slug, itemSlug: it.slug, name: `${it.name} (${r.name})`, kind: 'dish', entity: it });
     }
   }

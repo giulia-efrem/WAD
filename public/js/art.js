@@ -22,6 +22,7 @@ export const ICON = {
   chevron: '<path d="M6 9l6 6 6-6"/>',
   grid: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
   tag: '<path d="M3.5 12.5V4h8.5l8.5 8.5-8.5 8.5z"/><circle cx="8" cy="8.5" r="1.5"/>',
+  info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/>',
   thumb: '<path d="M7.5 11v9h-3v-9z"/><path d="M7.5 11l3.8-6.6a1.9 1.9 0 0 1 3.5 1.1V9.5h4.4a2 2 0 0 1 2 2.3l-1.2 6.5a2.1 2.1 0 0 1-2.1 1.7H7.5"/>',
   camera: '<path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3v11H4z"/><circle cx="12" cy="13.5" r="3.5"/>'
 };

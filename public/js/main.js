@@ -1,7 +1,7 @@
 import { $, $$, esc, reduced } from './util.js';
 import { art } from './art.js';
 import { api } from './api.js';
-import { state, LS, R, loadRestaurants, loadMenu, findItem, selectedOptions, lineKey, isFav, addLine, changeQty, onBasketChanged, setPromo } from './state.js';
+import { state, LS, R, loadRestaurants, loadMenu, findItem, selectedOptions, dealPrice, mainPart, lineKey, isFav, addLine, changeQty, onBasketChanged, setPromo } from './state.js';
 import { confirmDialog, closeAllModals, toast } from './ui.js';
 import { app, render, go, PATH_VIEWS } from './router.js';
 import { refreshOrderUI, openOrderSheet, toggleBasketsMenu } from './views/basket.js';
@@ -27,9 +27,35 @@ async function reorder(id) {
   if (!r) { toast('That restaurant isn’t on Morsel any more.'); return; }
   const detail = await loadMenu(r.slug);
   let added = 0;
+  /* The saved option names, matched back to today's choices for a dish. */
+  const selFor = (dish, line) => {
+    const sel = {};
+    for (const g of dish.optionGroups) {
+      const picked = line.options.filter(x => x.group === g.name).map(x => g.choices.find(c => c.name === x.choice)).filter(Boolean);
+      sel[g.key] = g.type === 'one' ? (picked[0] || g.choices[0]).id : picked.map(c => c.id).slice(0, g.max);
+    }
+    return sel;
+  };
   for (const line of o.items) {
     const item = findItem(detail, line.itemSlug);
     if (!item) continue;
+    if (item.kind === 'deal') {
+      /* Meal deal: the same dish for each part (when it's still a choice), and the main dish's customisation. */
+      const parts = {};
+      for (const part of item.deal.parts) {
+        const was = (line.parts || []).find(p => p.group === part.name);
+        const choice = (was && part.choices.find(c => c.itemSlug === was.itemSlug)) || part.choices[0];
+        parts[part.key] = choice.itemSlug;
+      }
+      const main = findItem(detail, parts[mainPart(item.deal).key]);
+      const sel = main ? selFor(main, line) : {};
+      const remove = main ? (line.removed || []).map(x => x.id).filter(rid => (main.ingredients || []).some(i => i.id === rid && i.removable)) : [];
+      const p = dealPrice(detail, item, parts, sel, remove);
+      const note = line.note || '';
+      addLine(r.slug, { key: lineKey(item.slug, sel, remove, note, parts), itemSlug: item.slug, name: item.name, unitPrice: p.unitPrice, qty: line.qty, options: p.options, removed: p.removed, parts, partsInfo: p.parts, sel, remove, note });
+      added += line.qty;
+      continue;
+    }
     const sel = {};
     for (const g of item.optionGroups) {
       const picked = line.options.filter(x => x.group === g.name).map(x => g.choices.find(c => c.name === x.choice)).filter(Boolean);

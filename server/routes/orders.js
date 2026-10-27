@@ -30,6 +30,8 @@ const lineSchema = z.object({
   qty: z.number({ error: 'Each item needs a quantity.' }).int('Quantities must be whole numbers.').min(1, 'Quantities must be between 1 and 20.').max(20, 'Quantities must be between 1 and 20.'),
   options: z.record(z.string().max(40), z.union([z.string().max(40), z.array(z.string().max(40)).max(10)])).optional().default({}),
   remove: z.array(z.string().max(40)).max(20, 'That’s too many ingredients to remove.').optional().default([]),
+  /* Meal deals only: the dish chosen for each part, e.g. { burger: 'classic', side: 'fries' } */
+  parts: z.record(z.string().max(40), z.string().max(60)).optional().default({}),
   note: z.string().trim().max(140, 'Kitchen notes can be up to 140 characters.').optional().default('')
 });
 

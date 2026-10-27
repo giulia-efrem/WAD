@@ -37,8 +37,25 @@ function restaurantCard(r, now = new Date()) {
     illustration: r.illustration,
     ...photoOut(r),
     isOpen: isOpenNow(r.hours, now),
-    /* Lets the home page search dishes without loading every menu. */
-    dishes: r.menu.flatMap(s => s.items.map(it => ({ name: it.name, description: it.description })))
+    /* Lets the home page search dishes (and their tags) without loading every menu. */
+    dishes: r.menu.flatMap(s => s.items.map(it => ({ name: it.name, description: it.description, tags: it.tags || [] })))
+  };
+}
+
+const findDish = (r, slug) => { for (const s of r.menu) { const it = s.items.find(x => x.slug === slug); if (it) return it; } return null; };
+
+/* A meal deal shows the photo of its default main dish (no photo of its own). */
+function dealOut(r, it) {
+  const mainPart = it.deal.parts.find(p => p.main) || it.deal.parts[0];
+  const mainDish = mainPart && findDish(r, mainPart.choices[0].itemSlug);
+  return {
+    photo: photoOut(mainDish || {}),
+    deal: {
+      parts: it.deal.parts.map(p => ({
+        key: p.key, name: p.name, main: p.main,
+        choices: p.choices.map(c => { const d = findDish(r, c.itemSlug); return { itemSlug: c.itemSlug, name: d ? d.name : c.itemSlug, price: d ? d.price : 0, delta: c.delta }; })
+      }))
+    }
   };
 }
 
@@ -54,7 +71,10 @@ function restaurantDetail(r, now = new Date()) {
         description: it.description,
         price: it.price,
         popular: it.popular,
-        ...photoOut(it),
+        kind: it.kind || 'main',
+        tags: it.tags || [],
+        allergens: it.allergens || [],
+        ...(it.kind === 'deal' && it.deal ? (({ photo, deal }) => ({ ...photo, deal }))(dealOut(r, it)) : { ...photoOut(it), deal: null }),
         ingredients: (it.ingredients || []).map(i => ({ id: i.id, name: i.name, removable: i.removable })),
         optionGroups: it.optionGroups.map(g => ({
           key: g.key, name: g.name, type: g.type, ...(g.type === 'many' ? { max: g.max } : {}),
@@ -77,6 +97,7 @@ function orderOut(o, now = Date.now()) {
     items: o.items.map(l => ({
       itemSlug: l.itemSlug, name: l.name, qty: l.qty, unitPrice: l.unitPrice,
       options: l.options.map(x => ({ group: x.group, choice: x.choice, price: x.price })),
+      parts: (l.parts || []).map(x => ({ group: x.group, itemSlug: x.itemSlug, name: x.name, price: x.price })),
       removed: (l.removed || []).map(x => ({ id: x.id, name: x.name })), note: l.note || ''
     })),
     pricing: { ...(o.pricing.toObject ? o.pricing.toObject() : o.pricing) },

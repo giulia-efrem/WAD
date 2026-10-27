@@ -1,7 +1,7 @@
 import { $, $$, esc, eur, clock, dayTime, clamp, initials, plural } from '../util.js';
 import { ic, ICON, FOOD } from '../art.js';
 import { api } from '../api.js';
-import { state, R, catalog, describeChoices } from '../state.js';
+import { state, R, catalog, describeLine } from '../state.js';
 import { progress, serverNow } from '../progress.js';
 import { toast } from '../ui.js';
 import { app, onLeave } from '../router.js';
@@ -107,7 +107,7 @@ export async function renderOrder(id) {
           <div id="tr-rate"></div>
           <section class="panel section-gap" aria-labelledby="tr-details" style="margin-top:24px">
             <h2 id="tr-details">Order details</h2>
-            <ul class="sum-items">${o.items.map(l => { const d = describeChoices(l.options, l.removed || []); return `<li><span><span class="q">${l.qty}×</span>${esc(l.name)}${d ? `<br><span class="muted" style="font-size:.85rem">${esc(d)}</span>` : ''}${l.note ? `<br><span class="muted" style="font-size:.85rem">Note: “${esc(l.note)}”</span>` : ''}</span><span>${eur(l.unitPrice * l.qty)}</span></li>`; }).join('')}</ul>
+            <ul class="sum-items">${o.items.map(l => { const d = describeLine(l); return `<li><span><span class="q">${l.qty}×</span>${esc(l.name)}${d ? `<br><span class="muted" style="font-size:.85rem">${esc(d)}</span>` : ''}${l.note ? `<br><span class="muted" style="font-size:.85rem">Note: “${esc(l.note)}”</span>` : ''}</span><span>${eur(l.unitPrice * l.qty)}</span></li>`; }).join('')}</ul>
             ${priceRowsStatic(o)}
             <ul class="detail-list" style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">
               <li><span class="muted">Deliver to</span><span style="text-align:right">${esc(o.address.street)}${o.address.details ? ', ' + esc(o.address.details) : ''}</span></li>

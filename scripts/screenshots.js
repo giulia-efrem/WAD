@@ -155,6 +155,11 @@ const VIEW_STEPS = {
       }
       await context.close();
     }
+  } catch (err) {
+    console.error(`
+Screenshots stopped: ${err.message}
+Is the server running (npm run dev) and the seed loaded (npm run seed)?`);
+    process.exitCode = 1;
   } finally {
     await browser.close();
     await teardown(ctx);

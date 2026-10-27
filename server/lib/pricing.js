@@ -22,21 +22,15 @@ function findItem(restaurant, itemSlug) {
   return null;
 }
 
-/* Turns one requested line ({ itemSlug, qty, options: { groupKey: choiceId | [choiceIds] }, remove: [ingredientIds], note })
-   into a priced order line, or throws a 400 that says what was wrong. Removing an ingredient is free. */
-function priceLine(restaurant, line) {
-  const item = findItem(restaurant, line.itemSlug);
-  if (!item) throw badRequest(`“${line.itemSlug}” isn’t on the menu at ${restaurant.name}.`, 'unknown_item');
-  if (!Number.isInteger(line.qty) || line.qty < 1 || line.qty > 20) {
-    throw badRequest(`Choose between 1 and 20 of ${item.name}.`, 'invalid_quantity');
-  }
-  const requested = line.options || {};
+/* Checks a dish's chosen options and left-out ingredients. Returns what they add to the price
+   and their snapshot for the order. Throws a 400 that says what was wrong. */
+function customise(item, requested = {}, remove = []) {
   const groups = item.optionGroups || [];
   for (const key of Object.keys(requested)) {
     if (!groups.some(g => g.key === key)) throw badRequest(`${item.name} has no “${key}” option.`, 'unknown_option');
   }
   const options = [];
-  let unitPrice = item.price;
+  let extra = 0;
   for (const g of groups) {
     const raw = requested[g.key];
     if (g.type === 'one') {
@@ -45,7 +39,7 @@ function priceLine(restaurant, line) {
       const choice = g.choices.find(c => c.id === raw);
       if (!choice) throw badRequest(`“${raw}” isn’t a ${g.name.toLowerCase()} for ${item.name}.`, 'unknown_option');
       options.push({ group: g.name, choice: choice.name, price: choice.price });
-      unitPrice += choice.price;
+      extra += choice.price;
     } else {
       if (raw == null) continue;
       const ids = Array.isArray(raw) ? raw : [raw];
@@ -56,13 +50,12 @@ function priceLine(restaurant, line) {
       for (const choice of g.choices) {
         if (!ids.includes(choice.id)) continue;
         options.push({ group: g.name, choice: choice.name, price: choice.price });
-        unitPrice += choice.price;
+        extra += choice.price;
       }
       const unknown = ids.find(id => !g.choices.some(c => c.id === id));
       if (unknown) throw badRequest(`“${unknown}” isn’t an option for ${item.name}.`, 'unknown_option');
     }
   }
-  const remove = line.remove || [];
   if (remove.some(id => typeof id !== 'string')) throw badRequest(`Invalid ingredient for ${item.name}.`, 'invalid_option');
   if (new Set(remove).size !== remove.length) throw badRequest('Each ingredient can only be removed once.', 'invalid_option');
   for (const id of remove) {
@@ -72,7 +65,52 @@ function priceLine(restaurant, line) {
   }
   /* In the menu's order, so equal choices always describe the same line. */
   const removed = (item.ingredients || []).filter(i => remove.includes(i.id)).map(i => ({ id: i.id, name: i.name }));
-  return { itemSlug: item.slug, name: item.name, qty: line.qty, unitPrice, options, removed, note: (line.note || '').trim() };
+  return { extra, options, removed };
+}
+
+/* The standard version of a deal's side or drink: the first choice of each required group. */
+const standardOptions = item => (item.optionGroups || []).filter(g => g.type === 'one').map(g => ({ group: g.name, choice: g.choices[0].name, price: g.choices[0].price }));
+
+/* Turns one requested line into a priced order line, or throws a 400 that says what was wrong.
+   Dish: { itemSlug, qty, options: { groupKey: choiceId | [choiceIds] }, remove: [ingredientIds], note }
+   Meal deal: the same plus parts: { partKey: dishSlug }; options and remove apply to the main dish.
+   A deal costs its price, plus each chosen part's surcharge, plus the main dish's paid options. */
+function priceLine(restaurant, line) {
+  const item = findItem(restaurant, line.itemSlug);
+  if (!item) throw badRequest(`“${line.itemSlug}” isn’t on the menu at ${restaurant.name}.`, 'unknown_item');
+  if (!Number.isInteger(line.qty) || line.qty < 1 || line.qty > 20) {
+    throw badRequest(`Choose between 1 and 20 of ${item.name}.`, 'invalid_quantity');
+  }
+  const note = (line.note || '').trim();
+  if (item.kind !== 'deal') {
+    if (line.parts && Object.keys(line.parts).length) throw badRequest(`${item.name} isn’t a meal deal.`, 'invalid_option');
+    const { extra, options, removed } = customise(item, line.options, line.remove || []);
+    return { itemSlug: item.slug, name: item.name, qty: line.qty, unitPrice: item.price + extra, options, removed, parts: [], note };
+  }
+  const deal = item.deal || { parts: [] };
+  const picked = line.parts || {};
+  for (const key of Object.keys(picked)) {
+    if (!deal.parts.some(p => p.key === key)) throw badRequest(`${item.name} has no “${key}” part.`, 'unknown_part');
+  }
+  let unitPrice = item.price;
+  let main = { extra: 0, options: [], removed: [] };
+  const parts = [];
+  for (const part of deal.parts) {
+    const slugValue = picked[part.key];
+    if (!slugValue) throw badRequest(`Choose a ${part.name.toLowerCase()} for ${item.name}.`, 'missing_part');
+    if (typeof slugValue !== 'string') throw badRequest(`Pick one ${part.name.toLowerCase()} for ${item.name}.`, 'invalid_part');
+    const choice = part.choices.find(c => c.itemSlug === slugValue);
+    if (!choice) throw badRequest(`“${slugValue}” isn’t a ${part.name.toLowerCase()} you can choose in ${item.name}.`, 'unknown_part');
+    const dish = findItem(restaurant, slugValue);
+    if (!dish) throw badRequest(`“${slugValue}” isn’t on the menu at ${restaurant.name}.`, 'unknown_item');
+    unitPrice += choice.delta;
+    if (part.main) main = customise(dish, line.options, line.remove || []);
+    parts.push({ group: part.name, itemSlug: dish.slug, name: dish.name, price: choice.delta, options: part.main ? [] : standardOptions(dish) });
+  }
+  if (!deal.parts.some(p => p.main) && ((line.remove || []).length || Object.keys(line.options || {}).length)) {
+    throw badRequest(`${item.name} can’t be customised.`, 'invalid_option');
+  }
+  return { itemSlug: item.slug, name: item.name, qty: line.qty, unitPrice: unitPrice + main.extra, options: main.options, removed: main.removed, parts, note };
 }
 
 /* Returns '' when the code can be used, otherwise the message to show (same wording as the reference). */

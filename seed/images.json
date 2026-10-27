@@ -239,8 +239,36 @@
       "downloadLocation": "https://api.unsplash.com/photos/ChXHveqrb28/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MXx8ZnJlbmNoJTIwZnJpZXN8ZW58MXx8fHwxNzkzMDU1MzkxfDA"
     }
   },
-  "smash-society/rings": "",
-  "smash-society/vanilla": "",
+  "smash-society/rings": {
+    "url": "https://images.unsplash.com/photo-1637231854063-dcc3b5c4e8aa?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8Nnx8b25pb24lMjByaW5nc3xlbnwxfHx8fDE3OTMwNTkyNjB8MA&ixlib=rb-4.1.0",
+    "color": "#262626",
+    "blurHash": "L44UQdX80}r=JBof$gR*9^oJ=wS4",
+    "alt": "a square metal container filled with onion rings",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "sJNrSTMsd5Y",
+      "name": "Tal Molcho",
+      "username": "molcotal",
+      "profileUrl": "https://unsplash.com/@molcotal",
+      "photoUrl": "https://unsplash.com/photos/a-square-metal-container-filled-with-onion-rings-sJNrSTMsd5Y",
+      "downloadLocation": "https://api.unsplash.com/photos/sJNrSTMsd5Y/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8Nnx8b25pb24lMjByaW5nc3xlbnwxfHx8fDE3OTMwNTkyNjB8MA"
+    }
+  },
+  "smash-society/vanilla": {
+    "url": "https://images.unsplash.com/photo-1734747643067-6d4e0f705a00?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MTF8fHZhbmlsbGElMjBtaWxrc2hha2V8ZW58MXx8fHwxNzkzMDU5MjYxfDA&ixlib=rb-4.1.0",
+    "color": "#262626",
+    "blurHash": "LKFFW:Sj0h_2I@~q_2E2O]?b?FM}",
+    "alt": "A tall glass with a drink and two straws in it",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "7oDmMCXZZpY",
+      "name": "Reggi Renaldi",
+      "username": "reggirenald",
+      "profileUrl": "https://unsplash.com/@reggirenald",
+      "photoUrl": "https://unsplash.com/photos/a-tall-glass-with-a-drink-and-two-straws-in-it-7oDmMCXZZpY",
+      "downloadLocation": "https://api.unsplash.com/photos/7oDmMCXZZpY/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MTF8fHZhbmlsbGElMjBtaWxrc2hha2V8ZW58MXx8fHwxNzkzMDU5MjYxfDA"
+    }
+  },
   "smash-society/caramel": "",
   "bao-and-broth": {
     "url": "https://images.unsplash.com/photo-1663147634679-78f6374cdde6?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8NHx8cmFtZW4lMjBib3dscyUyMGphcGFuZXNlJTIwcmVzdGF1cmFudHxlbnwxfDB8fHwxNzkzMDU1MzgzfDA&ixlib=rb-4.1.0",

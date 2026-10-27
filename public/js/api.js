@@ -5,8 +5,6 @@ export class ApiError extends Error {
   constructor(code, message, status) { super(message); this.code = code; this.status = status; }
 }
 
-export const DEMO_ACCOUNT = { email: 'demo@morsel.app', password: 'morsel-demo-2026' };
-
 export async function request(method, url, body) {
   const opts = { method, credentials: 'same-origin', headers: { Accept: 'application/json' } };
   if (body instanceof FormData) opts.body = body;
@@ -33,13 +31,9 @@ export const api = {
   async signUp({ name, email, password }) { return (await request('POST', '/auth/signup', { name, email, password })).user; },
   async logIn({ email, password }) { return (await request('POST', '/auth/login', { email, password })).user; },
   async logOut() { await request('POST', '/auth/logout'); },
-  async demoLogIn() {
-    try { return await api.logIn(DEMO_ACCOUNT); }
-    catch (err) {
-      if (err.code === 'bad_credentials') throw new ApiError('demo_missing', 'The demo account isn’t set up yet. Run npm run seed, then try again.', 401);
-      throw err;
-    }
-  },
+  /* Demo mode only (DEMO_MODE=true on the server): the accounts the login window offers, and a login by role. */
+  async demoAccounts() { return request('GET', '/auth/demo'); },
+  async demoLogIn(role, restaurant) { return (await request('POST', '/auth/demo', { role, restaurant })).user; },
 
   async addAddress(addr) { return request('POST', '/addresses', addr); },
   async setDefaultAddress(id) { return (await request('PATCH', `/addresses/${encodeURIComponent(id)}/default`)).user; },

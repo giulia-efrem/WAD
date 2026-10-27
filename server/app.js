@@ -81,6 +81,7 @@ async function start() {
   await flow.migrate();
   const server = app.listen(config.port, () => {
     console.log(`Morsel is running at http://localhost:${config.port} (demo speed ${config.demoSpeed}x)`);
+    if (config.demoMode) console.log('Demo mode is on: the login window offers one-click demo logins, including the admin. Turn DEMO_MODE off anywhere public.');
     /* Only the process that serves the site runs the autopilot. */
     flow.startAutopilot();
   });

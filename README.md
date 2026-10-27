@@ -13,7 +13,7 @@ npm run seed              # loads restaurants, menus, demo accounts and 30 days 
 npm run dev               # or: npm start
 ```
 
-Open **http://localhost:3000**. Click **Log in**, then **Continue with the demo account**. Staff pages are at **/admin**, **/partner** and **/courier** (accounts below).
+Open **http://localhost:3000**. Click **Log in** and, with `DEMO_MODE=true`, pick one of the **Demo accounts**: customer, restaurant partner, courier or admin. Staff pages are at **/admin**, **/partner** and **/courier** (accounts below).
 
 ### .env
 
@@ -23,6 +23,7 @@ Open **http://localhost:3000**. Click **Log in**, then **Continue with the demo 
 | `JWT_SECRET` | long random string | Signs the login cookie. Generate one with `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
 | `PORT` | `3000` | HTTP port |
 | `DEMO_SPEED` | `30` | Order tracking speed. 30 means one simulated minute lasts 2 seconds. 1 is real time, and turns off "Skip to next step" |
+| `DEMO_MODE` | `true` | Adds a "Demo accounts" section to the login window with one-click logins (see below). Off unless set to `true`. Leave it off anywhere public |
 | `UNSPLASH_ACCESS_KEY` | from unsplash.com/developers | Optional. Used only by `npm run photos` and /admin/photos, never sent to the browser |
 
 Never commit `.env`. It is listed in `.gitignore`.
@@ -60,6 +61,8 @@ Never commit `.env`. It is listed in `.gitignore`.
 | Courier (car) | `courier3@morsel.app` | `morsel-courier-2026` |
 
 The demo customer has a saved address and one delivered, rated order (with a reply from Bao & Broth). The seed also adds 20 customers at `@customers.morsel.app` with about 330 past orders over 30 days, so the dashboard has figures. Those customers can't log in. These passwords are public, so change them (or don't seed) on anything that isn't a demo.
+
+**One-click demo logins.** With `DEMO_MODE=true` in `.env`, the login window shows a **Demo accounts** section with four buttons: the demo customer, a restaurant partner, courier 1 and the admin. The browser never gets a password: it sends the role and the server signs in the matching seeded account. The customer stays on the site; staff go straight to /partner, /courier or /admin. The partner button signs in to the restaurant you're looking at (on its page or its checkout), and to Forno Sette from anywhere else. Accounts an admin has disabled or given another role aren't offered. With `DEMO_MODE` off, the section is hidden and the demo login endpoint answers 404. Anyone who can open the site can log in as the admin while it's on, so keep it off anywhere public.
 
 ## Roles
 
@@ -225,6 +228,8 @@ Money is always in cents.
 | POST | `/auth/signup` | `{ name, email, password }` | Password must be 8 to 72 characters. Sets the cookie. Limited to 10 per hour per IP |
 | POST | `/auth/login` | `{ email, password }` | Sets the cookie. 10 failed attempts per 15 minutes per IP |
 | POST | `/auth/logout` | | Clears the cookie |
+| GET | `/auth/demo` | | `{ enabled, defaultPartner, accounts: [{ role, name, restaurant?, vehicle? }] }`. `enabled: false` and no accounts unless `DEMO_MODE=true` |
+| POST | `/auth/demo` | `{ role, restaurant? }` | `DEMO_MODE=true` only (404 otherwise): signs in the seeded demo account for `customer`, `partner` (`restaurant` is a slug, Forno Sette by default), `courier` or `admin` |
 | GET | `/auth/me` | | `{ user }` with `role`, `restaurant` (partners), `vehicle` (couriers) and `orderCount`, or `{ user: null }` when logged out |
 | PATCH | `/auth/me` | `{ name }` | Edit your name |
 | POST | `/auth/password` | `{ current, password }` | Change your password. Signs out your other sessions |

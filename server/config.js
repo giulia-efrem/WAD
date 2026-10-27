@@ -26,6 +26,8 @@ const config = {
   demoSpeed: Number.isFinite(demoSpeed) && demoSpeed > 0 ? demoSpeed : 30,
   /* Optional: only the photo script and /admin/photos use it. It never leaves the server. */
   unsplashKey: (process.env.UNSPLASH_ACCESS_KEY || '').trim(),
+  /* DEMO_MODE=true adds one-click demo logins (customer, partner, courier, admin) to the login window. */
+  demoMode: (process.env.DEMO_MODE || '').trim().toLowerCase() === 'true',
   isProduction: process.env.NODE_ENV === 'production',
   cookieName: 'morsel_session',
   sessionDays: 7

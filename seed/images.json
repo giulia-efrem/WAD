@@ -44,11 +44,81 @@
       "downloadLocation": "https://api.unsplash.com/photos/_P76trHTWDE/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MXx8c3BpY3klMjBzYWxhbWklMjBwaXp6YXxlbnwxfHx8fDE3OTMwNTUzODh8MA"
     }
   },
-  "forno-sette/formaggi": "",
-  "forno-sette/funghi": "",
-  "forno-sette/marinara": "",
-  "forno-sette/burrata": "",
-  "forno-sette/focaccia": "",
+  "forno-sette/formaggi": {
+    "url": "https://images.unsplash.com/photo-1579751626657-72bc17010498?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8Mnx8cXVhdHRybyUyMGZvcm1hZ2dpJTIwcGl6emF8ZW58MXx8fHwxNzkzMDU4OTkzfDA&ixlib=rb-4.1.0",
+    "color": "#260c0c",
+    "blurHash": "LCCi2Di_0#Ek0LxFNHELEN={xuEj",
+    "alt": "pizza on brown wooden table",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "40OJLYVWeeM",
+      "name": "Nik Owens",
+      "username": "nik_owens",
+      "profileUrl": "https://unsplash.com/@nik_owens",
+      "photoUrl": "https://unsplash.com/photos/pizza-on-brown-wooden-table-40OJLYVWeeM",
+      "downloadLocation": "https://api.unsplash.com/photos/40OJLYVWeeM/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8Mnx8cXVhdHRybyUyMGZvcm1hZ2dpJTIwcGl6emF8ZW58MXx8fHwxNzkzMDU4OTkzfDA"
+    }
+  },
+  "forno-sette/funghi": {
+    "url": "https://images.unsplash.com/photo-1671292747904-baf322a84498?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MTV8fG11c2hyb29tJTIwc2F1c2FnZSUyMHBpenphfGVufDF8fHx8MTc5MzA1ODk5NHww&ixlib=rb-4.1.0",
+    "color": "#d9d9f3",
+    "blurHash": "LSODLQ.9X.-=I9s;Rjt8.Tt8DiRP",
+    "alt": "a slice of pizza with mushrooms and other toppings",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "mEOLd8sxBtk",
+      "name": "amin ramezani",
+      "username": "aminrmzni",
+      "profileUrl": "https://unsplash.com/@aminrmzni",
+      "photoUrl": "https://unsplash.com/photos/a-slice-of-pizza-with-mushrooms-and-other-toppings-mEOLd8sxBtk",
+      "downloadLocation": "https://api.unsplash.com/photos/mEOLd8sxBtk/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MTV8fG11c2hyb29tJTIwc2F1c2FnZSUyMHBpenphfGVufDF8fHx8MTc5MzA1ODk5NHww"
+    }
+  },
+  "forno-sette/marinara": {
+    "url": "https://images.unsplash.com/photo-1590947132387-155cc02f3212?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8NXx8cGl6emElMjBtYXJpbmFyYSUyMHRvbWF0byUyMGdhcmxpY3xlbnwxfHx8fDE3OTMwNTg5OTR8MA&ixlib=rb-4.1.0",
+    "color": "#594040",
+    "blurHash": "LWJij[1O9wnit3njWXW;WYNbsSxD",
+    "alt": "pizza with tomato and green leaves on white ceramic plate",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "Oxb84ENcFfU",
+      "name": "Vit Ch",
+      "username": "v_uk_europe",
+      "profileUrl": "https://unsplash.com/@v_uk_europe",
+      "photoUrl": "https://unsplash.com/photos/pizza-with-tomato-and-green-leaves-on-white-ceramic-plate-Oxb84ENcFfU",
+      "downloadLocation": "https://api.unsplash.com/photos/Oxb84ENcFfU/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8NXx8cGl6emElMjBtYXJpbmFyYSUyMHRvbWF0byUyMGdhcmxpY3xlbnwxfHx8fDE3OTMwNTg5OTR8MA"
+    }
+  },
+  "forno-sette/burrata": {
+    "url": "https://images.unsplash.com/photo-1649400454485-b8ad827f929d?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8OXx8YnVycmF0YSUyMGhlaXJsb29tJTIwdG9tYXRvZXN8ZW58MXx8fHwxNzkzMDU4OTk1fDA&ixlib=rb-4.1.0",
+    "color": "#262626",
+    "blurHash": "LaGaUjx]AFt79uWAVsRk0}ay-UWo",
+    "alt": "a plate of food on a wooden table",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "NNTV0JhNmis",
+      "name": "Paras Kapoor",
+      "username": "kapoorparas28",
+      "profileUrl": "https://unsplash.com/@kapoorparas28",
+      "photoUrl": "https://unsplash.com/photos/a-plate-of-food-on-a-wooden-table-NNTV0JhNmis",
+      "downloadLocation": "https://api.unsplash.com/photos/NNTV0JhNmis/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8OXx8YnVycmF0YSUyMGhlaXJsb29tJTIwdG9tYXRvZXN8ZW58MXx8fHwxNzkzMDU4OTk1fDA"
+    }
+  },
+  "forno-sette/focaccia": {
+    "url": "https://images.unsplash.com/photo-1767065885993-b4c5a018bd3a?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8M3x8cm9zZW1hcnklMjBmb2NhY2NpYSUyMGJyZWFkfGVufDF8fHx8MTc5MzA1ODk5Nnww&ixlib=rb-4.1.0",
+    "color": "#262626",
+    "blurHash": "LPDui2Iof9NG9]n%WVoe0fxajss:",
+    "alt": "Focaccia bread with rosemary on a wooden board",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "NZ8UM4NCkbQ",
+      "name": "Diego Arenas de Rodrigo",
+      "username": "diegoarenasderodrigo",
+      "profileUrl": "https://unsplash.com/@diegoarenasderodrigo",
+      "photoUrl": "https://unsplash.com/photos/focaccia-bread-with-rosemary-on-a-wooden-board-NZ8UM4NCkbQ",
+      "downloadLocation": "https://api.unsplash.com/photos/NZ8UM4NCkbQ/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8M3x8cm9zZW1hcnklMjBmb2NhY2NpYSUyMGJyZWFkfGVufDF8fHx8MTc5MzA1ODk5Nnww"
+    }
+  },
   "forno-sette/tiramisu": {
     "url": "https://images.unsplash.com/photo-1631206753348-db44968fd440?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8OHx8dGlyYW1pc3UlMjBkZXNzZXJ0fGVufDF8fHx8MTc5MzA1NTM4OXww&ixlib=rb-4.1.0",
     "color": "#c0c0c0",
@@ -64,7 +134,21 @@
       "downloadLocation": "https://api.unsplash.com/photos/-RF3H8HJe5I/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8OHx8dGlyYW1pc3UlMjBkZXNzZXJ0fGVufDF8fHx8MTc5MzA1NTM4OXww"
     }
   },
-  "forno-sette/pellegrino": "",
+  "forno-sette/pellegrino": {
+    "url": "https://images.unsplash.com/photo-1595994195534-d5219f02f99f?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8NHx8c3BhcmtsaW5nJTIwd2F0ZXIlMjBnbGFzcyUyMGJvdHRsZXxlbnwxfHx8fDE3OTMwNTg5OTZ8MA&ixlib=rb-4.1.0",
+    "color": "#f3f3f3",
+    "blurHash": "LaI$KO01Io9G%MX9x]WVo#f4xuay",
+    "alt": "clear glass bottle with water",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "rJxh46Mf5ZQ",
+      "name": "Greg Rosenke",
+      "username": "greg_rosenke",
+      "profileUrl": "https://unsplash.com/@greg_rosenke",
+      "photoUrl": "https://unsplash.com/photos/clear-glass-bottle-with-water-rJxh46Mf5ZQ",
+      "downloadLocation": "https://api.unsplash.com/photos/rJxh46Mf5ZQ/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8NHx8c3BhcmtsaW5nJTIwd2F0ZXIlMjBnbGFzcyUyMGJvdHRsZXxlbnwxfHx8fDE3OTMwNTg5OTZ8MA"
+    }
+  },
   "smash-society": {
     "url": "https://images.unsplash.com/photo-1561758033-d89a9ad46330?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MXx8YnVyZ2VyJTIwYW5kJTIwZnJpZXN8ZW58MXwwfHx8MTc5MzA1NTgwMnww&ixlib=rb-4.1.0",
     "color": "#260c0c",
@@ -95,7 +179,21 @@
       "downloadLocation": "https://api.unsplash.com/photos/77265qWj-Gk/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8Mnx8c21hc2glMjBidXJnZXIlMjBjaGVlc2V8ZW58MXx8fHwxNzkzMDU1Mzg5fDA"
     }
   },
-  "smash-society/double": "",
+  "smash-society/double": {
+    "url": "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8Mnx8ZG91YmxlJTIwY2hlZXNlYnVyZ2VyfGVufDF8fHx8MTc5MzA1ODk5N3ww&ixlib=rb-4.1.0",
+    "color": "#0c2640",
+    "blurHash": "LND[:|R*0+t64poKRkR*yDoL-SWD",
+    "alt": "double patty cheeseburger",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "jh5XyK4Rr3Y",
+      "name": "amirali mirhashemian",
+      "username": "amir_v_ali",
+      "profileUrl": "https://unsplash.com/@amir_v_ali",
+      "photoUrl": "https://unsplash.com/photos/double-patty-cheeseburger-jh5XyK4Rr3Y",
+      "downloadLocation": "https://api.unsplash.com/photos/jh5XyK4Rr3Y/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8Mnx8ZG91YmxlJTIwY2hlZXNlYnVyZ2VyfGVufDF8fHx8MTc5MzA1ODk5N3ww"
+    }
+  },
   "smash-society/hothoney": {
     "url": "https://images.unsplash.com/photo-1705131186176-1c7cdb830815?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8N3x8ZnJpZWQlMjBjaGlja2VuJTIwc2FuZHdpY2h8ZW58MXx8fHwxNzkzMDU1MzkwfDA&ixlib=rb-4.1.0",
     "color": "#c0c0c0",
@@ -111,7 +209,21 @@
       "downloadLocation": "https://api.unsplash.com/photos/rCl6ZyI0jXg/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8N3x8ZnJpZWQlMjBjaGlja2VuJTIwc2FuZHdpY2h8ZW58MXx8fHwxNzkzMDU1MzkwfDA"
     }
   },
-  "smash-society/mushroom": "",
+  "smash-society/mushroom": {
+    "url": "https://images.unsplash.com/photo-1579065413090-3ce766e7deca?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MXx8bXVzaHJvb20lMjBzd2lzcyUyMGJ1cmdlcnxlbnwxfHx8fDE3OTMwNTg5OTd8MA&ixlib=rb-4.1.0",
+    "color": "#d9d9d9",
+    "blurHash": "LIMi]1R+?wpe;L9FE2Mxt.kC4ns9",
+    "alt": "burger and potato fries on plate",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "bMvXpKuRN3g",
+      "name": "GoodEats YQR",
+      "username": "goodeats_yqr",
+      "profileUrl": "https://unsplash.com/@goodeats_yqr",
+      "photoUrl": "https://unsplash.com/photos/burger-and-potato-fries-on-plate-bMvXpKuRN3g",
+      "downloadLocation": "https://api.unsplash.com/photos/bMvXpKuRN3g/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MXx8bXVzaHJvb20lMjBzd2lzcyUyMGJ1cmdlcnxlbnwxfHx8fDE3OTMwNTg5OTd8MA"
+    }
+  },
   "smash-society/fries": {
     "url": "https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MXx8ZnJlbmNoJTIwZnJpZXN8ZW58MXx8fHwxNzkzMDU1MzkxfDA&ixlib=rb-4.1.0",
     "color": "#260c0c",
@@ -227,7 +339,21 @@
     }
   },
   "kaze-sushi/salmonset": "",
-  "kaze-sushi/dragon": "",
+  "kaze-sushi/dragon": {
+    "url": "https://images.unsplash.com/photo-1729544807821-0ae6fa70b274?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MTN8fHN1c2hpJTIwcm9sbCUyMGF2b2NhZG98ZW58MXx8fHwxNzkzMDU4OTc3fDA&ixlib=rb-4.1.0",
+    "color": "#d9f3f3",
+    "blurHash": "LtMkLqt7cDaQQ-bEo}V]-@oxXSWU",
+    "alt": "A white plate topped with sushi next to a purple flower",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "WwVV-CDW_WQ",
+      "name": "Carina S",
+      "username": "carinacs",
+      "profileUrl": "https://unsplash.com/@carinacs",
+      "photoUrl": "https://unsplash.com/photos/a-white-plate-topped-with-sushi-next-to-a-purple-flower-WwVV-CDW_WQ",
+      "downloadLocation": "https://api.unsplash.com/photos/WwVV-CDW_WQ/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MTN8fHN1c2hpJTIwcm9sbCUyMGF2b2NhZG98ZW58MXx8fHwxNzkzMDU4OTc3fDA"
+    }
+  },
   "kaze-sushi/california": "",
   "kaze-sushi/spicytuna": "",
   "kaze-sushi/nigiri": "",
@@ -264,7 +390,21 @@
     }
   },
   "green-theory/falafel": "",
-  "green-theory/teriyaki": "",
+  "green-theory/teriyaki": {
+    "url": "https://images.unsplash.com/photo-1791386797753-52e421960216?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8NHx8dGVyaXlha2klMjBjaGlja2VuJTIwcmljZSUyMGJvd2x8ZW58MXx8fHwxNzkzMDU4OTg4fDA&ixlib=rb-4.1.0",
+    "color": "#262626",
+    "blurHash": "LWF}[yJC9wIp0MngslxuD%xuxtWW",
+    "alt": "Black chopsticks lifting a piece of glazed chicken from a bowl of rice topped with sesame seeds",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "R_KF4TPN8jk",
+      "name": "Travis Palma",
+      "username": "palmavisuals",
+      "profileUrl": "https://unsplash.com/@palmavisuals",
+      "photoUrl": "https://unsplash.com/photos/glazed-chicken-rice-bowl-with-sesame-R_KF4TPN8jk",
+      "downloadLocation": "https://api.unsplash.com/photos/R_KF4TPN8jk/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8NHx8dGVyaXlha2klMjBjaGlja2VuJTIwcmljZSUyMGJvd2x8ZW58MXx8fHwxNzkzMDU4OTg4fDA"
+    }
+  },
   "green-theory/acai": "",
   "green-theory/greenjuice": "",
   "green-theory/shot": "",
@@ -283,8 +423,36 @@
       "downloadLocation": "https://api.unsplash.com/photos/5mpht0M5H0E/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8OHx8bWV4aWNhbiUyMHN0cmVldCUyMHRhY29zJTIwdGFibGV8ZW58MXwwfHx8MTc5MzA1NTM4NXww"
     }
   },
-  "taqueria-luna/pastor": "",
-  "taqueria-luna/birria": "",
+  "taqueria-luna/pastor": {
+    "url": "https://images.unsplash.com/photo-1606168159202-1f3fca458c18?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8Nnx8dGFjb3MlMjBhbCUyMHBhc3RvcnxlbnwxfHx8fDE3OTMwNTg5ODh8MA&ixlib=rb-4.1.0",
+    "color": "#c00c0c",
+    "blurHash": "LFL3C~9wr1BU8$#S#R%KQoa1x=IV",
+    "alt": "fries and vegetable salad on red and white ceramic plate",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "lmfEWru4V7A",
+      "name": "Jarritos Mexican Soda",
+      "username": "jarritos",
+      "profileUrl": "https://unsplash.com/@jarritos",
+      "photoUrl": "https://unsplash.com/photos/fries-and-vegetable-salad-on-red-and-white-ceramic-plate-lmfEWru4V7A",
+      "downloadLocation": "https://api.unsplash.com/photos/lmfEWru4V7A/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8Nnx8dGFjb3MlMjBhbCUyMHBhc3RvcnxlbnwxfHx8fDE3OTMwNTg5ODh8MA"
+    }
+  },
+  "taqueria-luna/birria": {
+    "url": "https://images.unsplash.com/photo-1768967145720-1eae9fe6ecb7?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8NHx8YmlycmlhJTIwdGFjb3N8ZW58MXx8fHwxNzkzMDU4OTg5fDA&ixlib=rb-4.1.0",
+    "color": "#400c0c",
+    "blurHash": "LQE^[]bHIon3~WxGRPVrtms.nORi",
+    "alt": "Crispy tacos topped with diced onions and cilantro",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "tlfjDBm-fXc",
+      "name": "You Le",
+      "username": "le_y0u",
+      "profileUrl": "https://unsplash.com/@le_y0u",
+      "photoUrl": "https://unsplash.com/photos/crispy-tacos-topped-with-diced-onions-and-cilantro-tlfjDBm-fXc",
+      "downloadLocation": "https://api.unsplash.com/photos/tlfjDBm-fXc/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8NHx8YmlycmlhJTIwdGFjb3N8ZW58MXx8fHwxNzkzMDU4OTg5fDA"
+    }
+  },
   "taqueria-luna/baja": "",
   "taqueria-luna/hongos": "",
   "taqueria-luna/burrito": "",
@@ -306,8 +474,36 @@
       "downloadLocation": "https://api.unsplash.com/photos/ErZbxoGdrRg/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8Mnx8cGF0aXNzZXJpZSUyMGNha2VzJTIwcGFzdHJpZXN8ZW58MXwwfHx8MTc5MzA1NTM4Nnww"
     }
   },
-  "sweet-spot/pistachio": "",
-  "sweet-spot/lava": "",
+  "sweet-spot/pistachio": {
+    "url": "https://images.unsplash.com/photo-1790862959816-e949d1b44759?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8NXx8cGlzdGFjaGlvJTIwY2hlZXNlY2FrZXxlbnwxfHx8fDE3OTMwNTg5ODl8MA&ixlib=rb-4.1.0",
+    "color": "#8ca6c0",
+    "blurHash": "LdHL}C?F?woynMV@MxNHbvkVITM|",
+    "alt": "A slice of cheesecake topped with berry sauce and crushed pistachios on a plate",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "3r6WMxWGd0k",
+      "name": "Irina Pertsova",
+      "username": "irina_24",
+      "profileUrl": "https://unsplash.com/@irina_24",
+      "photoUrl": "https://unsplash.com/photos/cheesecake-slice-with-berry-sauce-dessert-3r6WMxWGd0k",
+      "downloadLocation": "https://api.unsplash.com/photos/3r6WMxWGd0k/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8NXx8cGlzdGFjaGlvJTIwY2hlZXNlY2FrZXxlbnwxfHx8fDE3OTMwNTg5ODl8MA"
+    }
+  },
+  "sweet-spot/lava": {
+    "url": "https://images.unsplash.com/photo-1673551490812-eaee2e9bf0ef?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8Mnx8Y2hvY29sYXRlJTIwbGF2YSUyMGNha2V8ZW58MXx8fHwxNzkzMDU4OTkwfDA&ixlib=rb-4.1.0",
+    "color": "#f3f3f3",
+    "blurHash": "LUN,;}%N?vfj_NM{Rjt7?cxuD$Ri",
+    "alt": "a white plate topped with a piece of cake and ice cream",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "8lPKzLSWNgM",
+      "name": "American Heritage Chocolate",
+      "username": "americanheritagechocolate",
+      "profileUrl": "https://unsplash.com/@americanheritagechocolate",
+      "photoUrl": "https://unsplash.com/photos/a-white-plate-topped-with-a-piece-of-cake-and-ice-cream-8lPKzLSWNgM",
+      "downloadLocation": "https://api.unsplash.com/photos/8lPKzLSWNgM/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8Mnx8Y2hvY29sYXRlJTIwbGF2YSUyMGNha2V8ZW58MXx8fHwxNzkzMDU4OTkwfDA"
+    }
+  },
   "sweet-spot/carrot": "",
   "sweet-spot/cinnamon": "",
   "sweet-spot/macarons": "",
@@ -327,9 +523,37 @@
       "downloadLocation": "https://api.unsplash.com/photos/wBEdZxG8SgU/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MXx8YnJ1bmNoJTIwdGFibGUlMjBlZ2dzJTIwY29mZmVlfGVufDF8MHx8fDE3OTMwNTUzODZ8MA"
     }
   },
-  "morning-club/benedict": "",
+  "morning-club/benedict": {
+    "url": "https://images.unsplash.com/photo-1779332114741-655f5a7da58d?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MTB8fGVnZ3MlMjBiZW5lZGljdCUyMGhvbGxhbmRhaXNlfGVufDF8fHx8MTc5MzA1ODk5MXww&ixlib=rb-4.1.0",
+    "color": "#c0a6a6",
+    "blurHash": "LHKApH-3IVkr01-oaKWB4US%R%IA",
+    "alt": "Two eggs benedict with smoked salmon and hollandaise sauce",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "ALq284QfyIc",
+      "name": "Sunira Moses",
+      "username": "sunira",
+      "profileUrl": "https://unsplash.com/@sunira",
+      "photoUrl": "https://unsplash.com/photos/two-eggs-benedict-with-smoked-salmon-and-hollandaise-sauce-ALq284QfyIc",
+      "downloadLocation": "https://api.unsplash.com/photos/ALq284QfyIc/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MTB8fGVnZ3MlMjBiZW5lZGljdCUyMGhvbGxhbmRhaXNlfGVufDF8fHx8MTc5MzA1ODk5MXww"
+    }
+  },
   "morning-club/avotoast": "",
-  "morning-club/pancakes": "",
+  "morning-club/pancakes": {
+    "url": "https://images.unsplash.com/photo-1763308373589-7d50af854a7a?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MTB8fHBhbmNha2UlMjBzdGFjayUyMHN5cnVwfGVufDF8fHx8MTc5MzA1ODk5MXww&ixlib=rb-4.1.0",
+    "color": "#262626",
+    "blurHash": "LEEy0tD+0y%M$z=|EME1E2rp9Gx[",
+    "alt": "Stack of chocolate pancakes with ice cream and syrup",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "-m1TfmODM78",
+      "name": "Amin Zabardast",
+      "username": "aminzabardast",
+      "profileUrl": "https://unsplash.com/@aminzabardast",
+      "photoUrl": "https://unsplash.com/photos/stack-of-chocolate-pancakes-with-ice-cream-and-syrup--m1TfmODM78",
+      "downloadLocation": "https://api.unsplash.com/photos/-m1TfmODM78/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MTB8fHBhbmNha2UlMjBzdGFjayUyMHN5cnVwfGVufDF8fHx8MTc5MzA1ODk5MXww"
+    }
+  },
   "morning-club/shakshuka": "",
   "morning-club/flatwhite": "",
   "morning-club/oj": "",
@@ -348,11 +572,39 @@
       "downloadLocation": "https://api.unsplash.com/photos/YNfDiSsuU_E/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8MXx8aW5kaWFuJTIwY3VycnklMjBkaXNoZXMlMjB0YWJsZXxlbnwxfDB8fHwxNzkzMDU1Mzg3fDA"
     }
   },
-  "spice-route/butterchicken": "",
+  "spice-route/butterchicken": {
+    "url": "https://images.unsplash.com/photo-1707448829764-9474458021ed?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8OXx8YnV0dGVyJTIwY2hpY2tlbiUyMGN1cnJ5fGVufDF8fHx8MTc5MzA1ODk5Mnww&ixlib=rb-4.1.0",
+    "color": "#d9d9d9",
+    "blurHash": "LRMsfoibNLOX~VtSNKx[csEMs;$f",
+    "alt": "a bowl of red curry next to a bowl of rice and a bowl of soup",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "PPgBVHj0ecQ",
+      "name": "shibani Mishra",
+      "username": "shivsm_30",
+      "profileUrl": "https://unsplash.com/@shivsm_30",
+      "photoUrl": "https://unsplash.com/photos/a-bowl-of-red-curry-next-to-a-bowl-of-rice-and-a-bowl-of-soup-PPgBVHj0ecQ",
+      "downloadLocation": "https://api.unsplash.com/photos/PPgBVHj0ecQ/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8OXx8YnV0dGVyJTIwY2hpY2tlbiUyMGN1cnJ5fGVufDF8fHx8MTc5MzA1ODk5Mnww"
+    }
+  },
   "spice-route/paneer": "",
   "spice-route/roganjosh": "",
   "spice-route/chana": "",
-  "spice-route/biryani": "",
+  "spice-route/biryani": {
+    "url": "https://images.unsplash.com/photo-1697155406055-2db32d47ca07?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8M3x8Y2hpY2tlbiUyMGJpcnlhbml8ZW58MXx8fHwxNzkzMDU4OTkzfDA&ixlib=rb-4.1.0",
+    "color": "#26260c",
+    "blurHash": "LXHBFws90ht6M{WEogoe0ibIxsWV",
+    "alt": "a pan filled with rice and broccoli on top of a stove",
+    "credit": {
+      "source": "unsplash",
+      "unsplashId": "3tpobXvtAEw",
+      "name": "Rashpal Singh",
+      "username": "rashpalsingh",
+      "profileUrl": "https://unsplash.com/@rashpalsingh",
+      "photoUrl": "https://unsplash.com/photos/a-pan-filled-with-rice-and-broccoli-on-top-of-a-stove-3tpobXvtAEw",
+      "downloadLocation": "https://api.unsplash.com/photos/3tpobXvtAEw/download?ixid=M3wxMTE0NjA1fDB8MXxzZWFyY2h8M3x8Y2hpY2tlbiUyMGJpcnlhbml8ZW58MXx8fHwxNzkzMDU4OTkzfDA"
+    }
+  },
   "spice-route/naan": "",
   "spice-route/rice": "",
   "spice-route/lassi": ""

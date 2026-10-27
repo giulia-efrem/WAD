@@ -1031,3 +1031,17 @@ legend.opt-head + * { clear: both; }
 .choice { border-radius: 10px; }
 @media (hover: hover) { .choice:hover:not(.is-sold-out) > span:first-of-type { color: var(--brand-text); } }
 .item-price-lg { color: var(--ink); }
+
+/* ================= Polish: header address, basket, checkout ================= */
+@media (max-width: 480px) { .addr-street { display: none; } }
+/* Panels: the last option card doesn't add extra space at the bottom. */
+.panel .radio-card:last-child { margin-bottom: 0; }
+.panel > :last-child { margin-bottom: 0; }
+.checkout { padding-bottom: 64px; }
+.promo-row .input::placeholder { text-transform: none; }
+.promo-row .btn { min-height: 46px; }
+.radio-card { transition: border-color .15s, background-color .15s, box-shadow .15s; }
+.radio-card:has(input:focus-visible) { box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 40%, transparent); }
+@media (max-width: 600px) { .panel { padding: 18px; } }
+.panel .radio-card:has(+ .err:empty) { margin-bottom: 0; }
+.panel .radio-card + .err:not(:empty) { margin-top: 8px; }

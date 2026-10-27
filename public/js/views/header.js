@@ -11,7 +11,9 @@ const STAFF = {
 export function updateHeader() {
   const u = state.user;
   const def = u && u.addresses.find(a => a.isDefault);
-  $('#addr-label').textContent = def ? `${def.label}, ${def.street}` : 'Add delivery address';
+  /* On phones only the label (Home, Work) shows, rather than an address cut off mid-word. */
+  $('#addr-label').innerHTML = def ? `${esc(def.label)}<span class="addr-street">, ${esc(def.street)}</span>` : 'Add delivery address';
+  $('#addr-btn').setAttribute('aria-label', def ? `Deliver to ${def.label}, ${def.street}. Change address` : 'Add delivery address');
   $('#addr-btn').setAttribute('aria-label', def ? `Delivering to ${def.label}, ${def.street}. Change address` : 'Add a delivery address');
   const b = $('#acct-btn');
   if (u) { b.classList.add('has-avatar'); b.innerHTML = `<span class="avatar" aria-hidden="true">${esc(initials(u.name))}</span><span class="lbl">${esc(firstName(u.name))}</span>`; b.setAttribute('aria-label', `Your account, ${u.name}`); }

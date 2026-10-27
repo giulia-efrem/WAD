@@ -39,7 +39,7 @@ export async function renderAccount() {
         <span class="thumb ${hasPhoto(r) ? 'has-photo' : ''}" style="--cv:${r.color};${photoStyle(r)}">${art(r.illustration)}${photoImg(r, { size: 'thumb' })}</span>
         <div><h3>${esc(o.restaurantName)} ${status}${o.review ? `<span class="mini-stars" aria-label="You rated the food ${o.review.food} of 5">${Array.from({ length: o.review.food }, () => ic('star', 'fill')).join('')}</span>` : ''}</h3>
           <p>${dayTime(new Date(o.createdAt))}</p>
-          <p>${esc(o.items.map(i => `${i.qty}× ${i.name}`).join(', '))}</p></div>
+          <p>${esc(o.items.map(i => `${i.qty}× ${i.name}`).join(', '))}</p></div>
         <div class="order-actions"><strong>${eur(o.pricing.total)}</strong>
           ${st === 'delivered' || st === 'cancelled' ? `<button class="btn btn-sm btn-secondary" type="button" data-act="reorder" data-id="${esc(o._id)}">Reorder</button><button class="link-btn" type="button" data-act="track" data-id="${esc(o._id)}" style="font-size:.88rem">Details</button>` : `<button class="btn btn-sm btn-primary" type="button" data-act="track" data-id="${esc(o._id)}">Track</button>`}</div>
       </div>`;

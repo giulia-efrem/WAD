@@ -1061,3 +1061,10 @@ legend.opt-head + * { clear: both; }
 .err { margin-top: 2px; }
 .seg button { transition: color .15s, background-color .15s, box-shadow .15s; }
 .seg button:hover:not([aria-selected="true"]) { color: var(--ink); }
+
+/* ================= Polish: account ================= */
+/* The first tab's label lines up with the heading and the list below. */
+.tabs button:first-child { padding-left: 0; }
+.tabs button:first-child[aria-selected="true"]::after { left: 0; }
+.order-row { transition: background-color .15s; }
+.order-row .thumb { align-self: start; margin-top: 2px; }

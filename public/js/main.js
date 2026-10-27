@@ -205,14 +205,21 @@ window.addEventListener('popstate', () => {
   render();
 });
 
-/* The server said the session is gone (expired or logged out elsewhere). */
-window.addEventListener('morsel:signed-out', () => {
+/* The server said the session is gone (expired, logged out elsewhere, or the account was disabled). */
+window.addEventListener('morsel:signed-out', e => {
   if (!state.user) return;
   state.user = null; state.orderCount = 0; state.co.addressId = null;
   closeAllModals();
   updateHeader();
   render(true);
-  toast('Your session has ended. Log in again.');
+  toast(e.detail === 'account_disabled' ? 'This account has been disabled. Contact Morsel support.' : 'Your session has ended. Log in again.');
+});
+window.addEventListener('morsel:user-changed', () => updateHeader());
+window.addEventListener('morsel:account-deleted', () => {
+  state.user = null; state.orderCount = 0; state.co.addressId = null;
+  updateHeader();
+  go('home');
+  toast('Your account has been deleted');
 });
 
 /* ================= Start ================= */

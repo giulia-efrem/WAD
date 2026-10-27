@@ -12,7 +12,8 @@
     "start": "node server/app.js",
     "seed": "node seed/seed.js",
     "photos": "node scripts/fetch-photos.js",
-    "screenshots": "node scripts/screenshots.js"
+    "screenshots": "node scripts/screenshots.js",
+    "make-admin": "node scripts/make-admin.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

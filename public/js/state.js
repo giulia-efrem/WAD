@@ -49,6 +49,10 @@ export const state = {
   q: '', cat: 'all', sort: 'recommended', openNow: false, freeDel: false, topRated: false,
   baskets: stored.baskets,
   promo: stored.promo,
+  /* The rules of the applied code, from the server ({ code, type, value, maxDiscount, minSubtotal, firstOrderOnly }). */
+  promoRule: null,
+  /* The last server check of the code: { key, error }. The key changes with the user, order count and restaurant. */
+  promoCheck: { key: '', error: '' },
   promoDismissed: LS.get('morsel.promoDismissed', false),
   tip: 100,
   co: { addressId: null, when: 'asap', slot: '', pay: 'card', note: '' },
@@ -102,6 +106,8 @@ export const closesAt = r => hhmm(r.hours[0].close);
 export const is247 = r => r.hours[0].open === 0 && r.hours[0].close === 1440;
 export const hoursText = r => is247(r) ? 'Open 24 hours' : `${opensAt(r)} to ${closesAt(r)}`;
 export const etaText = r => `${r.eta.min}-${r.eta.max} min`;
+/* Why a dish can't be added right now, or '' when it can. */
+export const blockReason = (r, it) => r.paused ? 'Not taking orders right now' : !isOpen(r) ? `Opens at ${opensAt(r)}` : it && it.soldOut ? 'Sold out' : '';
 export const feeText = r => r.deliveryFee ? `${eur(r.deliveryFee)} delivery` : 'Free delivery';
 
 /* ================= Choices ================= */
@@ -288,17 +294,19 @@ function repriceBasket(detail) {
 }
 
 /* ================= Pricing (display only, the server recalculates everything) ================= */
-export function promoError(code, r) {
-  if (code === 'WELCOME20') {
-    if (!state.user) return 'Log in to use WELCOME20.';
-    if (state.orderCount > 0) return 'WELCOME20 is for your first order only.';
-    return '';
+/* Same checks as checkPromo() on the server, for a code the server has already described. */
+export const promoKey = (code, slug) => [code, state.user ? state.user._id : '', state.orderCount, slug].join('|');
+export function promoError(code, r, subtotal) {
+  if (state.promoCheck.key === promoKey(code, r && r.slug) && state.promoCheck.error) return state.promoCheck.error;
+  const p = state.promoRule;
+  if (!p || p.code !== code) return '';
+  if (p.firstOrderOnly) {
+    if (!state.user) return `Log in to use ${code}.`;
+    if (state.orderCount > 0) return `${code} is for your first order only.`;
   }
-  if (code === 'FREEDEL') {
-    if (r && !r.deliveryFee) return 'Delivery from this restaurant is already free.';
-    return '';
-  }
-  return 'That code isn’t valid. Check the spelling and try again.';
+  if (p.type === 'delivery' && r && !r.deliveryFee) return 'Delivery from this restaurant is already free.';
+  if (subtotal != null && p.minSubtotal && subtotal < p.minSubtotal) return `${code} is for orders over ${eur(p.minSubtotal)} of food.`;
+  return '';
 }
 export function pricing(slug, withExtras) {
   const r = R(slug);
@@ -308,10 +316,11 @@ export function pricing(slug, withExtras) {
   const smallOrderFee = Math.max(0, r.minOrder - subtotal);
   const serviceFee = clamp(Math.round(subtotal * 0.05), 49, 199);
   let discount = 0, deliveryDiscount = 0;
-  const promo = state.promo;
-  if (withExtras && promo && !promoError(promo, r)) {
-    if (promo === 'WELCOME20') discount = Math.min(800, Math.round(subtotal * 0.2));
-    if (promo === 'FREEDEL') deliveryDiscount = deliveryFee;
+  const promo = state.promo, rule = state.promoRule;
+  if (withExtras && promo && rule && rule.code === promo && !promoError(promo, r, subtotal)) {
+    if (rule.type === 'percent') discount = Math.min(rule.maxDiscount || Infinity, Math.round(subtotal * rule.value / 100));
+    if (rule.type === 'fixed') discount = Math.min(subtotal, rule.value);
+    if (rule.type === 'delivery') deliveryDiscount = deliveryFee;
   }
   const tip = withExtras ? state.tip : 0;
   return { subtotal, deliveryFee, serviceFee, smallOrderFee, discount, deliveryDiscount, tip, total: subtotal + deliveryFee + serviceFee + smallOrderFee - discount - deliveryDiscount + tip };

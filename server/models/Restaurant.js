@@ -68,6 +68,8 @@ const itemSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   price: { type: Number, required: true, min: 0 },
   popular: { type: Boolean, default: false },
+  /* Sold out: shown but can't be ordered, set by the restaurant or an admin. */
+  soldOut: { type: Boolean, default: false },
   kind: { type: String, enum: KINDS, default: 'main' },
   tags: { type: [{ type: String, enum: TAGS }], default: [] },
   /* From the 14 EU allergens, e.g. ['gluten', 'milk'] */
@@ -101,6 +103,10 @@ const restaurantSchema = new mongoose.Schema({
   illustration: { type: String, default: 'bowl' },
   ...photoFields,
   sortOrder: { type: Number, default: 0 },
+  /* Paused (or closed by an admin): no new orders until switched back. */
+  paused: { type: Boolean, default: false },
+  /* From the catalog in seed/; restaurants you add in /admin are never touched by npm run seed. */
+  seeded: { type: Boolean, default: false },
   menu: { type: [sectionSchema], default: [] }
 }, { timestamps: true });
 

@@ -1,7 +1,6 @@
 'use strict';
 
 const express = require('express');
-const crypto = require('crypto');
 const { z } = require('zod');
 const config = require('../config');
 const Restaurant = require('../models/Restaurant');
@@ -11,16 +10,16 @@ const { authorName, orderedText, refreshRating } = require('../lib/reviews');
 const validate = require('../middleware/validate');
 const { requireUser } = require('../middleware/auth');
 const { objectId, slug } = require('../lib/schemas');
-const { TIP_CHOICES, priceLine, promoError, computePricing } = require('../lib/pricing');
+const { TIP_CHOICES, priceLine, checkPromo, computePricing } = require('../lib/pricing');
+const { countOrders } = require('./promo');
 const { isOpenNow, isOpenAt, minuteOfDay } = require('../lib/hours');
-const { progress, skipShiftMs } = require('../lib/orderStatus');
+const flow = require('../lib/orderFlow');
 const { orderOut } = require('../lib/present');
 const { badRequest, notFound, forbidden, conflict } = require('../lib/httpError');
 
 const router = express.Router();
 router.use(requireUser);
 
-const COURIERS = [['Luca', 'bike'], ['Maya', 'scooter'], ['Andrei', 'bike'], ['Sofia', 'scooter'], ['Tom', 'bike'], ['Ines', 'scooter']];
 const SCHEDULE_MIN_AHEAD_MS = 30 * 60000;
 const SCHEDULE_MAX_AHEAD_MS = 24 * 3600000;
 
@@ -69,6 +68,7 @@ router.post('/', validate(createSchema), async (req, res) => {
   const user = req.user;
   const restaurant = await Restaurant.findOne({ slug: body.restaurantSlug });
   if (!restaurant) throw badRequest('We couldn’t find that restaurant.', 'unknown_restaurant');
+  if (restaurant.paused) throw badRequest(`${restaurant.name} isn’t taking orders right now. Try again a bit later.`, 'restaurant_paused');
 
   const addr = user.addresses.id(body.addressId);
   if (!addr) throw badRequest('That address isn’t one of your saved addresses.', 'invalid_address');
@@ -91,13 +91,14 @@ router.post('/', validate(createSchema), async (req, res) => {
   }
 
   let promoCode = body.promoCode || null;
+  let promo = null;
   if (promoCode) {
-    const orderCount = await Order.countDocuments({ user: user._id });
-    const err = promoError(promoCode, { restaurant, user, orderCount });
-    if (err) throw badRequest(err, 'invalid_promo');
+    const found = await checkPromo(promoCode, { restaurant, user, orderCount: await countOrders(user._id), subtotal });
+    if (found.error) throw badRequest(found.error, 'invalid_promo');
+    promo = found.promo;
   }
 
-  const pricing = computePricing({ restaurant, subtotal, promoCode, tip: body.tip });
+  const pricing = computePricing({ restaurant, subtotal, promo, tip: body.tip });
   if (body.expectedTotal != null && body.expectedTotal !== pricing.total) {
     throw badRequest('Prices have changed since you opened your bag. Check the new total and place your order again.', 'price_mismatch');
   }
@@ -106,10 +107,10 @@ router.post('/', validate(createSchema), async (req, res) => {
 
   const etaMin = Math.round((restaurant.eta.min + restaurant.eta.max) / 2);
   const startAt = at ? at.getTime() - etaMin * config.simMinuteMs : now;
-  const [name, vehicle] = COURIERS[crypto.randomInt(COURIERS.length)];
 
   const order = await Order.create({
     user: user._id,
+    customerName: user.name,
     restaurant: restaurant._id,
     restaurantName: restaurant.name,
     items,
@@ -121,7 +122,11 @@ router.post('/', validate(createSchema), async (req, res) => {
     promoCode,
     etaMin,
     startAt: new Date(startAt),
-    courier: { name, vehicle }
+    status: 'placed',
+    statusAt: new Date(now),
+    timeline: [{ status: 'placed', at: new Date(now), by: 'customer' }],
+    courier: { user: null, name: '', vehicle: '' },
+    seeded: !!user.seeded
   });
   order.restaurant = restaurant;
   res.status(201).json({ order: orderOut(order) });
@@ -140,7 +145,7 @@ router.get('/:id', validate(idParams, 'params'), async (req, res) => {
 /* Feedback after delivery: food 1-5 stars, delivery thumbs up or down, optional comment. One per order. */
 router.post('/:id/review', validate(idParams, 'params'), validate(reviewSchema), async (req, res) => {
   const order = await findMine(req);
-  if (progress(order).stage !== 'delivered') throw badRequest('You can review your order once it has been delivered.', 'not_delivered');
+  if (order.status !== 'delivered') throw badRequest('You can review your order once it has been delivered.', 'not_delivered');
   if ((order.review && order.review.food) || await Review.exists({ order: order._id })) throw conflict('You’ve already reviewed this order.', 'already_reviewed');
   const { food, delivery, comment } = req.body;
   const restaurantId = order.restaurant._id || order.restaurant;
@@ -156,16 +161,19 @@ router.post('/:id/review', validate(idParams, 'params'), validate(reviewSchema),
   res.json({ order: orderOut(order) });
 });
 
-/* Demo helper: jumps the order to its next stage by moving startAt back. */
+/* Until the restaurant accepts, the customer can cancel. */
+router.post('/:id/cancel', validate(idParams, 'params'), async (req, res) => {
+  const order = await findMine(req);
+  await flow.cancel(order, 'customer', 'Cancelled by the customer');
+  res.json({ order: orderOut(await Order.findById(order._id).populate('restaurant', 'slug')) });
+});
+
+/* Demo helper: takes the order's next step at once, as the autopilot would. */
 router.post('/:id/skip', validate(idParams, 'params'), async (req, res) => {
   if (!(config.demoSpeed > 1)) throw forbidden('Skipping is only available in demo mode (DEMO_SPEED above 1).');
   const order = await findMine(req);
-  const ms = skipShiftMs(order);
-  if (ms > 0) {
-    order.startAt = new Date(order.startAt.getTime() - ms);
-    await order.save();
-  }
-  res.json({ order: orderOut(order) });
+  await flow.skip(order);
+  res.json({ order: orderOut(await Order.findById(order._id).populate('restaurant', 'slug')) });
 });
 
 module.exports = router;

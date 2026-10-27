@@ -16,7 +16,7 @@ const orderedText = items => items.map(l => (l.qty > 1 ? `${l.qty}× ${l.name}` 
 /* Sets a restaurant's rating and review count from its reviews. */
 async function refreshRating(restaurantId) {
   const [agg] = await Review.aggregate([
-    { $match: { restaurant: restaurantId } },
+    { $match: { restaurant: restaurantId, hidden: { $ne: true } } },
     { $group: { _id: null, avg: { $avg: '$food' }, count: { $sum: 1 } } }
   ]);
   const rating = agg ? Math.round(agg.avg * 10) / 10 : 0;
@@ -28,7 +28,7 @@ async function refreshRating(restaurantId) {
 /* Average, count, 5-to-1 breakdown and the share of thumbs-up deliveries. */
 async function summary(restaurantId) {
   const rows = await Review.aggregate([
-    { $match: { restaurant: restaurantId } },
+    { $match: { restaurant: restaurantId, hidden: { $ne: true } } },
     { $group: { _id: '$food', count: { $sum: 1 }, up: { $sum: { $cond: [{ $eq: ['$delivery', 'up'] }, 1, 0] } } } }
   ]);
   const breakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
@@ -50,6 +50,8 @@ const reviewOut = r => ({
   comment: r.comment || '',
   ordered: r.ordered || '',
   createdAt: r.createdAt,
+  /* The restaurant's public reply. */
+  reply: r.reply && r.reply.text ? { text: r.reply.text, at: r.reply.at } : null,
   mine: false
 });
 

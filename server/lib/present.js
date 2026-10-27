@@ -2,7 +2,7 @@
 
 const config = require('../config');
 const { isOpenNow } = require('./hours');
-const { progress } = require('./orderStatus');
+const { estimate } = require('./orderFlow');
 
 /* Shapes documents into the JSON the front end reads. */
 
@@ -37,6 +37,8 @@ function restaurantCard(r, now = new Date()) {
     illustration: r.illustration,
     ...photoOut(r),
     isOpen: isOpenNow(r.hours, now),
+    /* Paused by the restaurant or an admin: shown, but not taking orders. */
+    paused: !!r.paused,
     /* Lets the home page search dishes (and their tags) without loading every menu. */
     dishes: r.menu.flatMap(s => s.items.map(it => ({ name: it.name, description: it.description, tags: it.tags || [] })))
   };
@@ -53,7 +55,7 @@ function dealOut(r, it) {
     deal: {
       parts: it.deal.parts.map(p => ({
         key: p.key, name: p.name, main: p.main,
-        choices: p.choices.map(c => { const d = findDish(r, c.itemSlug); return { itemSlug: c.itemSlug, name: d ? d.name : c.itemSlug, price: d ? d.price : 0, delta: c.delta }; })
+        choices: p.choices.map(c => { const d = findDish(r, c.itemSlug); return { itemSlug: c.itemSlug, name: d ? d.name : c.itemSlug, price: d ? d.price : 0, delta: c.delta, soldOut: !d || !!d.soldOut }; })
       }))
     }
   };
@@ -71,6 +73,7 @@ function restaurantDetail(r, now = new Date()) {
         description: it.description,
         price: it.price,
         popular: it.popular,
+        soldOut: !!it.soldOut,
         kind: it.kind || 'main',
         tags: it.tags || [],
         allergens: it.allergens || [],
@@ -87,7 +90,7 @@ function restaurantDetail(r, now = new Date()) {
 
 /* `restaurant` may be populated with { slug } or be a bare id. */
 function orderOut(o, now = Date.now()) {
-  const pr = progress(o, now);
+  const est = estimate(o, now);
   const rest = o.restaurant && o.restaurant.slug ? o.restaurant : null;
   return {
     _id: String(o._id),
@@ -108,10 +111,18 @@ function orderOut(o, now = Date.now()) {
     promoCode: o.promoCode || null,
     etaMin: o.etaMin,
     startAt: new Date(o.startAt).getTime(),
-    courier: { name: o.courier.name, vehicle: o.courier.vehicle },
+    customerName: o.customerName || '',
+    courier: { name: (o.courier && o.courier.name) || '', vehicle: (o.courier && o.courier.vehicle) || '', assigned: !!(o.courier && o.courier.name) },
     review: o.review && o.review.food ? { food: o.review.food, delivery: o.review.delivery, comment: o.review.comment || '', reviewedAt: o.review.reviewedAt } : null,
     createdAt: o.createdAt,
-    status: { stage: pr.stage, sim: pr.sim, remaining: pr.remaining, frac: pr.frac },
+    status: o.status || 'placed',
+    statusAt: new Date(o.statusAt || o.createdAt).getTime(),
+    timeline: (o.timeline || []).map(t => ({ status: t.status, at: t.at, by: t.by, note: t.note || '' })),
+    prepMinutes: est.prep,
+    travelMinutes: est.travel,
+    cancelReason: o.cancelReason || '',
+    /* Minutes left and how far the courier is along the route (0 to 1), from the server's clock. */
+    track: { remaining: est.remaining, frac: est.frac, scheduled: !!est.scheduled },
     serverNow: now,
     simMinuteMs: config.simMinuteMs,
     demoSpeed: config.demoSpeed

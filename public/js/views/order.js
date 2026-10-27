@@ -2,23 +2,24 @@ import { $, $$, esc, eur, clock, dayTime, clamp, initials, plural } from '../uti
 import { ic, ICON, FOOD } from '../art.js';
 import { api } from '../api.js';
 import { state, R, catalog, describeLine } from '../state.js';
-import { progress, serverNow } from '../progress.js';
-import { toast } from '../ui.js';
+import { progress, serverNow, isLive, STEPS, STEP_LABELS } from '../progress.js';
+import { toast, confirmDialog } from '../ui.js';
 import { app, onLeave } from '../router.js';
 
 const restaurantOf = o => R(o.restaurantSlug) || { name: o.restaurantName, color: catalog.list[0] ? catalog.list[0].color : '#EEE', illustration: 'bowl' };
 
 export function stageCopy(o, pr) {
   const r = restaurantOf(o);
-  const c = o.courier.name, v = o.courier.vehicle;
+  const c = o.courier.assigned ? o.courier.name : '', v = o.courier.vehicle;
   switch (pr.stage) {
-    case 'scheduled': return { title: `Scheduled for ${clock(new Date(o.delivery.at))}`, sub: `We’ll send your order to ${r.name}’s kitchen at the right time.` };
-    case 'placed': return { title: 'Sending your order', sub: `Waiting for ${r.name} to accept it.` };
-    case 'confirmed': return { title: 'Order confirmed', sub: `${r.name} has accepted your order.` };
-    case 'preparing': return { title: 'Preparing your food', sub: `The kitchen is on it. ${c} will pick it up when it’s ready.` };
-    case 'pickup': return { title: `${c} is picking up your order`, sub: 'Your food is being packed for the ride.' };
-    case 'onway': return { title: 'On the way', sub: `${c} is heading to you by ${v}.` };
-    default: return { title: 'Delivered. Enjoy your meal!', sub: `${c} dropped it off at ${o.address.street}.` };
+    case 'scheduled': return { title: `Scheduled for ${clock(new Date(o.delivery.at))}`, sub: o.status === 'accepted' ? `${r.name} has accepted it and will start at the right time.` : `We’ll send your order to ${r.name}’s kitchen at the right time.` };
+    case 'placed': return { title: `Waiting for ${r.name} to accept`, sub: 'Your order has been sent to the restaurant.' };
+    case 'accepted': return { title: 'Order accepted', sub: `${r.name} will start on it in a moment. About ${o.prepMinutes} minutes to prepare.` };
+    case 'preparing': return { title: 'Preparing your food', sub: c ? `The kitchen is on it. ${c} will pick it up when it’s ready.` : 'The kitchen is on it. We’re finding a courier nearby.' };
+    case 'ready': return c ? { title: `${c} is picking up your order`, sub: 'Your food is packed and ready for the ride.' } : { title: 'Ready for pickup', sub: 'Your food is packed. A courier is on the way to collect it.' };
+    case 'pickedup': return { title: 'On the way', sub: `${c || 'Your courier'} is heading to you by ${v || 'bike'}.` };
+    case 'cancelled': return { title: 'Order cancelled', sub: `${o.cancelReason ? o.cancelReason + '. ' : ''}You haven’t been charged for this order.` };
+    default: return { title: 'Delivered. Enjoy your meal!', sub: `${c || 'Your courier'} dropped it off at ${o.address.street}.` };
   }
 }
 
@@ -71,7 +72,7 @@ function mapSVG(o) {
   </svg>`;
 }
 
-const SERVER_REFRESH_MS = 10000;
+const SERVER_REFRESH_MS = 4000;
 
 export async function renderOrder(id) {
   if (!state.user) {
@@ -96,14 +97,12 @@ export async function renderOrder(id) {
           <h1 id="tr-title"></h1>
           <p class="track-sub" id="tr-sub"></p>
           <div class="eta-box" id="tr-eta"></div>
-          <ol class="steps" id="tr-steps" aria-label="Order progress">
-            ${['Confirmed', 'Preparing', 'On the way', 'Delivered'].map(l => `<li><span class="bar"><i></i></span><span class="lbl">${l}</span></li>`).join('')}
+          <ol class="steps six" id="tr-steps" aria-label="Order progress">
+            ${STEPS.map(s => `<li data-step="${s}"><span class="bar"><i></i></span><span class="lbl">${STEP_LABELS[s]}</span></li>`).join('')}
           </ol>
           <p class="demo-note" id="tr-demo" ${o.demoSpeed > 1 ? '' : 'hidden'}><span>Demo runs at ${esc(o.demoSpeed)}× speed.</span><button class="link-btn" type="button" data-act="skip" data-id="${esc(o._id)}">Skip to next step</button></p>
-          <div class="courier" id="tr-courier" hidden>
-            <span class="avatar" aria-hidden="true">${esc(initials(o.courier.name))}</span>
-            <p><strong>${esc(o.courier.name)}</strong> is your courier<br><small>Delivering by ${esc(o.courier.vehicle)}${o.courierNote ? `. Your note: “${esc(o.courierNote)}”` : ''}</small></p>
-          </div>
+          <p class="cancel-row" id="tr-cancel" hidden><button class="link-btn danger" type="button" id="tr-cancel-btn">Cancel order</button><span class="muted">You can cancel until the restaurant accepts.</span></p>
+          <div class="courier" id="tr-courier" hidden></div>
           <div id="tr-rate"></div>
           <section class="panel section-gap" aria-labelledby="tr-details" style="margin-top:24px">
             <h2 id="tr-details">Order details</h2>
@@ -113,12 +112,14 @@ export async function renderOrder(id) {
               <li><span class="muted">Deliver to</span><span style="text-align:right">${esc(o.address.street)}${o.address.details ? ', ' + esc(o.address.details) : ''}</span></li>
               <li><span class="muted">Payment</span><span>${o.payment === 'cash' ? 'Cash on delivery' : 'Card ending in 4242'}</span></li>
             </ul>
+            <h3 class="timeline-h">Timeline</h3>
+            <ol class="timeline" id="tr-timeline"></ol>
           </section>
         </div>
         <div class="map-col"><div class="map">${mapSVG(o)}</div></div>
       </div>
     </div>`;
-  let lastStage = '';
+  let lastKey = '';
   let order = o;
   const tick = () => {
     if (state.view !== 'order' || state.params.id !== id) return;
@@ -127,38 +128,58 @@ export async function renderOrder(id) {
     $('#tr-title').textContent = copy.title;
     $('#tr-sub').textContent = copy.sub;
     const eta = $('#tr-eta');
-    if (pr.stage === 'delivered') eta.innerHTML = '';
-    else if (pr.stage === 'scheduled') eta.innerHTML = `<div class="eta-big">${clock(new Date(order.delivery.at))}</div><div class="eta-label"><strong>Scheduled arrival</strong>${pr.pl.total} min after we start</div>`;
+    if (pr.stage === 'delivered' || pr.stage === 'cancelled') eta.innerHTML = '';
+    else if (pr.stage === 'scheduled') eta.innerHTML = `<div class="eta-big">${clock(new Date(order.delivery.at))}</div><div class="eta-label"><strong>Scheduled arrival</strong>about ${pr.remaining} min after the kitchen starts</div>`;
     else {
       const at = new Date(serverNow(order) + pr.remaining * 60000);
       eta.innerHTML = `<div class="eta-big">${pr.remaining} min</div><div class="eta-label"><strong>Estimated arrival</strong>around ${clock(at)}</div>`;
     }
-    const s = pr.sim, pl = pr.pl;
-    const fills = pr.stage === 'scheduled' ? [0, 0, 0, 0] : [
-      clamp(s / pl.prepStart, 0, 1), clamp((s - pl.prepStart) / (pl.pickup - pl.prepStart), 0, 1),
-      clamp((s - pl.pickup) / (pl.total - pl.pickup), 0, 1), s >= pl.total ? 1 : 0
-    ];
-    $$('#tr-steps li').forEach((li, i) => { $('i', li).style.width = (fills[i] * 100) + '%'; li.classList.toggle('reached', fills[i] > 0); });
-    $('#tr-demo').hidden = pr.stage === 'delivered' || !(order.demoSpeed > 1);
-    $('#tr-courier').hidden = !['pickup', 'onway', 'delivered'].includes(pr.stage);
+    /* Reached steps are full; the next one fills as the current step goes on. */
+    $('#tr-steps').hidden = pr.stage === 'cancelled';
+    $$('#tr-steps li').forEach((li, i) => {
+      const fill = i <= pr.index ? 1 : i === pr.index + 1 && pr.stage !== 'scheduled' ? pr.next : 0;
+      $('i', li).style.width = (fill * 100) + '%';
+      li.classList.toggle('reached', i <= pr.index);
+      if (i === pr.index) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+    });
+    $('#tr-demo').hidden = !isLive(order) || !(order.demoSpeed > 1);
+    $('#tr-cancel').hidden = order.status !== 'placed';
+    const showCourier = order.courier.assigned && ['ready', 'pickedup', 'delivered'].includes(order.status);
+    const box = $('#tr-courier');
+    box.hidden = !showCourier;
+    const courierKey = showCourier ? order.courier.name + order.courier.vehicle : '';
+    if (box.dataset.key !== courierKey) {
+      box.dataset.key = courierKey;
+      box.innerHTML = showCourier ? `<span class="avatar" aria-hidden="true">${esc(initials(order.courier.name))}</span>
+        <p><strong>${esc(order.courier.name)}</strong> is your courier<br><small>Delivering by ${esc(order.courier.vehicle)}${order.courierNote ? `. Your note: “${esc(order.courierNote)}”` : ''}</small></p>` : '';
+    }
     const courier = $('#courier');
     if (courier) {
       const [x, y] = routePoint(pr.frac);
       courier.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
-      courier.style.opacity = ['pickup', 'onway'].includes(pr.stage) ? '1' : '0';
+      courier.style.opacity = (pr.stage === 'pickedup' || (pr.stage === 'ready' && order.courier.assigned)) ? '1' : '0';
       $('#route-done').setAttribute('stroke-dashoffset', String(1 - pr.frac));
     }
-    if (pr.stage !== lastStage) {
+    $('.map-col').classList.toggle('is-cancelled', pr.stage === 'cancelled');
+    const key = order.status + order.timeline.length + (order.review ? 'r' : '');
+    if (key !== lastKey) {
+      $('#tr-timeline').innerHTML = order.timeline.map(t => `<li><span class="t-time">${clock(new Date(t.at))}</span><span>${esc(STEP_LABELS[t.status] || t.status)}${t.status === 'cancelled' && t.note ? `: ${esc(t.note)}` : ''}</span></li>`).join('');
       if (pr.stage === 'delivered') renderFeedback(order);
-      lastStage = pr.stage;
+      lastKey = key;
     }
   };
   const refresh = async () => {
     try { order = await api.getOrder(id); tick(); } catch (e) { /* keep the last known order */ }
   };
+  $('#tr-cancel-btn').addEventListener('click', async () => {
+    const ok = await confirmDialog({ title: 'Cancel this order?', body: `${esc(order.restaurantName)} hasn’t accepted it yet, so you won’t be charged.`, confirm: 'Cancel order', cancel: 'Keep order' });
+    if (!ok) return;
+    try { order = await api.cancelOrder(order._id); tick(); toast('Order cancelled'); }
+    catch (err) { toast(err.message); refresh(); }
+  });
   const timer = setInterval(tick, 500);
-  /* The server stays the authority: re-read the order now and then, while it is still live. */
-  const poll = setInterval(() => { if (progress(order).stage !== 'delivered') refresh(); }, SERVER_REFRESH_MS);
+  /* The server stays the authority: re-read the order every few seconds while it is still live. */
+  const poll = setInterval(() => { if (isLive(order)) refresh(); }, SERVER_REFRESH_MS);
   onLeave(() => { clearInterval(timer); clearInterval(poll); });
   tick();
   state.refreshOrder = async updated => { if (updated) { order = updated; tick(); } else await refresh(); };

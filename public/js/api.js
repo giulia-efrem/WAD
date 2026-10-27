@@ -7,7 +7,7 @@ export class ApiError extends Error {
 
 export const DEMO_ACCOUNT = { email: 'demo@morsel.app', password: 'morsel-demo-2026' };
 
-async function request(method, url, body) {
+export async function request(method, url, body) {
   const opts = { method, credentials: 'same-origin', headers: { Accept: 'application/json' } };
   if (body instanceof FormData) opts.body = body;
   else if (body !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
@@ -19,7 +19,7 @@ async function request(method, url, body) {
   if (!res.ok) {
     const err = (data && data.error) || {};
     const ex = new ApiError(err.code || 'server_error', err.message || 'Something went wrong. Try again in a moment.', res.status);
-    if (res.status === 401 && ex.code === 'unauthorized') window.dispatchEvent(new CustomEvent('morsel:signed-out'));
+    if ((res.status === 401 && ex.code === 'unauthorized') || ex.code === 'account_disabled') window.dispatchEvent(new CustomEvent('morsel:signed-out', { detail: ex.code }));
     throw ex;
   }
   return data;
@@ -48,13 +48,17 @@ export const api = {
 
   async restaurants() { return (await request('GET', '/restaurants')).restaurants; },
   async restaurant(slug) { return (await request('GET', `/restaurants/${encodeURIComponent(slug)}`)).restaurant; },
-  async validatePromo(code, restaurantSlug) { return request('POST', '/promo/validate', { code, restaurantSlug }); },
+  async validatePromo(code, restaurantSlug, subtotal) { return request('POST', '/promo/validate', { code, restaurantSlug, subtotal }); },
 
   async createOrder(payload) { return withClock((await request('POST', '/orders', payload)).order); },
   async listOrders() { return (await request('GET', '/orders/mine')).orders.map(withClock); },
   async getOrder(id) { return withClock((await request('GET', `/orders/${encodeURIComponent(id)}`)).order); },
   async reviewOrder(id, review) { return withClock((await request('POST', `/orders/${encodeURIComponent(id)}/review`, review)).order); },
   async reviews(slug, sort = 'newest', page = 1) { return request('GET', `/restaurants/${encodeURIComponent(slug)}/reviews?sort=${encodeURIComponent(sort)}&page=${page}`); },
+  async cancelOrder(id) { return withClock((await request('POST', `/orders/${encodeURIComponent(id)}/cancel`)).order); },
+  async updateMe(fields) { return (await request('PATCH', '/auth/me', fields)).user; },
+  async changePassword(current, password) { return request('POST', '/auth/password', { current, password }); },
+  async deleteMe(password) { return request('DELETE', '/auth/me', { password }); },
   async skipOrder(id) { return withClock((await request('POST', `/orders/${encodeURIComponent(id)}/skip`)).order); },
 
   async adminCatalog() { return (await request('GET', '/admin/catalog')).restaurants; },

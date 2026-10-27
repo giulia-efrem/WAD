@@ -24,8 +24,14 @@ const lineSchema = new mongoose.Schema({
   note: { type: String, default: '' }
 }, { _id: false });
 
+/* The steps an order goes through. cancelled can happen before pickup. */
+const STATUSES = ['placed', 'accepted', 'preparing', 'ready', 'pickedup', 'delivered', 'cancelled'];
+const ACTORS = ['customer', 'partner', 'courier', 'admin', 'autopilot'];
+
 const orderSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  /* null once the customer deletes their account (the order stays for the restaurant's records). */
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+  customerName: { type: String, default: '' },
   restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
   restaurantName: { type: String, required: true },
   items: { type: [lineSchema], validate: v => v.length > 0 },
@@ -42,8 +48,21 @@ const orderSchema = new mongoose.Schema({
   },
   promoCode: { type: String, default: null },
   etaMin: { type: Number, required: true },
+  /* When the kitchen should start: now for ASAP orders, earlier than the arrival time for scheduled ones. */
   startAt: { type: Date, required: true },
-  courier: { name: String, vehicle: String },
+  status: { type: String, enum: STATUSES, default: 'placed', index: true },
+  statusAt: { type: Date, default: Date.now },
+  /* Every step: who moved the order on, and when. */
+  timeline: {
+    type: [new mongoose.Schema({ status: { type: String, enum: STATUSES }, at: Date, by: { type: String, enum: ACTORS }, note: String }, { _id: false })],
+    default: []
+  },
+  /* Set by the restaurant when it accepts (or by the autopilot), in minutes. */
+  prepMinutes: { type: Number, default: null },
+  /* user is set when a real courier takes the delivery; the autopilot assigns a demo courier by name only. */
+  courier: { user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }, name: String, vehicle: String },
+  cancelReason: { type: String, default: '' },
+  seeded: { type: Boolean, default: false },
   /* The customer's feedback, also saved as a Review. food is 1-5 stars, delivery is 'up' or 'down'. */
   review: {
     type: new mongoose.Schema({ food: { type: Number, min: 1, max: 5 }, delivery: { type: String, enum: ['up', 'down'] }, comment: String, reviewedAt: Date }, { _id: false }),
@@ -52,5 +71,8 @@ const orderSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ restaurant: 1, createdAt: -1 });
+orderSchema.index({ 'courier.user': 1, status: 1 });
 
 module.exports = mongoose.model('Order', orderSchema);
+module.exports.STATUSES = STATUSES;

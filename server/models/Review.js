@@ -13,6 +13,10 @@ const reviewSchema = new mongoose.Schema({
   delivery: { type: String, enum: ['up', 'down'], required: true },
   comment: { type: String, default: '', maxlength: 500 },
   ordered: { type: String, default: '', maxlength: 300 },
+  /* Hidden by an admin: not shown and not counted in the rating. */
+  hidden: { type: Boolean, default: false },
+  /* The restaurant's public reply, shown under the review. */
+  reply: { type: new mongoose.Schema({ text: { type: String, maxlength: 600 }, at: Date, by: String }, { _id: false }), default: null },
   seeded: { type: Boolean, default: false }
 }, { timestamps: true });
 

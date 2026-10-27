@@ -186,7 +186,7 @@ async function start(user) {
   $('#who').textContent = user ? `Signed in as ${user.email}` : '';
   if (!user) { loginForm(); return; }
   if (user.role !== 'admin') {
-    root.innerHTML = `<div class="empty"><h3>This page is for the admin</h3><p>You’re signed in as ${esc(user.email)}. Only the account whose email matches ADMIN_EMAIL in .env can review photos.</p><a class="btn btn-primary" href="/">Back to Morsel</a></div>`;
+    root.innerHTML = `<div class="empty"><h3>This page is for the admin</h3><p>You’re signed in as ${esc(user.email)}. Only admin accounts can review photos. An admin can change your role, or run npm run make-admin.</p><a class="btn btn-primary" href="/">Back to Morsel</a></div>`;
     return;
   }
   root.innerHTML = '<div class="empty"><span class="spinner" style="margin:0 auto"></span></div>';

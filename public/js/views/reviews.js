@@ -27,6 +27,7 @@ const reviewHTML = r => `<li class="review">
     <div class="review-rating">${starsHTML(r.food)}<span class="rv-thumb ${r.delivery}">${ic('thumb', r.delivery === 'down' ? 'flip' : '')}<span>Delivery</span></span></div>
     ${r.ordered ? `<p class="review-ordered">Ordered ${esc(r.ordered)}</p>` : ''}
     ${r.comment ? `<p class="review-comment">${esc(r.comment)}</p>` : ''}
+    ${r.reply ? `<div class="review-reply"><p class="reply-head"><strong>Reply from ${esc((R(state.params.id) || {}).name || 'the restaurant')}</strong><span class="muted">${dateText(r.reply.at)}</span></p><p>${esc(r.reply.text)}</p></div>` : ''}
   </div>
 </li>`;
 

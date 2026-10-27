@@ -5,8 +5,8 @@
    the Microsoft Edge (or Chrome) already installed, so Playwright doesn't download a browser.
 
    Needs the server running (npm run dev) and the seed loaded. It logs in as the demo account,
-   places one order for the tracking view (deleted afterwards) and, for /admin/photos, creates a
-   temporary admin user that is removed again at the end. */
+   places one order for the tracking view (deleted afterwards), logs in as the seeded partner and
+   courier for their pages, and creates a temporary admin user that is removed again at the end. */
 
 const fs = require('fs');
 const path = require('path');
@@ -24,7 +24,7 @@ const arg = (name, fallback) => { const a = process.argv.find(x => x.startsWith(
 const OUT = path.resolve(config.root, arg('out', 'screenshots'));
 const WIDTHS = arg('widths', '375,768,1440').split(',').map(Number);
 const THEMES = arg('themes', 'light,dark').split(',');
-const VIEWS = arg('views', 'home,restaurant,dish,basket,checkout,order,account,admin-photos,credits').split(',');
+const VIEWS = arg('views', 'home,restaurant,dish,basket,checkout,order,account,admin,partner,courier,admin-photos,credits').split(',');
 const HEIGHT = { 375: 812, 768: 1024, 1440: 900 };
 const MAX_PAGE = 3600;
 const TEMP_ADMIN = 'screenshots-admin@morsel.invalid';
@@ -54,8 +54,7 @@ async function setup() {
     restaurantSlug: 'smash-society', addressId: me.addresses[0]._id, payment: 'card', delivery: { type: 'asap' }, tip: 100,
     items: [{ itemSlug: 'classic', qty: 2, options: { sauce: 'bbq', burgerExtras: ['bacon'] } }, { itemSlug: 'fries', qty: 1, options: { fries: 'truffle' } }]
   } })).data.order;
-  /* Move it to “on the way” so the map and courier show. */
-  await Order.updateOne({ _id: order._id }, { $set: { startAt: new Date(Date.now() - (order.etaMin - 6) * config.simMinuteMs) } });
+  await onTheWay(order._id);
   /* One basket at Smash Society (shown) and one at Forno Sette (so "Your baskets" appears). */
   const cart = {
     promo: null,
@@ -69,11 +68,28 @@ async function setup() {
       ] }
     }
   };
-  /* Temporary admin, signed in with a token, so ADMIN_EMAIL is never touched. */
+  /* Temporary admin signed in with a token, plus the seeded partner and courier for their pages. */
   await User.deleteMany({ email: TEMP_ADMIN });
   const admin = await User.create({ name: 'Screenshot Admin', email: TEMP_ADMIN, role: 'admin', passwordHash: await bcrypt.hash(crypto.randomBytes(24).toString('hex'), 4) });
-  const adminToken = jwt.sign({ sub: String(admin._id) }, config.jwtSecret, { expiresIn: '1h', algorithm: 'HS256' });
-  return { demoToken, adminToken, orderId: order._id, etaMin: order.etaMin, cart };
+  const adminToken = jwt.sign({ sub: String(admin._id), v: 0 }, config.jwtSecret, { expiresIn: '1h', algorithm: 'HS256' });
+  const staffToken = async (email, password) => {
+    const res = await api('POST', '/auth/login', { body: { email, password } });
+    if (!res.setCookie) throw new Error(`Couldn’t log in as ${email}. Run npm run seed first.`);
+    return cookieValue(res.setCookie);
+  };
+  const partnerToken = await staffToken('partner.smash-society@morsel.app', 'morsel-partner-2026');
+  const courierToken = await staffToken('courier1@morsel.app', 'morsel-courier-2026');
+  return { demoToken, adminToken, partnerToken, courierToken, orderId: order._id, etaMin: order.etaMin, cart };
+}
+
+/* Puts the order “on the way” with a demo courier, a few simulated minutes into the ride. */
+async function onTheWay(id) {
+  const now = Date.now(), m = config.simMinuteMs;
+  const at = k => new Date(now - k * m);
+  await Order.updateOne({ _id: id }, { $set: {
+    status: 'pickedup', statusAt: at(3), startAt: at(20), prepMinutes: 10, courier: { user: null, name: 'Maya', vehicle: 'bike' },
+    timeline: [{ status: 'placed', at: at(20), by: 'customer' }, { status: 'accepted', at: at(19), by: 'partner' }, { status: 'preparing', at: at(18), by: 'partner' }, { status: 'ready', at: at(8), by: 'partner' }, { status: 'pickedup', at: at(3), by: 'courier' }]
+  } });
 }
 
 async function teardown(ctx) {
@@ -116,9 +132,12 @@ const VIEW_STEPS = {
   async checkout(page) { await page.goto(BASE + '/#checkout-smash-society'); await page.waitForSelector('#place-btn'); return true; },
   async order(page, ctx) {
     /* Put the order back to “on the way” for every shot, since demo time keeps running. */
-    await Order.updateOne({ _id: ctx.orderId }, { $set: { startAt: new Date(Date.now() - (ctx.etaMin - 6) * config.simMinuteMs) } });
+    await onTheWay(ctx.orderId);
     await page.goto(`${BASE}/#order-${ctx.orderId}`); await page.waitForSelector('#tr-title:not(:empty)'); await page.waitForTimeout(800); return true; },
   async account(page) { await page.goto(BASE + '/#account'); await page.waitForSelector('.order-row'); return true; },
+  async admin(page) { await page.goto(BASE + '/admin'); await page.waitForSelector('.cols-chart'); return true; },
+  async partner(page, ctx) { await onTheWay(ctx.orderId); await page.goto(BASE + '/partner'); await page.waitForSelector('.board'); return true; },
+  async courier(page) { await page.goto(BASE + '/courier'); await page.waitForSelector('.c-tiles'); return true; },
   async 'admin-photos'(page) { await page.goto(BASE + '/admin/photos'); await page.waitForSelector('.rv'); return true; },
   async credits(page) { await page.goto(BASE + '/credits'); await page.waitForSelector('.credit-list, .credit-group, #credits-list p'); return true; }
 };
@@ -133,9 +152,9 @@ const VIEW_STEPS = {
     for (const theme of THEMES) for (const width of WIDTHS) {
       const context = await browser.newContext({ viewport: { width, height: HEIGHT[width] || 900 }, colorScheme: theme, reducedMotion: 'reduce', deviceScaleFactor: 1 });
       for (const view of VIEWS) {
-        const admin = view === 'admin-photos';
+        const token = { admin: ctx.adminToken, 'admin-photos': ctx.adminToken, partner: ctx.partnerToken, courier: ctx.courierToken }[view] || ctx.demoToken;
         await context.clearCookies();
-        await context.addCookies([{ name: 'morsel_session', value: admin ? ctx.adminToken : ctx.demoToken, url: BASE, httpOnly: true, sameSite: 'Lax' }]);
+        await context.addCookies([{ name: 'morsel_session', value: token, url: BASE, httpOnly: true, sameSite: 'Lax' }]);
         const page = await context.newPage();
         page.on('pageerror', e => problems.push(`${view} ${width} ${theme}: ${e.message}`));
         page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) problems.push(`${view} ${width} ${theme}: ${m.text()}`); });

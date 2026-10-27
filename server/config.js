@@ -23,7 +23,6 @@ const config = {
   mongoUri: required('MONGODB_URI'),
   jwtSecret: required('JWT_SECRET'),
   port: Number(process.env.PORT || 3000),
-  adminEmail: (process.env.ADMIN_EMAIL || '').trim().toLowerCase(),
   demoSpeed: Number.isFinite(demoSpeed) && demoSpeed > 0 ? demoSpeed : 30,
   /* Optional: only the photo script and /admin/photos use it. It never leaves the server. */
   unsplashKey: (process.env.UNSPLASH_ACCESS_KEY || '').trim(),

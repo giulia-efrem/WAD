@@ -3,7 +3,7 @@ import { ic, art } from '../art.js';
 import { api } from '../api.js';
 import { state, catalog, CATS, HERO, R, menuOf, loadMenu, findItem, isOpen, nowMin, opensAt, etaText, isFav } from '../state.js';
 import { hasPhoto, photoImg, photoStyle, creditHTML, creditText } from '../photos.js';
-import { progress } from '../progress.js';
+import { progress, isLive } from '../progress.js';
 import { stageCopy } from './order.js';
 import { app } from '../router.js';
 
@@ -70,9 +70,9 @@ function rowLists() {
 export function cardHTML({ r, match, open }, { size = 'card' } = {}) {
   const fav = isFav(r);
   const fee = r.deliveryFee ? `${eur(r.deliveryFee)} delivery` : 'Free delivery';
-  return `<article class="card ${open ? '' : 'is-closed'}" style="--cv:${r.color};--cvi:${r.ink}">
+  return `<article class="card ${open && !r.paused ? '' : 'is-closed'}" style="--cv:${r.color};--cvi:${r.ink}">
     <div class="cover ${hasPhoto(r) ? 'has-photo' : ''}" style="${photoStyle(r)}"><div class="art">${art(r.illustration)}</div>${photoImg(r, { size })}
-      ${open ? '' : `<div class="veil"><span>Closed now<br>Opens at ${opensAt(r)}</span></div>`}
+      ${r.paused ? '<div class="veil"><span>Not taking orders<br>Back soon</span></div>' : open ? '' : `<div class="veil"><span>Closed now<br>Opens at ${opensAt(r)}</span></div>`}
     </div>
     <div class="card-body">
       ${logoBadge(r)}
@@ -245,7 +245,7 @@ async function loadLiveOrder() {
   if (!state.user) return;
   let orders;
   try { orders = await api.listOrders(); } catch (e) { return; }
-  const live = orders.find(o => progress(o).stage !== 'delivered');
+  const live = orders.find(isLive);
   const box = $('#live-order');
   if (!live || !box) return;
   const p = progress(live);

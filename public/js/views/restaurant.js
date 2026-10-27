@@ -1,6 +1,6 @@
 import { $, $$, esc, eur, clamp, logoBadge } from '../util.js';
 import { ic, art } from '../art.js';
-import { state, R, menuOf, loadMenu, findItem, isOpen, opensAt, closesAt, is247, hoursText, etaText, isFav, qtyOfItem, selectedOptions, missingChoices, isPrimaryGroup, ingredientWords, dealPrice, dealSaving, mainPart, lineKey, MAX_QTY, basketLines, addLine, replaceLine, removeLine } from '../state.js';
+import { state, R, menuOf, loadMenu, findItem, isOpen, blockReason, opensAt, closesAt, is247, hoursText, etaText, isFav, qtyOfItem, selectedOptions, missingChoices, isPrimaryGroup, ingredientWords, dealPrice, dealSaving, mainPart, lineKey, MAX_QTY, basketLines, addLine, replaceLine, removeLine } from '../state.js';
 import { hasPhoto, photoImg, photoStyle, creditHTML } from '../photos.js';
 import { openModal, closeModal, toast } from '../ui.js';
 import { orderHTML, refreshOrderUI } from './basket.js';
@@ -60,7 +60,7 @@ function drawRestaurant(r) {
           <li class="r-open"><span class="open-state ${open ? '' : 'closed'}"><span class="dot" aria-hidden="true"></span>${openText}</span>${is247(r) ? '' : `<small>${hoursText(r)}</small>`}</li>
         </ul>
       </div>
-      ${open ? '' : `<p class="notice">${esc(r.name)} is closed right now. Have a look at the menu, and order from ${opensAt(r)}.</p>`}
+      ${r.paused ? `<p class="notice">${esc(r.name)} isn’t taking new orders right now. Have a look at the menu and check back a little later.</p>` : open ? '' : `<p class="notice">${esc(r.name)} is closed right now. Have a look at the menu, and order from ${opensAt(r)}.</p>`}
     </div>
     <div class="menu-tabs-bar"><nav class="wrap menu-tabs" id="menu-tabs" aria-label="Menu sections">
       ${sections.map((s, i) => `<button type="button" data-act="menu-tab" data-sec="sec-${slug(s.category)}" aria-current="${i === 0}">${esc(s.category)}</button>`).join('')}
@@ -121,12 +121,12 @@ function itemHTML(r, it) {
   const fromPrice = deal ? it.deal.parts.some(p => p.choices.some(c => c.delta)) : it.optionGroups.some(g => g.choices.some(c => c.price));
   const saving = deal ? dealSaving(r, it) : 0;
   return `
-          <button class="item ${textOnly ? 'text-only' : ''} ${deal ? 'is-deal' : ''}" type="button" data-act="open-item" data-r="${esc(r.slug)}" data-i="${esc(it.slug)}">
+          <button class="item ${textOnly ? 'text-only' : ''} ${deal ? 'is-deal' : ''} ${it.soldOut ? 'sold-out' : ''}" type="button" data-act="open-item" data-r="${esc(r.slug)}" data-i="${esc(it.slug)}">
             <span class="item-main">
               <span class="item-name">${esc(it.name)}${it.popular ? '<span class="tag-pop">Popular</span>' : ''}</span>
               <span class="item-desc">${esc(it.description)}</span>
               ${deal ? `<span class="deal-parts">${esc(dealPartsText(it.deal))}</span>` : tagsHTML(it.tags)}
-              <span class="item-price">${eur(it.price)}${fromPrice ? '<span class="muted" style="font-weight:500"> and up</span>' : ''}${saving > 0 ? `<span class="save-tag">Save ${eur(saving)}</span>` : ''}</span>
+              <span class="item-price">${eur(it.price)}${fromPrice ? '<span class="muted" style="font-weight:500"> and up</span>' : ''}${saving > 0 && !it.soldOut ? `<span class="save-tag">Save ${eur(saving)}</span>` : ''}${it.soldOut ? '<span class="sold-tag">Sold out</span>' : ''}</span>
             </span>
             ${textOnly
               ? `<span class="add add-inline" aria-hidden="true">${ic('plus')}</span>`
@@ -141,7 +141,7 @@ export function refreshItemBadges() {
     const add = $('.add', el);
     add.innerHTML = n ? String(n) : ic('plus');
     const name = $('.item-name', el).firstChild.textContent;
-    el.setAttribute('aria-label', `${name}${n ? `, ${n} in your order` : ''}. Open to customise and add.`);
+    el.setAttribute('aria-label', el.classList.contains('sold-out') ? `${name}, sold out` : `${name}${n ? `, ${n} in your order` : ''}. Open to customise and add.`);
   });
 }
 
@@ -166,7 +166,8 @@ export function openItem(rid, iid, { edit = null } = {}) {
   const it = r && findItem(r, iid);
   if (!r || !it) return;
   if (it.kind === 'deal') { openDeal(r, it, { edit }); return; }
-  const open = isOpen(r);
+  const why = blockReason(r, it);
+  const open = !why;
   const groups = it.optionGroups;
   const removable = (it.ingredients || []).filter(i => i.removable);
   const sel = {};
@@ -211,7 +212,7 @@ export function openItem(rid, iid, { edit = null } = {}) {
     const missing = missingChoices(it, sel);
     const btn = $('#item-add', w);
     btn.disabled = !open;
-    if (!open) btn.innerHTML = `<span>Opens at ${opensAt(r)}</span>`;
+    if (!open) btn.innerHTML = `<span>${why}</span>`;
     else if (missing.length) btn.innerHTML = `<span>Choose ${missing[0].name.toLowerCase()}</span><span>${eur(unit() * qty)}</span>`;
     else btn.innerHTML = `<span>${edit ? 'Update order' : `Add ${qty} to order`}</span><span>${eur(unit() * qty)}</span>`;
     /* Still clickable while a choice is missing: it points the customer at what to pick. */
@@ -269,17 +270,18 @@ export function openItem(rid, iid, { edit = null } = {}) {
 /* Pick a dish for each part (main dish first, with its own customisation), with the running
    price and the saving against buying the same dishes separately. */
 function openDeal(r, it, { edit = null } = {}) {
-  const open = isOpen(r);
+  const why = blockReason(r, it);
+  const open = !why;
   const parts = {};
   let sel = {}, remove = [], qty = 1;
-  if (edit) { Object.assign(parts, edit.parts); sel = JSON.parse(JSON.stringify(edit.sel || {})); remove = [...(edit.remove || [])]; qty = edit.qty; }
+  if (edit) { Object.assign(parts, edit.parts); for (const p of it.deal.parts) { const c = p.choices.find(x => x.itemSlug === parts[p.key]); if (c && c.soldOut) delete parts[p.key]; } sel = JSON.parse(JSON.stringify(edit.sel || {})); remove = [...(edit.remove || [])]; qty = edit.qty; }
   const mainP = mainPart(it.deal);
   const mainDish = () => (parts[mainP.key] ? findItem(r, parts[mainP.key]) : null);
   const partHTML = part => `<fieldset class="opt-group" data-group="part-${esc(part.key)}">
       <legend class="opt-head"><span class="opt-title">${esc(part.name)}</span><span class="req is-required" data-req="part-${esc(part.key)}">Required</span></legend>
       <p class="opt-hint">Choose 1</p>
-      ${part.choices.map(c => `<label class="choice"><input type="radio" name="part-${esc(part.key)}" value="${esc(c.itemSlug)}" data-part="${esc(part.key)}" ${parts[part.key] === c.itemSlug ? 'checked' : ''}>
-        <span>${esc(c.name)}</span><span class="cp">${c.delta ? '+' + eur(c.delta) : ''}</span></label>`).join('')}
+      ${part.choices.map(c => `<label class="choice ${c.soldOut ? 'is-sold-out' : ''}"><input type="radio" name="part-${esc(part.key)}" value="${esc(c.itemSlug)}" data-part="${esc(part.key)}" ${parts[part.key] === c.itemSlug && !c.soldOut ? 'checked' : ''} ${c.soldOut ? 'disabled' : ''}>
+        <span>${esc(c.name)}</span><span class="cp">${c.soldOut ? 'Sold out' : c.delta ? '+' + eur(c.delta) : ''}</span></label>`).join('')}
     </fieldset>`;
   /* The main dish's own choices, shown once it's picked. */
   const mainCustomHTML = () => {
@@ -334,7 +336,7 @@ function openDeal(r, it, { edit = null } = {}) {
     const need = missing();
     const btn = $('#item-add', w);
     btn.disabled = !open;
-    if (!open) btn.innerHTML = `<span>Opens at ${opensAt(r)}</span>`;
+    if (!open) btn.innerHTML = `<span>${why}</span>`;
     else if (need) btn.innerHTML = `<span>Choose ${need.name.toLowerCase()}</span><span>${eur(price.unitPrice * qty)}</span>`;
     else btn.innerHTML = `<span>${edit ? 'Update order' : `Add ${qty} to order`}</span><span>${eur(price.unitPrice * qty)}</span>`;
     btn.classList.toggle('needs-choice', open && !!need);

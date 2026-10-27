@@ -37,7 +37,7 @@ router.get('/:slug/reviews', validate(z.object({ slug }), 'params'), validate(re
   const { sort, page } = req.valid.query;
   const [sum, list] = await Promise.all([
     summary(r._id),
-    Review.find({ restaurant: r._id }).sort(SORTS[sort]).skip((page - 1) * PAGE_SIZE).limit(PAGE_SIZE)
+    Review.find({ restaurant: r._id, hidden: { $ne: true } }).sort(SORTS[sort]).skip((page - 1) * PAGE_SIZE).limit(PAGE_SIZE)
   ]);
   const me = req.user ? String(req.user._id) : null;
   res.json({

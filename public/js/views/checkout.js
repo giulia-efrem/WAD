@@ -1,7 +1,7 @@
 import { $, esc, eur, clock, plural, reduced, logoBadge } from '../util.js';
 import { ic, art } from '../art.js';
 import { api } from '../api.js';
-import { state, R, menuOf, loadMenu, isOpen, etaText, basketLines, basketCount, allBaskets, clearBasket, setPromo, pricing, priceRows, promoError, describeLine } from '../state.js';
+import { state, R, menuOf, loadMenu, isOpen, etaText, basketLines, basketCount, basketSubtotal, allBaskets, clearBasket, setPromo, pricing, priceRows, promoError, promoKey, describeLine, findItem } from '../state.js';
 import { hasPhoto, photoImg, photoStyle } from '../photos.js';
 import { toast } from '../ui.js';
 import { openAuth } from './auth.js';
@@ -47,7 +47,14 @@ export function renderCheckout() {
   if (!open && state.co.when === 'asap') state.co.when = 'later';
   if (state.co.when === 'later' && !slots.some(s => String(s.getTime()) === state.co.slot)) state.co.slot = slots[0] ? String(slots[0].getTime()) : '';
   const promo = state.promo;
-  const promoErr = promo ? promoError(promo, r) : '';
+  if (promo) checkPromo(promo, r.slug);
+  const promoErr = promo ? promoError(promo, r, p.subtotal) : '';
+  const checking = promo && state.promoCheck.key !== promoKey(promo, r.slug);
+  /* Dishes that sold out since they went into the bag, and a restaurant that paused orders. */
+  const menu = menuOf(r.slug);
+  const soldOut = menu ? basketLines(slug).filter(l => { const it = findItem(menu, l.itemSlug); return it && (it.soldOut || (l.parts && it.deal && it.deal.parts.some(pt => { const c = pt.choices.find(x => x.itemSlug === l.parts[pt.key]); return c && c.soldOut; }))); }) : [];
+  const paused = !!(menu ? menu.paused : r.paused);
+  const blocked = paused ? `${r.name} isn’t taking orders right now. Try again a little later.` : soldOut.length ? `${soldOut.map(l => l.name).join(', ')} ${soldOut.length === 1 ? 'is' : 'are'} sold out right now. Remove ${soldOut.length === 1 ? 'it' : 'them'} from your bag to order.` : '';
   const scroll = window.scrollY;
   app().innerHTML = `
     <div class="wrap">
@@ -55,6 +62,7 @@ export function renderCheckout() {
       <h1 class="page-title">Checkout</h1>
       <div class="checkout">
         <div>
+          ${blocked ? `<p class="notice" style="margin:0 0 16px">${esc(blocked)}</p>` : ''}
           ${u ? '' : `<div class="login-card"><p><strong>Log in to place your order</strong>Your bag is saved. Log in or create an account to choose an address and pay.</p><button class="btn btn-primary" type="button" data-act="login">Log in</button><button class="btn btn-outline" type="button" data-act="signup">Sign up</button></div>`}
           <section class="panel" aria-labelledby="co-addr">
             <div class="panel-head"><h2 id="co-addr">Delivery address</h2>${u && u.addresses.length ? `<button class="btn btn-sm btn-secondary" type="button" data-act="add-addr">${ic('plus')}New</button>` : ''}</div>
@@ -88,13 +96,14 @@ export function renderCheckout() {
             <div class="sum-r"><span class="thumb ${hasPhoto(r) ? 'has-photo' : ''}" style="--cv:${r.color};${photoStyle(r)}">${art(r.illustration)}${photoImg(r, { size: 'thumb' })}</span><div><h2 id="co-sum" style="margin:0">${esc(r.name)}</h2><span class="muted" style="font-size:.92rem">${plural(basketCount(slug), 'item', 'items')}</span></div></div>
             <ul class="sum-items">${basketLines(slug).map(l => { const d = describeLine(l); return `<li><span><span class="q">${l.qty}×</span>${esc(l.name)}${d ? `<br><span class="muted" style="font-size:.85rem">${esc(d)}</span>` : ''}${l.note ? `<br><span class="muted" style="font-size:.85rem">Note: “${esc(l.note)}”</span>` : ''}</span><span>${eur(l.unitPrice * l.qty)}</span></li>`; }).join('')}</ul>
             <p class="sub-label">Promo code</p>
-            ${promo && !promoErr ? `<div class="applied"><span>${ic('tag')} ${esc(promo)} applied</span><button class="link-btn" type="button" data-act="remove-promo">Remove</button></div>`
+            ${promo && checking ? `<div class="applied"><span>${ic('tag')} Checking ${esc(promo)}…</span></div>`
+              : promo && !promoErr ? `<div class="applied"><span>${ic('tag')} ${esc(promo)} applied</span><button class="link-btn" type="button" data-act="remove-promo">Remove</button></div>`
               : `<div class="promo-row"><label class="visually-hidden" for="promo">Promo code</label><input class="input" id="promo" placeholder="Enter code" value="${esc(promo || '')}" autocomplete="off"><button class="btn btn-secondary" type="button" data-act="apply-promo" style="min-height:46px">Apply</button></div>
                  <p class="err" id="promo-err" style="margin-top:6px">${promo ? esc(promoErr) : ''}</p>`}
             <p class="sub-label">Tip your courier</p>
             <div class="tips" role="group" aria-label="Courier tip">${[0, 100, 200, 300].map(v => `<button class="pill" type="button" data-act="tip" data-v="${v}" aria-pressed="${state.tip === v}">${v ? eur(v) : 'None'}</button>`).join('')}</div>
             ${priceRows(p, { tip: true })}
-            <button class="btn btn-primary btn-block btn-split" type="button" data-act="place-order" id="place-btn" style="margin-top:16px"><span>Place order</span><span>${eur(p.total)}</span></button>
+            <button class="btn btn-primary btn-block btn-split" type="button" data-act="place-order" id="place-btn" style="margin-top:16px" ${blocked ? 'disabled' : ''}><span>Place order</span><span>${eur(p.total)}</span></button>
             <p class="fine">This is a demo checkout. No payment is taken.</p>
           </section>
         </aside>
@@ -108,6 +117,18 @@ export function renderCheckout() {
   if (promoInput) promoInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); applyPromo(); } });
 }
 
+/* Asks the server about the code once per user, order count and restaurant, then redraws. */
+let checkingKey = '';
+function checkPromo(code, slug) {
+  const key = promoKey(code, slug);
+  if (state.promoCheck.key === key || checkingKey === key) return;
+  checkingKey = key;
+  api.validatePromo(code, slug, basketSubtotal(slug))
+    .then(rule => { state.promoRule = rule; state.promoCheck = { key, error: '' }; })
+    .catch(err => { state.promoCheck = { key, error: err.code === 'invalid_promo' || err.code === 'validation_failed' ? err.message : '' }; })
+    .finally(() => { checkingKey = ''; if (state.view === 'checkout') renderCheckout(); });
+}
+
 let applying = false;
 export async function applyPromo() {
   const input = $('#promo');
@@ -116,8 +137,9 @@ export async function applyPromo() {
   const errEl = $('#promo-err');
   if (!code) { errEl.textContent = 'Enter a promo code.'; input.focus(); return; }
   applying = true;
+  const slug = checkoutSlug();
   try {
-    await api.validatePromo(code, checkoutSlug());
+    state.promoRule = await api.validatePromo(code, slug, basketSubtotal(slug));
   } catch (err) {
     applying = false;
     errEl.textContent = err.message;
@@ -126,6 +148,7 @@ export async function applyPromo() {
   }
   applying = false;
   setPromo(code);
+  state.promoCheck = { key: promoKey(code, slug), error: '' };
   renderCheckout();
   toast(`${code} applied`);
 }
@@ -157,7 +180,7 @@ export async function placeOrder() {
       payment: state.co.pay,
       courierNote: state.co.note.trim(),
       delivery: later ? { type: 'scheduled', at: Number(state.co.slot) } : { type: 'asap' },
-      promoCode: promo && !promoError(promo, r) && (p.discount || p.deliveryDiscount) ? promo : null,
+      promoCode: promo && !promoError(promo, r, p.subtotal) && (p.discount || p.deliveryDiscount) ? promo : null,
       tip: state.tip,
       expectedTotal: p.total
     });
@@ -168,7 +191,7 @@ export async function placeOrder() {
     go('order', { id: order._id });
     toast('Order placed');
   } catch (err) {
-    if (err.code === 'price_mismatch') {
+    if (err.code === 'price_mismatch' || err.code === 'sold_out' || err.code === 'restaurant_paused') {
       try { await loadMenu(r.slug, { fresh: true }); } catch (e) { /* keep the message below */ }
       if (state.view === 'checkout') renderCheckout();
     } else if (state.view === 'checkout' && document.contains(btn)) {

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <!-- The Morsel logo mark. Same colours as the header logo, including its dark-mode version. -->
+  <style>
+    .bg { fill: #4B1E78; }
+    .dot { fill: #FF6A1A; }
+    @media (prefers-color-scheme: dark) { .bg { fill: #7C4DDB; } .dot { fill: #FF7A2E; } }
+  </style>
+  <defs>
+    <mask id="bite" maskUnits="userSpaceOnUse" x="0" y="0" width="40" height="40">
+      <rect width="40" height="40" fill="#fff"/>
+      <circle cx="29" cy="10.5" r="5.6" fill="#000"/>
+      <circle cx="31.8" cy="18" r="4.6" fill="#000"/>
+    </mask>
+  </defs>
+  <rect class="bg" width="40" height="40" rx="12"/>
+  <circle cx="18.5" cy="21" r="11.5" fill="#fff" mask="url(#bite)"/>
+  <circle class="dot" cx="31.4" cy="29.6" r="2.5"/>
+</svg>

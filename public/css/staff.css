@@ -351,3 +351,14 @@
 }
 .tile-sub { text-wrap: pretty; }
 .data-table tbody tr { transition: background-color .15s; }
+/* Board column titles line up with the text under them. */
+.col h2 { margin: 2px 0 12px; }
+/* Partner figures on phones: the two counts side by side, sales across the full width. */
+@media (max-width: 599px) {
+  .tiles-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tiles-3 .tile { padding: 14px 16px; border-radius: 16px; }
+  .tiles-3 .tile:nth-child(2) { grid-column: 1 / -1; order: 3; }
+  .tiles-3 .tile-value { font-size: 1.55rem; }
+}
+/* Partner menu: a narrower list keeps each dish close to its switch on wide screens. */
+.panel.avail { max-width: 860px; }

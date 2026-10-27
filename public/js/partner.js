@@ -95,7 +95,7 @@ function drawOrders() {
       ${pausedSwitch(r.paused)}
     </div>
     ${data.autopilot ? '<p class="staff-note">Demo autopilot is on. While this page is open, Morsel waits for you to accept and prepare orders. Close it and orders move along on their own.</p>' : ''}
-    <div class="tiles">
+    <div class="tiles tiles-3">
       <div class="tile"><span class="tile-label">Orders today</span><strong class="tile-value">${data.today.orders}</strong></div>
       <div class="tile"><span class="tile-label">Food sales delivered today</span><strong class="tile-value">${eur(data.today.revenue)}</strong></div>
       <div class="tile"><span class="tile-label">Active now</span><strong class="tile-value">${data.active.length}</strong></div>

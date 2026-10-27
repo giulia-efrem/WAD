@@ -88,6 +88,7 @@ export async function renderOrder(id) {
     return;
   }
   if (state.view !== 'order' || state.params.id !== id) return;
+  document.title = `Your order from ${o.restaurantName} · Morsel`;
   app().innerHTML = `
     <div class="wrap">
       <div class="back-row"><button class="back-link" type="button" data-act="account">${ic('back')}All orders</button></div>

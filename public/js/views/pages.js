@@ -77,7 +77,7 @@ const PAGES = {
 export function renderPage(key) {
   const p = PAGES[key];
   if (!p) { renderNotFound(); return; }
-  document.title = `${p.title} · Morsel`;
+  document.title = p.title === 'About Morsel' ? 'About · Morsel' : `${p.title} · Morsel`;
   app().innerHTML = `<div class="wrap page prose">
     <h1 class="page-title">${esc(p.title)}</h1>
     <span class="placeholder-note">Placeholder page</span>

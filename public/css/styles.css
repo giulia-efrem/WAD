@@ -1020,3 +1020,14 @@ body:has(.menu-tabs-bar) .topbar.scrolled { box-shadow: none; }
 /* Price and its "Save" or "Sold out" tag: when the tag wraps, it starts at the left edge too. */
 .item-price { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .item-price .save-tag, .item-price .sold-tag { margin-left: 0; }
+
+/* ================= Polish: dish window ================= */
+/* A floated legend no longer sits on the fieldset's top border, so each group gets its divider back,
+   with more room above a group's title than below it. */
+.opt-group { padding: 20px 0 8px; }
+legend.opt-head { float: left; margin-bottom: 6px; }
+legend.opt-head + * { clear: both; }
+.opt-group > legend + .choice, .opt-group > legend + .opt-hint { margin-top: 0; }
+.choice { border-radius: 10px; }
+@media (hover: hover) { .choice:hover:not(.is-sold-out) > span:first-of-type { color: var(--brand-text); } }
+.item-price-lg { color: var(--ink); }

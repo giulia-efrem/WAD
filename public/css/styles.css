@@ -231,22 +231,10 @@ h1, h2, h3 { text-wrap: balance; }
 
 .home-notes { display: grid; gap: 12px; margin-top: 24px; }
 .home-notes:empty { display: none; }
-.banner {
-  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  padding: 14px 16px 14px 20px; border-radius: var(--r-lg); background: var(--brand); color: var(--brand-ink);
-}
-.banner p { margin: 0; flex: 1 1 260px; font-weight: 500; }
-.banner strong { font-weight: 800; }
-.banner .code { font-weight: 800; letter-spacing: 0.04em; padding: 2px 8px; border-radius: 8px; border: 1.5px dashed currentColor; white-space: nowrap; }
-.banner .btn { background: var(--surface); color: var(--ink); min-height: 40px; padding: 0 16px; border-radius: 11px; font-size: 0.92rem; }
-.banner .btn:hover { filter: none; background: var(--surface-2); }
-.banner .x { background: transparent; border: 0; color: inherit; cursor: pointer; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; opacity: 0.8; }
-.banner .x:hover { opacity: 1; background: rgba(255, 255, 255, 0.12); }
-.live-banner {
-  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
-  border-radius: var(--r-lg); background: var(--accent-soft); color: var(--ink); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-}
-.live-banner p { margin: 0; flex: 1; font-weight: 500; }
+/* Live order: the same slim card as the promo, with a pulsing dot */
+.live-banner { display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 16px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.live-banner p { margin: 0; flex: 1; min-width: 0; font-size: 0.93rem; font-weight: 500; }
+.live-banner .btn-sm { min-height: 34px; padding: 0 12px; border-radius: 10px; font-size: 0.86rem; flex: none; }
 .pulse { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); flex: none; box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); animation: pulse 1.8s infinite; }
 @keyframes pulse { 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 
@@ -729,3 +717,65 @@ a.icon-btn { text-decoration: none; }
 a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 60%, transparent); outline-offset: 2px; }
 .icon-btn:hover, .round-btn:hover, .close-btn:hover { box-shadow: 0 0 0 4px color-mix(in srgb, var(--ink) 6%, transparent); }
 .home-notes > :empty { display: none; }
+
+/* Home v2: photo hero, photo cuisine circles, slim promo card */
+.hero-media { display: none; }
+@media (min-width: 760px) {
+  .hero-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 32px; }
+  .hero-media { display: block; }
+}
+@media (min-width: 1024px) { .hero-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 520px); gap: 56px; } }
+@media (max-width: 1023px) { .hero-chip { left: 10px; bottom: 10px; padding: 6px 12px 6px 6px; } .hero-chip .logo-badge { width: 32px; height: 32px; font-size: 0.75rem; } .hero-photo .credit.on-photo { font-size: 0.66rem; } }
+.hero-photo { position: relative; aspect-ratio: 5 / 4; border-radius: var(--r-xl); overflow: hidden; background: var(--photo-bg, var(--cv)); box-shadow: var(--shadow-hover); }
+.hero-photo::before { content: ""; position: absolute; inset: 0; opacity: 0.16; background-image: radial-gradient(var(--cvi) 1.5px, transparent 1.8px); background-size: 18px 18px; }
+.hero-photo.has-photo::before { display: none; }
+.hero-photo .art { position: absolute; right: 10%; bottom: -10%; width: 50%; transform: rotate(-8deg); }
+.hero-photo .art svg { display: block; width: 100%; height: auto; }
+.hero-photo .photo { transition: opacity .45s ease, transform .6s cubic-bezier(.2,.8,.2,1); }
+.hero-photo:hover .photo { transform: scale(1.03); }
+.hero-link { position: absolute; inset: 0; z-index: 2; border: 0; border-radius: inherit; background: transparent; cursor: pointer; }
+.hero-link:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
+.hero-chip {
+  position: absolute; left: 16px; bottom: 16px; z-index: 3; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 32px);
+  padding: 8px 16px 8px 8px; border-radius: 16px; background: color-mix(in srgb, var(--surface) 90%, transparent); color: var(--ink);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: var(--shadow-sm); pointer-events: none;
+}
+.hero-chip .logo-badge { width: 40px; height: 40px; border-radius: 11px; font-size: 0.88rem; }
+.hero-chip strong { display: block; font-size: 0.98rem; line-height: 1.25; }
+.hero-chip small { display: block; color: var(--muted); font-size: 0.82rem; }
+.hero-photo .credit.on-photo { top: 14px; right: 14px; bottom: auto; z-index: 3; }
+.hero-photo.sk { box-shadow: none; }
+
+.cats { gap: 6px; margin-top: 30px; }
+.cat { width: 86px; padding: 4px 2px 8px; gap: 9px; border: 0; border-radius: var(--r-md); }
+.cat:hover { background: transparent; }
+.cat .ic { position: relative; width: 72px; height: 72px; background: var(--cv); transition: transform .2s, box-shadow .2s; }
+.cat .ic.has-photo > svg { visibility: hidden; }
+.cat .ic .photo { border-radius: 50%; }
+.cat .ic svg { width: 48px; height: 48px; }
+.cat .ic-all { background: var(--surface); border: 1.5px solid var(--line-strong); color: var(--ink); }
+.cat .ic-all .i { width: 26px; height: 26px; color: var(--ink); stroke-width: 1.8; }
+.cat-name { font-weight: 600; font-size: var(--fs-sm); color: var(--ink); }
+.cat:hover .cat-name { color: var(--brand-text); }
+.cat[aria-pressed="true"] { background: transparent; border-color: transparent; }
+.cat[aria-pressed="true"] .ic { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4.5px var(--brand); }
+.cat[aria-pressed="true"] .ic-all { border-color: transparent; }
+.cat[aria-pressed="true"] .cat-name { color: var(--brand-text); font-weight: 700; }
+.cat:focus-visible { outline: none; }
+.cat:focus-visible .ic { box-shadow: 0 0 0 2px var(--bg), 0 0 0 5px color-mix(in srgb, var(--brand) 60%, transparent); }
+
+.promo-card { display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 10px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); }
+.promo-ic { width: 34px; height: 34px; border-radius: 10px; background: var(--accent-soft); color: var(--accent-text); display: grid; place-items: center; flex: none; }
+.promo-ic .i { width: 18px; height: 18px; }
+.promo-card p { margin: 0; flex: 1 1 auto; min-width: 0; font-size: 0.93rem; line-height: 1.45; }
+.promo-card .code { font-weight: 800; letter-spacing: 0.04em; font-size: 0.84rem; padding: 2px 7px; border-radius: 6px; background: var(--brand-soft); color: var(--brand-text); white-space: nowrap; }
+.promo-card .btn-sm { min-height: 34px; padding: 0 12px; border-radius: 10px; font-size: 0.86rem; flex: none; }
+.promo-card .x { width: 32px; height: 32px; border: 0; border-radius: 50%; background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; flex: none; }
+.promo-card .x:hover { background: var(--surface-2); color: var(--ink); }
+.promo-card .x .i { width: 16px; height: 16px; }
+@media (max-width: 560px) {
+  .promo-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 12px; padding: 10px 8px 12px 10px; }
+  .promo-card .btn-sm { grid-column: 2; grid-row: 2; justify-self: start; }
+  .promo-card .x { grid-column: 3; grid-row: 1; }
+}
+.credit-list .also { display: block; margin-top: 1px; color: var(--muted); font-size: var(--fs-xs); }

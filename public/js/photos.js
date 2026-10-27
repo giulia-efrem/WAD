@@ -29,7 +29,9 @@ export const SIZES = {
   cover: { ratio: 9 / 25, widths: [640, 960, 1280, 1600, 2000, 2560], sizes: '100vw' },
   band: { ratio: 9 / 16, widths: [480, 640, 960, 1280], sizes: '(max-width: 600px) 100vw, 640px' },
   square: { ratio: 1, widths: [160, 240, 320, 480], sizes: '(max-width: 600px) 30vw, 140px' },
-  thumb: { ratio: 1, widths: [64, 104, 156], sizes: '52px' }
+  thumb: { ratio: 1, widths: [64, 104, 156], sizes: '52px' },
+  hero: { ratio: 4 / 5, widths: [480, 640, 800, 1000, 1200], sizes: '(max-width: 759px) 1px, (max-width: 1023px) 320px, 520px' },
+  cat: { ratio: 1, widths: [72, 144, 216], sizes: '72px' }
 };
 
 export const photoUrl = e => (e && e.image) || null;
@@ -49,6 +51,9 @@ export function photoImg(e, { size = 'card', eager = false, alt = '' } = {}) {
 
 /* Inline style for a photo's container: its colour shows until the image arrives. */
 export const photoStyle = e => (e && e.image && e.imageColor ? `--photo-bg:${esc(e.imageColor)};` : '');
+
+/* Plain-text credit, for tooltips. */
+export const creditText = e => (e && e.image && e.imageCredit ? `Photo by ${e.imageCredit.name} on Unsplash` : '');
 
 /* “Photo by NAME on Unsplash”, both links with Morsel's UTM parameters. */
 export function creditHTML(e, cls = '') {

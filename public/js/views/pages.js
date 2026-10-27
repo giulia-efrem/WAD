@@ -1,8 +1,15 @@
 import { esc } from '../util.js';
 import { art } from '../art.js';
-import { R } from '../state.js';
+import { R, CATS, HERO } from '../state.js';
 import { photoImg, photoStyle, withUtm, UNSPLASH_HOME } from '../photos.js';
 import { app } from '../router.js';
+
+/* Where a photo is reused on the home page, so the credit says so. */
+function alsoUsed(c) {
+  if (c.dishSlug) return c.restaurantSlug === HERO.slug && c.dishSlug === HERO.item ? 'Also the large photo at the top of the home page' : '';
+  const cats = CATS.filter(x => x.from === c.restaurantSlug).map(x => x.name);
+  return cats.length ? `Also the ${cats.join(' and ')} photo in the home page’s cuisine row` : '';
+}
 
 /* /credits: every Unsplash photo in the app, credited to its photographer. */
 export async function renderCredits() {
@@ -28,7 +35,7 @@ export async function renderCredits() {
         <ul class="credit-list">${g.items.map(c => `
           <li>
             <span class="thumb has-photo" style="--cv:${r.color};${photoStyle(c)}">${art(r.illustration)}${photoImg(c, { size: 'thumb' })}</span>
-            <span><strong>${esc(c.dish || 'Restaurant cover')}</strong><br>
+            <span><strong>${esc(c.dish || 'Restaurant cover')}</strong>${alsoUsed(c) ? `<span class="also">${esc(alsoUsed(c))}</span>` : ''}<br>
               <span class="muted">Photo by <a href="${esc(withUtm(c.imageCredit.profileUrl))}" target="_blank" rel="noopener">${esc(c.imageCredit.name)}</a> on <a href="${esc(UNSPLASH_HOME)}" target="_blank" rel="noopener">Unsplash</a> · <a href="${esc(withUtm(c.imageCredit.photoUrl))}" target="_blank" rel="noopener">View photo</a></span></span>
           </li>`).join('')}</ul>
       </section>`;

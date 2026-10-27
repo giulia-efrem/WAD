@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
   const credits = [];
   const add = (r, e, dish) => {
     const p = photoOut(e);
-    if (p.image && p.imageCredit) credits.push({ restaurant: r.name, restaurantSlug: r.slug, dish: dish ? e.name : null, ...p });
+    if (p.image && p.imageCredit) credits.push({ restaurant: r.name, restaurantSlug: r.slug, dish: dish ? e.name : null, dishSlug: dish ? e.slug : null, ...p });
   };
   for (const r of list) {
     add(r, r, false);

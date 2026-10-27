@@ -1,15 +1,15 @@
 import { $, $$, esc, eur, firstName, logoBadge } from '../util.js';
 import { ic, art } from '../art.js';
 import { api } from '../api.js';
-import { state, catalog, CATS, isOpen, nowMin, opensAt, etaText, isFav } from '../state.js';
-import { hasPhoto, photoImg, photoStyle } from '../photos.js';
+import { state, catalog, CATS, HERO, R, menuOf, loadMenu, findItem, isOpen, nowMin, opensAt, etaText, isFav } from '../state.js';
+import { hasPhoto, photoImg, photoStyle, creditHTML, creditText } from '../photos.js';
 import { progress } from '../progress.js';
 import { stageCopy } from './order.js';
 import { app } from '../router.js';
 
 function greeting() {
   const h = new Date().getHours();
-  if (h < 5) return 'Still up';
+  if (h < 5) return 'Good evening';
   if (h < 12) return 'Good morning';
   if (h < 18) return 'Good afternoon';
   return 'Good evening';
@@ -88,9 +88,47 @@ export function cardHTML({ r, match, open }, { size = 'card' } = {}) {
 
 const skeletonCard = () => `<div class="sk-card" aria-hidden="true"><div class="sk sk-cover"></div><div class="sk-row"><div class="sk sk-badge"></div><div><div class="sk sk-text w60"></div><div class="sk sk-text w40"></div></div></div></div>`;
 
+/* The photo at the top of the home page: the HERO dish, else its restaurant's cover, else any cover.
+   Returns null when there is no photo at all, and the illustrations are shown instead. */
+function heroPick() {
+  const r = R(HERO.slug);
+  const menu = menuOf(HERO.slug);
+  const dish = menu && findItem(menu, HERO.item);
+  if (r && dish && hasPhoto(dish)) return { r, photo: dish, title: dish.name };
+  if (r && !menu) return { r, photo: null, pending: true };
+  const cover = (r && hasPhoto(r) ? r : null) || catalog.list.find(hasPhoto);
+  return cover ? { r: cover, photo: cover, title: cover.name } : null;
+}
+
+function heroMediaHTML() {
+  const pick = catalog.list.length ? heroPick() : { pending: true };
+  if (pick && pick.pending) return '<div class="hero-photo sk" aria-hidden="true"></div>';
+  if (!pick) return `<div class="hero-art" aria-hidden="true">
+      <span class="disc d1" style="--dc:#FFE2D1">${art('pizza')}</span>
+      <span class="disc d2" style="--dc:#DCE8FB">${art('ramen')}</span>
+      <span class="disc d3" style="--dc:#FFF0C4">${art('taco')}</span>
+    </div>`;
+  const { r, photo, title } = pick;
+  const sub = photo === r ? `${esc(r.label)} · ${etaText(r)}` : `${esc(r.name)} · ${etaText(r)}`;
+  return `<div class="hero-photo has-photo" style="--cv:${r.color};--cvi:${r.ink};${photoStyle(photo)}">
+      <div class="art">${art(r.illustration)}</div>${photoImg(photo, { size: 'hero', alt: photo.imageAlt || title })}
+      <button class="hero-link" type="button" data-act="open-r" data-id="${esc(r.slug)}" aria-label="${esc(title)} from ${esc(r.name)}. Open the menu"></button>
+      <span class="hero-chip" aria-hidden="true">${logoBadge(r)}<span><strong>${esc(title)}</strong><small>${sub}</small></span></span>
+      ${creditHTML(photo, 'on-photo')}
+    </div>`;
+}
+
+/* The hero dish lives in a menu; load it once, then swap the placeholder for the photo. */
+function fillHero() {
+  if (!catalog.list.length || menuOf(HERO.slug) || !R(HERO.slug)) return;
+  loadMenu(HERO.slug).catch(() => {}).then(() => {
+    const box = $('#hero-media');
+    if (box && state.view === 'home') box.innerHTML = heroMediaHTML();
+  });
+}
+
 function heroHTML() {
   const u = state.user;
-  const name = u ? firstName(u.name) : '';
   const def = u && u.addresses.find(a => a.isDefault);
   const sub = def
     ? `Delivering to <button class="link-btn" type="button" data-act="addr">${esc(def.label)}, ${esc(def.street)}</button>`
@@ -98,7 +136,7 @@ function heroHTML() {
   return `<section class="hero">
     <div class="wrap hero-inner">
       <div class="hero-copy">
-        <p class="kicker">${greeting()}${name ? ', ' + esc(name) : ''}</p>
+        ${u ? `<p class="kicker">${greeting()}, ${esc(firstName(u.name))}</p>` : ''}
         <h1>What are you craving ${momentWord()}?</h1>
         <p class="hero-sub">${sub}</p>
         <div class="search" role="search">${ic('search')}
@@ -106,13 +144,19 @@ function heroHTML() {
           <button class="search-clear" type="button" data-act="clear-search" aria-label="Clear search" ${state.q ? '' : 'hidden'}>${ic('close')}</button>
         </div>
       </div>
-      <div class="hero-art" aria-hidden="true">
-        <span class="disc d1" style="--dc:#FFE2D1">${art('pizza')}</span>
-        <span class="disc d2" style="--dc:#DCE8FB">${art('ramen')}</span>
-        <span class="disc d3" style="--dc:#FFF0C4">${art('taco')}</span>
-      </div>
+      <div class="hero-media" id="hero-media">${heroMediaHTML()}</div>
     </div>
   </section>`;
+}
+
+/* A round photo for each cuisine, from one of its restaurants; the illustration if there's no photo. */
+function catHTML(c) {
+  const src = c.from ? R(c.from) : null;
+  const photo = src && hasPhoto(src) ? src : null;
+  const media = c.id === 'all'
+    ? `<span class="ic ic-all">${ic('grid')}</span>`
+    : `<span class="ic ${photo ? 'has-photo' : ''}" style="--cv:${c.color};${photoStyle(photo)}" ${photo ? `title="${esc(creditText(photo))}"` : ''}>${art(c.art)}${photoImg(photo, { size: 'cat' })}</span>`;
+  return `<button class="cat" type="button" data-act="cat" data-id="${c.id}" aria-pressed="${state.cat === c.id}">${media}<span class="cat-name">${c.name}</span></button>`;
 }
 
 /* Shown while the restaurant list loads. */
@@ -127,15 +171,13 @@ export function renderHomeSkeleton() {
 export function renderHome() {
   app().innerHTML = `${heroHTML()}
     <section class="wrap">
-      <div class="home-notes" id="home-notes"><div id="live-order"></div>${state.promoDismissed ? '' : `<div class="banner" id="promo-banner">
-        <p><strong>New to Morsel?</strong> Take 20% off your first order with <span class="code">WELCOME20</span></p>
-        <button class="btn" type="button" data-act="use-promo">Apply at checkout</button>
+      <div class="home-notes" id="home-notes"><div id="live-order"></div>${state.promoDismissed ? '' : `<div class="promo-card" id="promo-banner">
+        <span class="promo-ic" aria-hidden="true">${ic('tag')}</span>
+        <p><strong>New to Morsel?</strong> <span class="muted">20% off your first order with</span> <span class="code">WELCOME20</span></p>
+        <button class="btn btn-sm btn-secondary" type="button" data-act="use-promo">Apply at checkout</button>
         <button class="x" type="button" data-act="dismiss-promo" aria-label="Dismiss offer">${ic('close')}</button>
       </div>`}</div>
-      <div class="cats" role="group" aria-label="Cuisines">
-        ${CATS.map(c => `<button class="cat" type="button" data-act="cat" data-id="${c.id}" aria-pressed="${state.cat === c.id}">
-          <span class="ic" style="--cv:${c.color || 'var(--surface-2)'}">${c.art ? art(c.art) : ic('grid')}</span>${c.name}</button>`).join('')}
-      </div>
+      <div class="cats" role="group" aria-label="Cuisines">${CATS.map(catHTML).join('')}</div>
       <div id="rows"></div>
       <div class="toolbar" id="all-restaurants">
         <h2 id="res-title"></h2>
@@ -159,6 +201,7 @@ export function renderHome() {
   $('#q').addEventListener('input', e => { state.q = e.target.value; $('.search-clear').hidden = !state.q; updateResults(); });
   updateResults();
   loadLiveOrder();
+  fillHero();
 }
 
 function renderRows() {

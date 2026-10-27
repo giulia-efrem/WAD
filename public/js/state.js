@@ -36,18 +36,22 @@ export const state = {
 };
 
 /* ================= Catalog ================= */
+/* Cuisine shortcuts on the home page. Each one shows the cover photo of `from` (the illustration if it has none). */
 export const CATS = [
   { id: 'all', name: 'All' },
-  { id: 'pizza', name: 'Pizza', art: 'pizza', color: '#FFE2D1' },
-  { id: 'burgers', name: 'Burgers', art: 'burger', color: '#FFE9B8' },
-  { id: 'asian', name: 'Ramen', art: 'ramen', color: '#DCE8FB' },
-  { id: 'sushi', name: 'Sushi', art: 'sushi', color: '#DDF1EE' },
-  { id: 'healthy', name: 'Healthy', art: 'bowl', color: '#DDF3E1' },
-  { id: 'mexican', name: 'Mexican', art: 'taco', color: '#FFF0C4' },
-  { id: 'indian', name: 'Indian', art: 'curry', color: '#FFE4CC' },
-  { id: 'breakfast', name: 'Breakfast', art: 'breakfast', color: '#FFF4D6' },
-  { id: 'desserts', name: 'Desserts', art: 'cupcake', color: '#FCE0EC' }
+  { id: 'pizza', name: 'Pizza', art: 'pizza', color: '#FFE2D1', from: 'forno-sette' },
+  { id: 'burgers', name: 'Burgers', art: 'burger', color: '#FFE9B8', from: 'smash-society' },
+  { id: 'asian', name: 'Ramen', art: 'ramen', color: '#DCE8FB', from: 'bao-and-broth' },
+  { id: 'sushi', name: 'Sushi', art: 'sushi', color: '#DDF1EE', from: 'kaze-sushi' },
+  { id: 'healthy', name: 'Healthy', art: 'bowl', color: '#DDF3E1', from: 'green-theory' },
+  { id: 'mexican', name: 'Mexican', art: 'taco', color: '#FFF0C4', from: 'taqueria-luna' },
+  { id: 'indian', name: 'Indian', art: 'curry', color: '#FFE4CC', from: 'spice-route' },
+  { id: 'breakfast', name: 'Breakfast', art: 'breakfast', color: '#FFF4D6', from: 'morning-club' },
+  { id: 'desserts', name: 'Desserts', art: 'cupcake', color: '#FCE0EC', from: 'sweet-spot' }
 ];
+
+/* The dish photographed at the top of the home page. If it has no photo, the restaurant's cover is used. */
+export const HERO = { slug: 'forno-sette', item: 'margherita' };
 
 export const catalog = { list: [], menus: new Map() };
 export const R = slug => catalog.list.find(r => r.slug === slug) || null;

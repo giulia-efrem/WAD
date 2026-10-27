@@ -1045,3 +1045,11 @@ legend.opt-head + * { clear: both; }
 @media (max-width: 600px) { .panel { padding: 18px; } }
 .panel .radio-card:has(+ .err:empty) { margin-bottom: 0; }
 .panel .radio-card + .err:not(:empty) { margin-top: 8px; }
+
+/* ================= Polish: order tracking ================= */
+.detail-list li > :first-child { flex: none; white-space: nowrap; }
+.detail-list li > :last-child { text-align: right; }
+.track { padding-bottom: 64px; }
+/* On desktop the map stays in view beside the longer order details. */
+@media (min-width: 921px) { .track .map-col { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 92px); } }
+.sum-items li > :last-child { flex: none; }

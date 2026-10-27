@@ -7,10 +7,17 @@ import { renderCheckout } from './views/checkout.js';
 import { renderOrder } from './views/order.js';
 import { renderAccount } from './views/account.js';
 import { renderCredits, renderPage, renderNotFound } from './views/pages.js';
+import { renderSearch } from './views/search.js';
+import { renderReceipt } from './views/receipt.js';
+import { renderReset } from './views/reset.js';
+import { renderHelp } from './views/help.js';
+import { updateTabbar } from './views/tabbar.js';
 
 /* Every view has its own address, so a refresh, the back button and a shared link all land on the
    same page. The server sends index.html for each of these paths. */
-export const PATH_VIEWS = { '/credits': 'credits', '/about': 'about', '/help': 'help', '/terms': 'terms', '/privacy': 'privacy', '/account': 'account' };
+export const PATH_VIEWS = { '/credits': 'credits', '/about': 'about', '/help': 'help', '/terms': 'terms', '/privacy': 'privacy', '/reset-password': 'reset' };
+/* The account's tabs, each with its own address. */
+const ACCOUNT_PATHS = { orders: '/orders', profile: '/account', addresses: '/account/addresses', favorites: '/account/favourites' };
 
 export function pathFor(view, params = {}) {
   const enc = encodeURIComponent;
@@ -19,6 +26,10 @@ export function pathFor(view, params = {}) {
     case 'restaurant': return `/r/${enc(params.id)}${params.dish ? `?dish=${enc(params.dish)}` : ''}`;
     case 'checkout': return params.slug ? `/checkout/${enc(params.slug)}` : '/checkout';
     case 'order': return `/order/${enc(params.id)}`;
+    case 'search': return params.q ? `/search?q=${enc(params.q)}` : '/search';
+    case 'receipt': return `/receipt/${enc(params.id)}`;
+    case 'reset': return params.token ? `/reset-password?token=${enc(params.token)}` : '/reset-password';
+    case 'account': return ACCOUNT_PATHS[params.tab] || '/orders';
     default: return Object.keys(PATH_VIEWS).find(p => PATH_VIEWS[p] === view) || '/';
   }
 }
@@ -27,7 +38,12 @@ export function pathFor(view, params = {}) {
 export function routeOf(url) {
   const path = url.pathname.replace(/\/+$/, '') || '/';
   const parts = path.split('/').slice(1).map(decodeURIComponent);
+  if (path === '/reset-password') return { view: 'reset', params: { token: url.searchParams.get('token') || '' } };
   if (PATH_VIEWS[path]) return { view: PATH_VIEWS[path], params: {} };
+  if (path === '/search') return { view: 'search', params: { q: url.searchParams.get('q') || '' } };
+  const tab = Object.keys(ACCOUNT_PATHS).find(k => ACCOUNT_PATHS[k] === path);
+  if (tab) return { view: 'account', params: { tab } };
+  if (parts[0] === 'receipt' && parts[1] && parts.length === 2) return { view: 'receipt', params: { id: parts[1] } };
   if (parts[0] === 'r' && parts[1] && parts.length === 2) return { view: 'restaurant', params: { id: parts[1], ...(url.searchParams.get('dish') ? { dish: url.searchParams.get('dish') } : {}) } };
   if (parts[0] === 'order' && parts[1] && parts.length === 2) return { view: 'order', params: { id: parts[1] } };
   if (parts[0] === 'checkout' && parts.length <= 2) return { view: 'checkout', params: parts[1] ? { slug: parts[1] } : {} };
@@ -36,7 +52,8 @@ export function routeOf(url) {
   if (hash.startsWith('r-')) return { view: 'restaurant', params: { id: hash.slice(2) } };
   if (hash.startsWith('order-')) return { view: 'order', params: { id: hash.slice(6) } };
   if (hash.startsWith('checkout-')) return { view: 'checkout', params: { slug: hash.slice(9) } };
-  if (['checkout', 'account'].includes(hash)) return { view: hash, params: {} };
+  if (hash === 'checkout') return { view: 'checkout', params: {} };
+  if (hash === 'account') return { view: 'account', params: { tab: 'orders' } };
   return { view: 'home', params: {} };
 }
 
@@ -57,13 +74,18 @@ export function render(keepScroll) {
     case 'restaurant': renderRestaurant(state.params.id); break;
     case 'checkout': renderCheckout(); break;
     case 'order': renderOrder(state.params.id); break;
-    case 'account': renderAccount(); break;
+    case 'account': state.acctTab = state.params.tab || 'orders'; renderAccount(); break;
+    case 'receipt': renderReceipt(state.params.id); break;
+    case 'reset': renderReset(); break;
+    case 'help': renderHelp(); break;
+    case 'search': renderSearch(); break;
     case 'credits': renderCredits(); break;
-    case 'about': case 'help': case 'terms': case 'privacy': renderPage(state.view); break;
+    case 'about': case 'terms': case 'privacy': renderPage(state.view); break;
     case 'notfound': renderNotFound(); break;
     default: renderHome();
   }
   refreshOrderUI();
+  updateTabbar();
   if (keepScroll) window.scrollTo(0, y);
 }
 
@@ -75,7 +97,8 @@ export function go(view, params = {}) {
   if (view !== 'notfound' && location.pathname + location.search + location.hash !== path) history.pushState(null, '', path);
   render();
   window.scrollTo(0, 0);
-  app().focus({ preventScroll: true });
+  /* Focus moves to the new page, unless the page already put it somewhere (the search field). */
+  if (!app().contains(document.activeElement)) app().focus({ preventScroll: true });
 }
 
 /* Changes the address without adding a history step, e.g. when the dish window opens or closes. */

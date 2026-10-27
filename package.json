@@ -17,7 +17,8 @@
     "test": "node test/run.js api",
     "test:e2e": "node test/run.js e2e",
     "test:all": "node test/run.js all",
-    "remove-test-data": "node scripts/remove-test-data.js"
+    "remove-test-data": "node scripts/remove-test-data.js",
+    "test:sweep": "node test/run.js slow"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

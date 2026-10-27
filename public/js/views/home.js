@@ -5,6 +5,9 @@ import { state, catalog, CATS, PROMOS, R, menuOf, loadMenu, findItem, isOpen, no
 import { hasPhoto, photoImg, photoStyle, creditHTML, creditText } from '../photos.js';
 import { progress, isLive } from '../progress.js';
 import { stageCopy } from './order.js';
+import { dietDishes, DIETS } from '../search.js';
+import { attachSuggestions } from './searchbox.js';
+import { dietPills, openResult } from './search.js';
 import { app } from '../router.js';
 
 function greeting() {
@@ -15,22 +18,21 @@ function greeting() {
   return 'Good evening';
 }
 
-const searching = () => !!state.q.trim() || state.cat !== 'all' || state.openNow || state.freeDel || state.topRated;
+const searching = () => state.cat !== 'all' || state.openNow || state.freeDel || state.topRated || state.diets.length > 0;
 
+/* With dietary filters on, a restaurant needs at least one dish that has all of them,
+   and its card says how many it has ("12 vegan dishes"). */
 function filteredRestaurants() {
-  const q = state.q.trim().toLowerCase();
   const m = nowMin();
+  const diets = state.diets;
   let list = catalog.list.map((r, i) => {
-    let match = '';
-    if (q) {
-      const inName = (r.name + ' ' + r.label + ' ' + r.tagline + ' ' + r.cuisines.join(' ')).toLowerCase().includes(q);
-      if (!inName) {
-        const hit = r.dishes.find(d => d.name.toLowerCase().includes(q) || d.description.toLowerCase().includes(q) || (d.tags || []).some(t => t.replace('-', ' ').includes(q) || t.includes(q)));
-        if (hit) match = hit.name;
-        if (!match) return null;
-      }
+    let note = '';
+    if (diets.length) {
+      const n = dietDishes(r, diets).length;
+      if (!n) return null;
+      note = `${n} ${diets.map(d => DIETS[d].label.toLowerCase()).join(', ')} ${n === 1 ? 'dish' : 'dishes'}`;
     }
-    return { r, i, match, open: isOpen(r, m) };
+    return { r, i, match: '', note, open: isOpen(r, m) };
   }).filter(Boolean);
   if (state.cat !== 'all') list = list.filter(x => x.r.cuisines.includes(state.cat));
   if (state.openNow) list = list.filter(x => x.open);
@@ -62,7 +64,7 @@ function rowLists() {
   ].filter(row => row.items.length);
 }
 
-export function cardHTML({ r, match, open }, { size = 'card' } = {}) {
+export function cardHTML({ r, match, note, open }, { size = 'card' } = {}) {
   const fav = isFav(r);
   const fee = r.deliveryFee ? `${eur(r.deliveryFee)} delivery` : 'Free delivery';
   return `<article class="card ${open && !r.paused ? '' : 'is-closed'}" style="--cv:${r.color};--cvi:${r.ink}">
@@ -74,7 +76,7 @@ export function cardHTML({ r, match, open }, { size = 'card' } = {}) {
       <div class="card-name"><h3>${esc(r.name)}</h3><p class="card-meta">${esc(r.label)} · ${esc(r.priceLevel)}</p></div>
       <span class="rating rating-chip" aria-label="Rated ${r.rating.toFixed(1)} out of 5">${ic('star', 'fill')}${r.rating.toFixed(1)}</span>
       <p class="card-facts"><span>${ic('clock')}${etaText(r)}</span><span class="${r.deliveryFee ? '' : 'free'}">${ic('bike')}${fee}</span></p>
-      ${match ? `<p class="match">Serves ${esc(match)}</p>` : ''}
+      ${match ? `<p class="match">Serves ${esc(match)}</p>` : note ? `<p class="match">${esc(note)}</p>` : ''}
     </div>
     <button class="card-link" type="button" data-act="open-r" data-id="${esc(r.slug)}" aria-label="${esc(r.name)}. ${esc(r.label)}. ${r.eta.min} to ${r.eta.max} minutes. ${fee}. Rated ${r.rating.toFixed(1)}.${open ? '' : ' Closed now.'}"></button>
     <button class="fav" type="button" data-act="fav" data-id="${esc(r._id)}" aria-pressed="${fav}" aria-label="${fav ? 'Remove' : 'Save'} ${esc(r.name)} ${fav ? 'from' : 'to'} favourites">${ic('heart')}</button>
@@ -93,8 +95,8 @@ function topHTML() {
         ${def ? `<p class="home-sub">Delivering to <button class="link-btn" type="button" data-act="addr">${esc(def.label)}, ${esc(def.street)}</button></p>` : ''}
       </div>
       <div class="search" role="search">${ic('search')}
-        <input id="q" type="search" placeholder="Search restaurants or dishes" aria-label="Search restaurants, dishes or cuisines" autocomplete="off" value="${esc(state.q)}">
-        <button class="search-clear" type="button" data-act="clear-search" aria-label="Clear search" ${state.q ? '' : 'hidden'}>${ic('close')}</button>
+        <input id="q" type="search" placeholder="Search restaurants or dishes" aria-label="Search restaurants, dishes or cuisines" autocomplete="off" enterkeyhint="search">
+        <button class="search-clear" type="button" data-act="clear-search" aria-label="Clear search" hidden>${ic('close')}</button>
       </div>
     </section>`;
 }
@@ -165,6 +167,7 @@ export function renderHome() {
               <option value="rating">Top rated</option>
               <option value="fee">Lowest delivery fee</option>
             </select>${ic('chevron')}</label>
+          ${dietPills()}
           <button class="pill" type="button" data-act="filter" data-f="openNow" aria-pressed="${state.openNow}">Open now</button>
           <button class="pill" type="button" data-act="filter" data-f="freeDel" aria-pressed="${state.freeDel}">Free delivery</button>
           <button class="pill" type="button" data-act="filter" data-f="topRated" aria-pressed="${state.topRated}">Rated 4.8+</button>
@@ -174,7 +177,7 @@ export function renderHome() {
     </section>`;
   $('#sort').value = state.sort;
   $('#sort').addEventListener('change', e => { state.sort = e.target.value; updateResults(); });
-  $('#q').addEventListener('input', e => { state.q = e.target.value; $('.search-clear').hidden = !state.q; updateResults(); });
+  attachSuggestions($('#q'), { onPick: openResult, onInput: v => { $('.search-clear').hidden = !v; } });
   updateResults();
   loadLiveOrder();
   fillPromos();
@@ -183,8 +186,6 @@ export function renderHome() {
 function renderRows() {
   const box = $('#rows');
   if (!box) return;
-  const promos = $('#promos');
-  if (promos) promos.hidden = !!state.q.trim();
   if (searching()) { box.innerHTML = ''; return; }
   box.innerHTML = rowLists().map(row => `
     <section class="row-sec" aria-labelledby="row-${row.id}">
@@ -212,11 +213,11 @@ export function updateResults() {
   renderRows();
   const list = filteredRestaurants();
   const cat = CATS.find(c => c.id === state.cat);
-  const title = state.q.trim() ? 'Results' : state.cat === 'all' ? 'All restaurants' : cat.name;
+  const title = state.cat === 'all' ? 'All restaurants' : cat.name;
   $('#res-title').innerHTML = `${esc(title)}<span class="count">${list.length}</span>`;
   $('#results').innerHTML = list.length
     ? `<div class="grid">${list.map(x => cardHTML(x)).join('')}</div>`
-    : `<div class="empty"><div class="empty-art">${art('bowl')}</div><h3>Nothing matches yet</h3><p>${state.q.trim() ? `No restaurants or dishes match “${esc(state.q.trim())}”. Try something like ramen, tacos or cheesecake.` : 'No restaurants match these filters right now.'}</p><button class="btn btn-secondary" type="button" data-act="reset-filters">Clear search and filters</button></div>`;
+    : `<div class="empty"><div class="empty-art">${art('bowl')}</div><h3>Nothing matches yet</h3><p>No restaurants match these filters right now.</p><button class="btn btn-secondary" type="button" data-act="reset-filters">Clear filters</button></div>`;
 }
 
 async function loadLiveOrder() {

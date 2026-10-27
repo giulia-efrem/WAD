@@ -368,3 +368,10 @@
 /* Sticky at the spot it already sits in, so the side menu doesn't shift between long and short sections. */
 .admin-side { top: 69px; }
 @media (max-width: 960px) { .admin-side { top: 68px; } }
+
+/* Messages from the Help centre */
+.side-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 8px; padding: 0 6px; border-radius: 999px; background: var(--brand); color: #fff; font-size: 0.72rem; font-weight: 700; line-height: 1; }
+.a-message .msg-body { white-space: pre-line; }
+.a-message .msg-meta { margin: 6px 0 0; font-size: var(--fs-sm); }
+.a-message.is-done { opacity: 0.8; }
+.a-review-foot .btn + .btn, .a-review-foot a.btn { margin-left: 8px; }

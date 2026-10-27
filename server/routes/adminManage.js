@@ -8,6 +8,7 @@ const Order = require('../models/Order');
 const Review = require('../models/Review');
 const User = require('../models/User');
 const Promo = require('../models/Promo');
+const Message = require('../models/Message');
 const { getSetting, setSetting } = require('../models/Setting');
 const validate = require('../middleware/validate');
 const { requireAdmin } = require('../middleware/auth');
@@ -82,7 +83,8 @@ router.get('/overview', async (req, res) => {
     topDishes: dishes.map(d => ({ name: d._id.d, restaurant: d._id.r, qty: d.qty, revenue: d.revenue })),
     topRestaurants: restaurants.map(r => ({ _id: String(r._id), name: r.name, orders: r.orders, revenue: r.revenue })),
     live: Object.fromEntries(flow.ACTIVE.map(s => [s, (live.find(x => x._id === s) || { n: 0 }).n])),
-    autopilot: !!(await getSetting('autopilot'))
+    autopilot: !!(await getSetting('autopilot')),
+    unreadMessages: await Message.countDocuments({ status: 'new' })
   });
 });
 
@@ -117,9 +119,10 @@ const restaurantFields = {
   color: hex,
   ink: hex,
   illustration: z.enum(ILLUSTRATIONS, { error: 'Choose an illustration.' }),
-  paused: z.boolean()
+  paused: z.boolean(),
+  address: z.object({ street: z.string().trim().max(120, 'Use a shorter street.'), area: z.string().trim().max(80, 'Use a shorter area.') })
 };
-const createRestaurant = z.object({ ...restaurantFields, cuisines: restaurantFields.cuisines.optional().default([]), label: restaurantFields.label.optional().default(''), tagline: restaurantFields.tagline.optional().default(''), priceLevel: restaurantFields.priceLevel.optional().default('€€'), color: hex.optional().default('#FFE2D1'), ink: hex.optional().default('#8A3413'), illustration: restaurantFields.illustration.optional().default('bowl'), paused: z.boolean().optional().default(false) });
+const createRestaurant = z.object({ ...restaurantFields, cuisines: restaurantFields.cuisines.optional().default([]), label: restaurantFields.label.optional().default(''), tagline: restaurantFields.tagline.optional().default(''), priceLevel: restaurantFields.priceLevel.optional().default('€€'), color: hex.optional().default('#FFE2D1'), ink: hex.optional().default('#8A3413'), illustration: restaurantFields.illustration.optional().default('bowl'), paused: z.boolean().optional().default(false), address: restaurantFields.address.optional().default({ street: '', area: '' }) });
 const updateRestaurant = z.object(restaurantFields).partial();
 const slugParams = z.object({ slug });
 
@@ -127,7 +130,7 @@ const restaurantRow = (r, counts) => ({
   _id: String(r._id), slug: r.slug, name: r.name, label: r.label, cuisines: r.cuisines, tagline: r.tagline, priceLevel: r.priceLevel,
   rating: r.rating, reviewCount: r.reviewCount, eta: r.eta, deliveryFee: r.deliveryFee, minOrder: r.minOrder,
   hours: r.hours.map(h => ({ open: h.open, close: h.close })), color: r.color, ink: r.ink, illustration: r.illustration,
-  image: r.image || '', paused: !!r.paused, seeded: !!r.seeded,
+  image: r.image || '', paused: !!r.paused, seeded: !!r.seeded, address: { street: (r.address && r.address.street) || '', area: (r.address && r.address.area) || '' },
   dishes: r.menu.reduce((s, x) => s + x.items.length, 0), soldOut: r.menu.reduce((s, x) => s + x.items.filter(i => i.soldOut).length, 0),
   ordersToday: counts.get(String(r._id)) || 0
 });
@@ -515,6 +518,50 @@ router.patch('/promos/:id', validate(z.object({ id: objectId('promo') }), 'param
   checkPromoValue(p);
   await p.save();
   res.json({ promo: (await promoRows([p]))[0] });
+});
+
+/* ================= Messages from the contact form ================= */
+
+const messageOut = m => ({
+  _id: String(m._id), name: m.name, email: m.email, topic: m.topic, body: m.body, status: m.status, note: m.note,
+  order: m.order ? { _id: String(m.order._id), restaurantName: m.order.restaurantName, createdAt: m.order.createdAt, status: m.order.status } : null,
+  account: m.user ? { _id: String(m.user._id), name: m.user.name, email: m.user.email } : null,
+  handledBy: m.handledBy ? m.handledBy.name : null, handledAt: m.handledAt, createdAt: m.createdAt
+});
+
+router.get('/messages', validate(z.object({
+  status: z.enum(['all', ...Message.STATUSES]).optional().default('new'),
+  q: z.string().trim().max(80).optional().default(''),
+  page: z.coerce.number().int().min(1).max(500).optional().default(1)
+}), 'query'), async (req, res) => {
+  const { status, q, page } = req.valid.query;
+  const filter = {};
+  if (status !== 'all') filter.status = status;
+  if (q) { const re = new RegExp(escapeRe(q), 'i'); filter.$or = [{ name: re }, { email: re }, { body: re }]; }
+  const PAGE = 25;
+  const [list, total, unread] = await Promise.all([
+    Message.find(filter).sort({ createdAt: -1 }).skip((page - 1) * PAGE).limit(PAGE).populate('order', 'restaurantName createdAt status').populate('user', 'name email').populate('handledBy', 'name'),
+    Message.countDocuments(filter),
+    Message.countDocuments({ status: 'new' })
+  ]);
+  res.json({ messages: list.map(messageOut), total, unread, page, hasMore: page * PAGE < total });
+});
+
+router.patch('/messages/:id', validate(z.object({ id: objectId('message') }), 'params'), validate(z.object({
+  status: z.enum(Message.STATUSES).optional(),
+  note: z.string().trim().max(1000).optional()
+})), async (req, res) => {
+  const m = await Message.findById(req.valid.params.id);
+  if (!m) throw notFound('We couldn’t find that message.');
+  if (req.body.status && req.body.status !== m.status) {
+    m.status = req.body.status;
+    m.handledBy = m.status === 'done' ? req.user._id : null;
+    m.handledAt = m.status === 'done' ? new Date() : null;
+  }
+  if (typeof req.body.note === 'string') m.note = req.body.note;
+  await m.save();
+  await m.populate([{ path: 'order', select: 'restaurantName createdAt status' }, { path: 'user', select: 'name email' }, { path: 'handledBy', select: 'name' }]);
+  res.json({ message: messageOut(m) });
 });
 
 module.exports = router;

@@ -19,7 +19,10 @@ const demoSpeed = Number(process.env.DEMO_SPEED || 30);
 const config = {
   root: ROOT,
   publicDir: path.join(ROOT, 'public'),
-  uploadsDir: path.join(ROOT, 'uploads'),
+  uploadsDir: process.env.UPLOADS_DIR ? path.resolve(process.env.UPLOADS_DIR) : path.join(ROOT, 'uploads'),
+  /* Where the photo choices (images.json, photo-candidates.json) are kept. The test server points
+     this at a copy, so tests never change the real files. */
+  photoFilesDir: process.env.PHOTO_FILES_DIR ? path.resolve(process.env.PHOTO_FILES_DIR) : path.join(ROOT, 'seed'),
   mongoUri: required('MONGODB_URI'),
   jwtSecret: required('JWT_SECRET'),
   port: Number(process.env.PORT || 3000),

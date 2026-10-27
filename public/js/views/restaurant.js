@@ -1,11 +1,12 @@
-import { $, $$, esc, eur, clamp, logoBadge } from '../util.js';
+import { $, $$, esc, eur, clamp, logoBadge, hhmm } from '../util.js';
 import { ic, art } from '../art.js';
 import { state, R, menuOf, loadMenu, findItem, isOpen, blockReason, opensAt, closesAt, is247, hoursText, etaText, isFav, qtyOfItem, selectedOptions, missingChoices, isPrimaryGroup, ingredientWords, dealPrice, dealSaving, mainPart, lineKey, MAX_QTY, basketLines, addLine, replaceLine, removeLine } from '../state.js';
 import { hasPhoto, photoImg, photoStyle, creditHTML } from '../photos.js';
 import { openModal, closeModal, toast } from '../ui.js';
 import { orderHTML, refreshOrderUI } from './basket.js';
 import { renderReviews } from './reviews.js';
-import { app, onLeave } from '../router.js';
+import { app, onLeave, setPath } from '../router.js';
+import { dishMatches } from '../search.js';
 import { renderNotFound } from './pages.js';
 
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -58,7 +59,12 @@ function drawRestaurant(r) {
           <li>${ic('bike')}<strong class="${r.deliveryFee ? '' : 'free'}">${r.deliveryFee ? `${eur(r.deliveryFee)} delivery` : 'Free delivery'}</strong></li>
           <li>${ic('bag')}<span>Min. <strong>${eur(r.minOrder)}</strong></span></li>
           <li class="r-open"><span class="open-state ${open ? '' : 'closed'}"><span class="dot" aria-hidden="true"></span>${openText}</span>${is247(r) ? '' : `<small>${hoursText(r)}</small>`}</li>
+          <li><button class="link-btn info-btn" type="button" data-act="r-info">${ic('info')}Info and allergens</button></li>
         </ul>
+      </div>
+      <div class="search menu-search" role="search">${ic('search')}
+        <input id="menu-q" type="search" placeholder="Search the menu" aria-label="Search ${esc(r.name)}’s menu" autocomplete="off" enterkeyhint="search">
+        <button class="search-clear" type="button" data-act="clear-menu-q" aria-label="Clear menu search" hidden>${ic('close')}</button>
       </div>
       ${r.paused ? `<p class="notice">${esc(r.name)} isn’t taking new orders right now. Have a look at the menu and check back a little later.</p>` : open ? '' : `<p class="notice">${esc(r.name)} is closed right now. Have a look at the menu, and order from ${opensAt(r)}.</p>`}
     </div>
@@ -68,7 +74,8 @@ function drawRestaurant(r) {
     </nav></div>
     <div class="wrap r-body">
       <div class="r-main menu">
-        ${sections.map(s => `<section class="menu-sec" id="sec-${slug(s.category)}" aria-labelledby="h-${slug(s.category)}">
+        <div class="menu-empty" id="menu-empty" hidden></div>
+        ${sections.map(s => `<section class="menu-sec ${s === sections[0] && popular.length ? 'is-popular' : ''}" id="sec-${slug(s.category)}" aria-labelledby="h-${slug(s.category)}" data-category="${esc(s.category)}">
           <h2 id="h-${slug(s.category)}">${esc(s.category)}</h2>
           <div class="items">${s.items.map(it => itemHTML(r, it)).join('')}</div>
         </section>`).join('')}
@@ -79,6 +86,16 @@ function drawRestaurant(r) {
   refreshItemBadges();
   refreshOrderUI();
   renderReviews(r.slug, $('#reviews-box'));
+  $('#menu-q').addEventListener('input', e => filterMenu(r, e.target.value));
+  /* An address with ?dish= (a search result, a shared link) opens that dish. */
+  if (state.params.dish) {
+    const it = findItem(r, state.params.dish);
+    if (it) {
+      const el = $(`.item[data-i="${CSS.escape(it.slug)}"]`);
+      if (el) el.scrollIntoView({ block: 'center' });
+      openItem(r.slug, it.slug);
+    } else setPath({ dish: undefined });
+  }
   if ('IntersectionObserver' in window) {
     const tabs = $$('#menu-tabs button');
     const io = new IntersectionObserver(entries => {
@@ -95,6 +112,73 @@ function drawRestaurant(r) {
     onLeave(() => io.disconnect());
   }
 }
+
+/* The menu search: dishes whose name, description, labels or section match, sections with none hidden.
+   The Popular section steps aside while searching, so a dish isn't listed twice. */
+function filterMenu(r, q) {
+  const on = !!q.trim();
+  $('[data-act="clear-menu-q"]').hidden = !on;
+  let shown = 0;
+  $$('.menu-sec:not(.reviews)').forEach(sec => {
+    if (sec.classList.contains('is-popular')) { sec.hidden = on; return; }
+    let n = 0;
+    $$('.item', sec).forEach(el => {
+      const it = findItem(r, el.dataset.i);
+      const ok = !on || (it && dishMatches(q, { ...it, category: sec.dataset.category }));
+      el.hidden = !ok;
+      if (ok) n++;
+    });
+    sec.hidden = n === 0;
+    shown += n;
+  });
+  $('#sec-reviews').hidden = on;
+  $$('#menu-tabs button').forEach(b => { const sec = document.getElementById(b.dataset.sec); b.hidden = !!(sec && sec.hidden); });
+  const empty = $('#menu-empty');
+  empty.hidden = !on || shown > 0;
+  if (!empty.hidden) empty.innerHTML = `<div class="empty"><div class="empty-art">${art(r.illustration)}</div><h2>No dishes match “${esc(q.trim())}”</h2><p>Try another word, or see the whole menu.</p><button class="btn btn-secondary" type="button" data-act="clear-menu-q">Show the whole menu</button></div>`;
+}
+export function clearMenuSearch() {
+  const input = $('#menu-q');
+  const r = menuOf(state.params.id);
+  if (!input || !r) return;
+  input.value = '';
+  filterMenu(r, '');
+  input.focus();
+}
+
+/* ================= Restaurant info ================= */
+/* Where it is, when it's open each day (today marked), delivery terms and the allergens in its kitchen. */
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const rangeText = h => (h.open === 0 && h.close === 1440 ? 'Open 24 hours' : `${hhmm(h.open)} to ${hhmm(h.close)}${h.close > 1440 ? ' (next day)' : ''}`);
+export function openInfo(rid) {
+  const r = menuOf(rid);
+  if (!r) return;
+  const today = (new Date().getDay() + 6) % 7;
+  const allergens = (r.allergens || []).map(a => ALLERGEN_NAMES[a] || a);
+  const where = r.address && r.address.street ? `${esc(r.address.street)}, ${esc(r.address.area)}` : '';
+  openModal(`
+    <div class="modal-head"><h2 id="info-title">${esc(r.name)}</h2><p>${esc(r.label)} · ${esc(r.priceLevel)} · ${esc(r.tagline)}</p></div>
+    <div class="modal-body info-body">
+      ${where ? `<section class="info-sec" aria-labelledby="in-addr"><h3 id="in-addr">${ic('pin')}Address</h3><p>${where}</p></section>` : ''}
+      <section class="info-sec" aria-labelledby="in-hours"><h3 id="in-hours">${ic('clock')}Opening hours</h3>
+        <table class="info-hours"><caption class="visually-hidden">Opening hours for each day</caption><tbody>
+          ${DAYS.map((d, i) => `<tr ${i === today ? 'aria-current="date"' : ''}><th scope="row">${d}${i === today ? ' <span class="today">Today</span>' : ''}</th><td>${r.hours.map(rangeText).join(', ')}</td></tr>`).join('')}
+        </tbody></table>
+        <p class="info-now"><span class="open-state ${isOpen(r) ? '' : 'closed'}"><span class="dot" aria-hidden="true"></span>${r.paused ? 'Not taking orders right now' : isOpen(r) ? (is247(r) ? 'Open now, all day' : `Open now, until ${closesAt(r)}`) : `Closed now, opens at ${opensAt(r)}`}</span></p>
+      </section>
+      <section class="info-sec" aria-labelledby="in-del"><h3 id="in-del">${ic('bike')}Delivery</h3>
+        <dl class="info-list"><div><dt>Delivery time</dt><dd>${etaText(r)}</dd></div><div><dt>Delivery fee</dt><dd>${r.deliveryFee ? eur(r.deliveryFee) : 'Free'}</dd></div><div><dt>Minimum order</dt><dd>${eur(r.minOrder)}</dd></div></dl>
+      </section>
+      <section class="info-sec" aria-labelledby="in-all"><h3 id="in-all">${ic('info')}Allergens</h3>
+        <p>${allergens.length ? `This kitchen handles <strong>${allergens.join(', ')}</strong>. Traces may be present in any dish.` : 'No major allergens are listed on this menu.'}</p>
+        <p class="muted">Every dish lists its own allergens in its window. If you have a severe allergy, add a note for the kitchen and <a href="/help#contact">contact us</a> before you order.</p>
+      </section>
+    </div>`, { label: 'info-title' });
+}
+
+/* The address names the open dish (/r/forno-sette?dish=margherita), so it can be shared or reloaded. */
+const dishOpened = iid => { if (state.view === 'restaurant') setPath({ dish: iid }); };
+const dishClosed = () => { if (state.view === 'restaurant' && state.params.dish) setPath({ dish: undefined }); };
 
 const TAG_LABELS = { vegetarian: 'Vegetarian', vegan: 'Vegan', spicy: 'Spicy', 'gluten-free': 'Gluten-free', 'contains-nuts': 'Contains nuts' };
 const tagsHTML = tags => (tags && tags.length ? `<span class="dish-tags">${tags.map(t => `<span class="dtag dtag-${t}">${TAG_LABELS[t] || esc(t)}</span>`).join('')}</span>` : '');
@@ -165,6 +249,7 @@ export function openItem(rid, iid, { edit = null } = {}) {
   const r = menuOf(rid);
   const it = r && findItem(r, iid);
   if (!r || !it) return;
+  if (!edit) dishOpened(iid);
   if (it.kind === 'deal') { openDeal(r, it, { edit }); return; }
   const why = blockReason(r, it);
   const open = !why;
@@ -204,7 +289,7 @@ export function openItem(rid, iid, { edit = null } = {}) {
     <div class="modal-foot">
       <div class="qty" role="group" aria-label="Quantity"><button type="button" data-q="-1" aria-label="Decrease quantity">${ic('minus')}</button><span id="item-qty">${qty}</span><button type="button" data-q="1" aria-label="Increase quantity">${ic('plus')}</button></div>
       <button class="btn btn-primary btn-split" type="button" id="item-add" style="flex:1"></button>
-    </div>`, { label: 'item-title' });
+    </div>`, { label: 'item-title', onClose: dishClosed });
   const w = m.wrap;
   const unit = () => selectedOptions(it, sel, remove).unitPrice;
   const refresh = () => {
@@ -320,7 +405,7 @@ function openDeal(r, it, { edit = null } = {}) {
     <div class="modal-foot">
       <div class="qty" role="group" aria-label="Quantity"><button type="button" data-q="-1" aria-label="Decrease quantity">${ic('minus')}</button><span id="item-qty">${qty}</span><button type="button" data-q="1" aria-label="Increase quantity">${ic('plus')}</button></div>
       <button class="btn btn-primary btn-split" type="button" id="item-add" style="flex:1"></button>
-    </div>`, { label: 'item-title' });
+    </div>`, { label: 'item-title', onClose: dishClosed });
   const w = m.wrap;
   /* What's still to choose, in the order it appears: the main part, its own required choices, then the other parts. */
   const missing = () => {

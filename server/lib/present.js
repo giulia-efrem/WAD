@@ -39,8 +39,16 @@ function restaurantCard(r, now = new Date()) {
     isOpen: isOpenNow(r.hours, now),
     /* Paused by the restaurant or an admin: shown, but not taking orders. */
     paused: !!r.paused,
-    /* Lets the home page search dishes (and their tags) without loading every menu. */
-    dishes: r.menu.flatMap(s => s.items.map(it => ({ name: it.name, description: it.description, tags: it.tags || [] })))
+    /* Lets search find dishes (and their tags) and show them with a photo and price, without
+       loading every menu. A meal deal shows its main dish's photo, as on the menu. */
+    dishes: r.menu.flatMap(s => s.items.map(it => {
+      const photo = it.kind === 'deal' && it.deal ? dealOut(r, it).photo : it;
+      return {
+        slug: it.slug, name: it.name, description: it.description, tags: it.tags || [], category: s.category,
+        kind: it.kind || 'main', price: it.price, popular: !!it.popular, soldOut: !!it.soldOut,
+        image: photo.image || '', imageColor: photo.imageColor || ''
+      };
+    }))
   };
 }
 
@@ -61,10 +69,15 @@ function dealOut(r, it) {
   };
 }
 
+/* Every EU allergen that appears somewhere on the menu, for the restaurant's info section. */
+const menuAllergens = r => [...new Set(r.menu.flatMap(s => s.items.flatMap(it => it.allergens || [])))].sort();
+
 function restaurantDetail(r, now = new Date()) {
   const { dishes, ...card } = restaurantCard(r, now);
   return {
     ...card,
+    address: { street: (r.address && r.address.street) || '', area: (r.address && r.address.area) || '' },
+    allergens: menuAllergens(r),
     menu: r.menu.map(s => ({
       category: s.category,
       items: s.items.map(it => ({

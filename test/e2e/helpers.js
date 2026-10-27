@@ -23,9 +23,11 @@ async function launch() {
 async function closeBrowser() { if (browser) { await browser.close(); browser = null; } }
 
 /* A fresh browser profile and page. Page errors and console errors are collected in page.problems. */
-async function newPage({ width = 1440, height = 900, theme = 'light', mobile = width < 600 } = {}) {
+/* The cookie notice starts dismissed (it would cover buttons at the bottom), unless cookies: true. */
+async function newPage({ width = 1440, height = 900, theme = 'light', mobile = width < 600, cookies = false } = {}) {
   const b = await launch();
   const ctx = await b.newContext({ viewport: { width, height }, colorScheme: theme, reducedMotion: 'reduce', isMobile: mobile, hasTouch: mobile });
+  if (!cookies) await ctx.addInitScript(() => { try { localStorage.setItem('morsel.cookieNotice', 'true'); } catch (e) { /* no storage */ } });
   const page = await ctx.newPage();
   page.problems = [];
   page.on('pageerror', e => page.problems.push('page error: ' + e.message));

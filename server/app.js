@@ -49,6 +49,7 @@ app.use('/api/admin', require('./routes/adminManage'));
 app.use('/api/partner', require('./routes/partner'));
 app.use('/api/courier', require('./routes/courier'));
 app.use('/api/credits', require('./routes/credits'));
+app.use('/api/contact', require('./routes/contact'));
 app.use('/api', notFoundApi);
 
 app.use('/uploads', express.static(config.uploadsDir, { maxAge: '7d' }));
@@ -58,7 +59,7 @@ app.get('/admin/photos', (req, res) => res.sendFile(path.join(config.publicDir, 
 app.get('/partner', (req, res) => res.sendFile(path.join(config.publicDir, 'partner.html')));
 app.get('/courier', (req, res) => res.sendFile(path.join(config.publicDir, 'courier.html')));
 /* Pages of the main app with their own address. The front end picks the view from the path. */
-app.get(['/credits', '/about', '/help', '/terms', '/privacy', '/account', '/checkout', '/checkout/:slug', '/r/:slug', '/order/:id'],
+app.get(['/credits', '/about', '/help', '/terms', '/privacy', '/account', '/checkout', '/checkout/:slug', '/r/:slug', '/order/:id', '/search', '/receipt/:id', '/reset-password', '/orders', '/account/addresses', '/account/favourites'],
   (req, res) => res.sendFile(path.join(config.publicDir, 'index.html')));
 app.use(express.static(config.publicDir, { extensions: ['html'] }));
 

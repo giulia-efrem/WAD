@@ -27,4 +27,24 @@ const signupLimiter = rateLimit({
   handler
 });
 
-module.exports = { loginLimiter, signupLimiter };
+/* Forgot-password requests and reset attempts. RESET_LIMIT exists for the test server. */
+const resetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: Number(process.env.RESET_LIMIT) || 10,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: 'Too many password reset attempts. Wait 15 minutes and try again.',
+  handler
+});
+
+/* The contact form. CONTACT_LIMIT exists for the test server. */
+const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: Number(process.env.CONTACT_LIMIT) || 8,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: 'You’ve sent several messages already. We’ll be in touch; try again in an hour if it’s urgent.',
+  handler
+});
+
+module.exports = { loginLimiter, signupLimiter, resetLimiter, contactLimiter };

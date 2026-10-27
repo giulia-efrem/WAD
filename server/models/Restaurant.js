@@ -98,6 +98,8 @@ const restaurantSchema = new mongoose.Schema({
   deliveryFee: { type: Number, required: true, min: 0 },
   minOrder: { type: Number, required: true, min: 0 },
   hours: { type: [{ open: Number, close: Number, _id: false }], default: [] },
+  /* Where the kitchen is, shown in the restaurant's info section. */
+  address: { street: { type: String, default: '', trim: true, maxlength: 120 }, area: { type: String, default: '', trim: true, maxlength: 80 } },
   color: { type: String, default: '#EEE' },
   ink: { type: String, default: '#333' },
   illustration: { type: String, default: 'bowl' },

@@ -53,6 +53,7 @@ function buildRestaurant(r, i, images) {
     deliveryFee: r.deliveryFee,
     minOrder: r.minOrder,
     hours: r.hours,
+    address: r.address,
     color: r.color,
     ink: r.ink,
     illustration: r.illustration,

@@ -69,7 +69,8 @@ const PAGES = {
     title: 'Privacy',
     lead: 'What Morsel stores about you, and why.',
     body: `<h2>What we store</h2><p>Your name, email address, a secure hash of your password, your saved addresses, your favourite restaurants and your orders. We use them only to run the app.</p>
-      <h2>In your browser</h2><p>Your bag and dismissed messages are kept in your browser so they survive a reload. A login cookie keeps you signed in; it can't be read by scripts on the page.</p>
+      <h2 id="cookies">Cookies</h2><p>Morsel uses one cookie, and only because the site needs it: it keeps you logged in. It can’t be read by scripts on the page, and it expires after seven days or when you log out. There are no tracking, analytics or advertising cookies, so there’s nothing to accept or refuse.</p>
+      <h2>In your browser</h2><p>Your baskets, and a note that you’ve seen the cookie message, are kept in your browser’s storage so they survive a reload. They never leave your device.</p>
       <h2>Photos</h2><p>Photos are shown directly from Unsplash, so your browser loads them from Unsplash's servers.</p>`
   }
 };

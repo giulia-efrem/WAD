@@ -46,7 +46,7 @@ export const state = {
   orderCount: 0,
   view: 'home',
   params: {},
-  q: '', cat: 'all', sort: 'recommended', openNow: false, freeDel: false, topRated: false,
+  q: '', cat: 'all', sort: 'recommended', openNow: false, freeDel: false, topRated: false, diets: [], searchAllDishes: false,
   baskets: stored.baskets,
   promo: stored.promo,
   /* The rules of the applied code, from the server ({ code, type, value, maxDiscount, minSubtotal, firstOrderOnly }). */
@@ -338,7 +338,7 @@ export function priceRows(p, opts = {}) {
   rows.push(['Delivery', p.deliveryFee === 0 ? '<span class="free">Free</span>' : p.deliveryDiscount ? `<span class="strike">${eur(p.deliveryFee)}</span><span class="free">Free</span>` : eur(p.deliveryFee)]);
   if (!opts.noService) rows.push(['Service fee', eur(p.serviceFee)]);
   if (p.smallOrderFee && !opts.noService) rows.push(['Small order fee', eur(p.smallOrderFee)]);
-  if (p.discount) rows.push([`Promo ${esc(state.promo || opts.promo || '')}`, `<span class="neg">−${eur(p.discount)}</span>`]);
+  if (p.discount) rows.push([`Promo ${esc(opts.promo || state.promo || '')}`, `<span class="neg">−${eur(p.discount)}</span>`]);
   if (opts.tip) rows.push(['Courier tip', eur(p.tip)]);
   return `<dl class="rows">${rows.map(([a, b]) => `<div class="row"><dt>${a}</dt><dd>${b}</dd></div>`).join('')}${opts.noTotal ? '' : `<div class="row total"><dt>${opts.totalLabel || 'Total'}</dt><dd>${eur(p.total)}</dd></div>`}</dl>`;
 }

@@ -28,6 +28,9 @@ const userSchema = new mongoose.Schema({
   disabled: { type: Boolean, default: false },
   /* Raised on password change or disable, which signs out every existing session. */
   tokenVersion: { type: Number, default: 0 },
+  /* "Forgot password": a SHA-256 hash of the one-time token in the reset link, and when it stops working. */
+  resetTokenHash: { type: String, default: '' },
+  resetTokenExpires: { type: Date, default: null },
   addresses: { type: [addressSchema], default: [] },
   favorites: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant' }], default: [] },
   /* Created by npm run seed; re-seeding replaces only these. */

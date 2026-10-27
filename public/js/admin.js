@@ -8,7 +8,7 @@ import { call, toast, gate, statusChip, shortId, linesHTML, whenText, ROLE_LABEL
    settings. Every change goes through /api/admin, which checks the admin role on each request. */
 
 const root = $('#staff');
-const SECTIONS = ['overview', 'orders', 'restaurants', 'menus', 'users', 'reviews', 'promos', 'settings'];
+const SECTIONS = ['overview', 'orders', 'restaurants', 'menus', 'users', 'reviews', 'messages', 'promos', 'settings'];
 const STATUSES = ['placed', 'accepted', 'preparing', 'ready', 'pickedup', 'delivered', 'cancelled'];
 const KINDS = ['main', 'starter', 'side', 'drink', 'dessert', 'deal'];
 const TAGS = ['vegetarian', 'vegan', 'spicy', 'gluten-free', 'contains-nuts'];
@@ -23,7 +23,8 @@ const view = { section: 'overview', param: '' };
 const filters = {
   orders: { status: 'all', restaurant: '', from: '', to: '', q: '' },
   users: { q: '', role: 'all' },
-  reviews: { restaurant: '', show: 'all', q: '' }
+  reviews: { restaurant: '', show: 'all', q: '' },
+  messages: { status: 'new', q: '' }
 };
 
 /* ---------- Small helpers ---------- */
@@ -76,7 +77,7 @@ function route() {
   view.param = decodeURIComponent(param);
   $$('#side a[data-sec]').forEach(a => { if (a.dataset.sec === view.section) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
   document.title = `${cap(view.section === 'promos' ? 'Promo codes' : view.section)} · Morsel admin`;
-  ({ overview: drawOverview, orders: drawOrders, restaurants: drawRestaurants, menus: drawMenus, users: drawUsers, reviews: drawReviews, promos: drawPromos, settings: drawSettings })[view.section]();
+  ({ overview: drawOverview, orders: drawOrders, restaurants: drawRestaurants, menus: drawMenus, users: drawUsers, reviews: drawReviews, messages: drawMessages, promos: drawPromos, settings: drawSettings })[view.section]();
 }
 
 /* ================= Overview ================= */
@@ -180,6 +181,8 @@ let ordersPage = 1;
 async function drawOrders() {
   const f = filters.orders;
   if (view.param === 'active') { f.status = 'active'; view.param = ''; history.replaceState(null, '', '#orders'); }
+  /* #orders/ID (a link from a message) opens that order's details over the list. */
+  if (/^[a-f0-9]{24}$/i.test(view.param)) { const id = view.param; view.param = ''; history.replaceState(null, '', '#orders'); setTimeout(() => openOrder(id), 0); }
   root.innerHTML = `
     <div class="staff-head"><div><h1>Orders</h1><p class="muted" id="o-count">Loading…</p></div></div>
     <form class="filter-bar" id="o-filters" role="search">
@@ -684,6 +687,62 @@ async function loadReviews(page) {
   $('#rv-more').hidden = !d.hasMore;
 }
 
+/* ================= Messages from the Help centre ================= */
+
+const TOPIC_LABEL = { order: 'An order', payment: 'Payment or promo code', account: 'Account', restaurant: 'A restaurant', partner: 'Partner or courier', other: 'Something else' };
+let messagesPage = 1;
+/* The side menu shows how many messages nobody has dealt with yet. */
+function setUnread(n) {
+  const a = $('#side a[data-sec="messages"]');
+  if (!a) return;
+  let b = a.querySelector('.side-count');
+  if (!n) { if (b) b.remove(); return; }
+  if (!b) { b = document.createElement('span'); b.className = 'side-count'; a.appendChild(b); }
+  b.textContent = n;
+  b.setAttribute('aria-label', `${n} new`);
+}
+async function drawMessages() {
+  const f = filters.messages;
+  root.innerHTML = `
+    <div class="staff-head"><div><h1>Messages</h1><p class="muted" id="msg-count">Loading…</p></div></div>
+    <p class="staff-note">Sent with the contact form in the Help centre. Reply by email, then mark the message as handled.</p>
+    <form class="filter-bar" id="msg-filters" role="search">
+      ${selectHTML('mf-status', 'Show', [['new', 'New'], ['done', 'Handled'], ['all', 'All messages']].map(([k, l]) => `<option value="${k}" ${f.status === k ? 'selected' : ''}>${l}</option>`).join(''))}
+      <label class="search-field"><span class="visually-hidden">Search messages</span>${ic('search')}<input class="input" type="search" id="mf-q" placeholder="Search messages" title="Search the name, email or message" value="${esc(f.q)}"></label>
+    </form>
+    <ul class="admin-reviews" id="msg-rows"></ul>
+    <button class="btn btn-secondary" type="button" id="msg-more" hidden>Show more</button>`;
+  let t = 0;
+  const read = () => { f.status = $('#mf-status').value; f.q = $('#mf-q').value.trim(); loadMessages(1); };
+  $('#msg-filters').addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { if (view.section === 'messages') read(); }, 250); });
+  $('#msg-filters').addEventListener('submit', e => { e.preventDefault(); read(); });
+  $('#msg-more').addEventListener('click', () => loadMessages(messagesPage + 1));
+  loadMessages(1);
+}
+const messageRow = m => `<li class="panel a-review a-message ${m.status === 'done' ? 'is-done' : ''}" data-id="${esc(m._id)}">
+  <div class="a-review-top"><div><strong>${esc(m.name)}</strong> <span class="muted">${esc(m.email)} · ${new Date(m.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>
+    <span class="chip">${esc(TOPIC_LABEL[m.topic] || m.topic)}</span></div>
+  <p class="msg-body">${esc(m.body)}</p>
+  ${m.order ? `<p class="muted msg-meta">About the order from ${esc(m.order.restaurantName)} on ${new Date(m.order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} (${esc(m.order.status)}) · <a class="link-btn" href="#orders/${esc(m.order._id)}">Open the order</a></p>` : ''}
+  ${m.account ? '' : '<p class="muted msg-meta">Sent without logging in</p>'}
+  <div class="a-review-foot">${m.status === 'done' ? `<span class="chip st-delivered">Handled${m.handledBy ? ` by ${esc(m.handledBy)}` : ''}</span>` : '<span class="chip st-placed">New</span>'}
+    <a class="btn btn-sm btn-outline" href="mailto:${esc(m.email)}?subject=${encodeURIComponent('Your message to Morsel')}">Reply by email</a>
+    <button class="btn btn-sm ${m.status === 'done' ? 'btn-secondary' : 'btn-primary'}" type="button" data-act="msg-status" data-id="${esc(m._id)}" data-status="${m.status === 'done' ? 'new' : 'done'}">${m.status === 'done' ? 'Mark as new' : 'Mark as handled'}</button></div>
+</li>`;
+async function loadMessages(page) {
+  const f = filters.messages;
+  let d;
+  try { d = await call('GET', `/admin/messages?${new URLSearchParams({ status: f.status, page, q: f.q })}`); } catch (err) { toast(err.message); return; }
+  setUnread(d.unread);
+  if (view.section !== 'messages') return;
+  messagesPage = page;
+  $('#msg-count').textContent = `${plural(d.total, 'message', 'messages')}${d.unread ? `, ${d.unread} new` : ''}`;
+  const empty = f.status === 'new' && !f.q ? 'No new messages. Everything has been handled.' : 'No messages match.';
+  if (page === 1) $('#msg-rows').innerHTML = d.messages.map(messageRow).join('') || `<li class="muted">${empty}</li>`;
+  else $('#msg-rows').insertAdjacentHTML('beforeend', d.messages.map(messageRow).join(''));
+  $('#msg-more').hidden = !d.hasMore;
+}
+
 /* ================= Promo codes ================= */
 
 let promos = [];
@@ -796,6 +855,14 @@ root.addEventListener('click', async e => {
         loadUsers(1);
         break;
       }
+      case 'msg-status': {
+        const { message } = await call('PATCH', `/admin/messages/${id}`, { status: el.dataset.status });
+        const li = el.closest('.a-message');
+        if (filters.messages.status === 'all') li.outerHTML = messageRow(message); else li.remove();
+        toast(message.status === 'done' ? 'Marked as handled' : 'Marked as new');
+        loadMessages(1);
+        break;
+      }
       case 'hide-review': {
         const hidden = el.dataset.hidden !== 'true';
         const { review } = await call('PATCH', `/admin/reviews/${id}`, { hidden });
@@ -830,5 +897,5 @@ gate(root, {
   roles: ['admin'],
   title: 'Morsel admin',
   intro: 'Log in with an admin account to manage restaurants, orders and users.',
-  ready: user => { me = user; $('#side').hidden = false; route(); }
+  ready: user => { me = user; $('#side').hidden = false; route(); call('GET', '/admin/messages?status=new').then(d => setUnread(d.unread), () => {}); }
 });

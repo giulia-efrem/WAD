@@ -9,7 +9,7 @@ const path = require('path');
 const config = require('../config');
 const Restaurant = require('../models/Restaurant');
 
-const SEED_DIR = path.join(config.root, 'seed');
+const SEED_DIR = config.photoFilesDir;
 const IMAGES_FILE = path.join(SEED_DIR, 'images.json');
 const CANDIDATES_FILE = path.join(SEED_DIR, 'photo-candidates.json');
 

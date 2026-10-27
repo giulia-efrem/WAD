@@ -91,7 +91,7 @@ export async function renderOrder(id) {
   document.title = `Your order from ${o.restaurantName} · Morsel`;
   app().innerHTML = `
     <div class="wrap">
-      <div class="back-row"><button class="back-link" type="button" data-act="account">${ic('back')}All orders</button></div>
+      <div class="back-row"><button class="back-link" type="button" data-act="account">${ic('back')}All orders</button><a class="link-btn receipt-link" href="/receipt/${esc(o._id)}">${ic('receipt')}Receipt</a></div>
       <div class="track">
         <div>
           <p class="track-kicker">${esc(o.restaurantName)}, ordered ${dayTime(new Date(o.createdAt))}</p>

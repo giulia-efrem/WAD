@@ -30,8 +30,30 @@ function assertTestDb(uri) {
   return name;
 }
 
-function env(uri, port) {
-  return { ...process.env, MONGODB_URI: uri, PORT: String(port), DEMO_MODE: 'true', NODE_ENV: 'test', UNSPLASH_ACCESS_KEY: '', SIGNUP_LIMIT: '500' };
+/* The test server gets its own copy of the photo files and its own uploads folder, so nothing a test
+   does (removing a photo on /admin/photos, uploading one) reaches the real files in seed/ and uploads/. */
+const fs = require('fs');
+const os = require('os');
+function scratchDirs(port) {
+  const base = path.join(os.tmpdir(), `morsel-test-${port}`);
+  fs.rmSync(base, { recursive: true, force: true });
+  const photos = path.join(base, 'photo-files');
+  const uploads = path.join(base, 'uploads');
+  fs.mkdirSync(photos, { recursive: true });
+  fs.mkdirSync(uploads, { recursive: true });
+  for (const f of ['images.json', 'photo-candidates.json']) {
+    const from = path.join(ROOT, 'seed', f);
+    if (fs.existsSync(from)) fs.copyFileSync(from, path.join(photos, f));
+  }
+  return { photos, uploads };
+}
+
+function env(uri, port, dirs = {}) {
+  return {
+    ...process.env, MONGODB_URI: uri, PORT: String(port), DEMO_MODE: 'true', NODE_ENV: 'test', UNSPLASH_ACCESS_KEY: '',
+    SIGNUP_LIMIT: '500', RESET_LIMIT: '500', CONTACT_LIMIT: '500',
+    ...(dirs.photos ? { PHOTO_FILES_DIR: dirs.photos, UPLOADS_DIR: dirs.uploads } : {})
+  };
 }
 
 async function resetDb(uri) {
@@ -63,7 +85,7 @@ async function startTestServer({ port = Number(process.env.TEST_PORT || 3100) } 
   catch (err) { if (err.message.startsWith('Port ')) throw err; }
   await resetDb(uri);
   const log = [];
-  const child = spawn(process.execPath, ['server/app.js'], { cwd: ROOT, env: env(uri, port), stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(process.execPath, ['server/app.js'], { cwd: ROOT, env: env(uri, port, scratchDirs(port)), stdio: ['ignore', 'pipe', 'pipe'] });
   child.stdout.on('data', d => log.push(String(d)));
   child.stderr.on('data', d => log.push(String(d)));
   const base = `http://localhost:${port}`;

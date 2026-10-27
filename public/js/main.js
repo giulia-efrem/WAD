@@ -10,7 +10,10 @@ import { updateHeader } from './views/header.js';
 import { openAuth, requireAuth } from './views/auth.js';
 import { openAddressForm, openAddressPicker } from './views/addresses.js';
 import { renderHome, renderHomeSkeleton, updateResults } from './views/home.js';
-import { openItem, editLine, refreshItemBadges, skeleton as restaurantSkeleton } from './views/restaurant.js';
+import { drawResults } from './views/search.js';
+import { openItem, editLine, refreshItemBadges, clearMenuSearch, openInfo, skeleton as restaurantSkeleton } from './views/restaurant.js';
+import { renderHelp } from './views/help.js';
+import { cookieNotice } from './cookies.js';
 import { renderCheckout, applyPromo, placeOrder } from './views/checkout.js';
 
 /* Whatever shows a basket redraws when one changes. */
@@ -86,6 +89,9 @@ document.addEventListener('click', e => {
   go(route.view, route.params);
 });
 
+/* Filters apply to whichever list is on screen: the home page's or the search results. */
+const refreshList = () => { if (state.view === 'search') drawResults(); else updateResults(); };
+
 /* ================= Events ================= */
 document.addEventListener('click', async e => {
   const el = e.target.closest('[data-act]');
@@ -98,7 +104,7 @@ document.addEventListener('click', async e => {
       case 'to-top': window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' }); break;
       case 'home': go('home'); break;
       case 'see-all': {
-        Object.assign(state, { q: '', cat: 'all', openNow: false, freeDel: false, topRated: false, sort: 'recommended' }, JSON.parse(el.dataset.see));
+        Object.assign(state, { q: '', cat: 'all', openNow: false, freeDel: false, topRated: false, diets: [], sort: 'recommended' }, JSON.parse(el.dataset.see));
         renderHome();
         const t = document.getElementById('all-restaurants');
         if (t) t.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
@@ -111,10 +117,26 @@ document.addEventListener('click', async e => {
       }
       case 'open-r': go('restaurant', { id }); break;
       case 'cat': state.cat = id; $$('.cat').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.id === id))); updateResults(); break;
-      case 'filter': state[el.dataset.f] = !state[el.dataset.f]; el.setAttribute('aria-pressed', String(state[el.dataset.f])); updateResults(); break;
-      case 'clear-search': state.q = ''; $('#q').value = ''; el.hidden = true; $('#q').focus(); updateResults(); break;
+      case 'filter': state[el.dataset.f] = !state[el.dataset.f]; el.setAttribute('aria-pressed', String(state[el.dataset.f])); refreshList(); break;
+      case 'diet': {
+        const d = el.dataset.diet;
+        state.diets = state.diets.includes(d) ? state.diets.filter(x => x !== d) : [...state.diets, d];
+        $$(`[data-act="diet"][data-diet="${d}"]`).forEach(b => b.setAttribute('aria-pressed', String(state.diets.includes(d))));
+        refreshList();
+        break;
+      }
+      case 'clear-search': $('#q').value = ''; el.hidden = true; $('#q').focus(); break;
+      case 'clear-sq': $('#sq').value = ''; el.hidden = true; $('#sq').focus(); break;
+      case 'search-for': go('search', { q: el.dataset.q }); break;
+      case 'open-dish': go('restaurant', { id: el.dataset.r, dish: el.dataset.i }); break;
+      case 'clear-menu-q': clearMenuSearch(); break;
+      case 'more-dishes': state.searchAllDishes = true; drawResults(); break;
+      case 'clear-filters':
+        Object.assign(state, { openNow: false, freeDel: false, diets: [] });
+        $$('[data-act="filter"], [data-act="diet"]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+        refreshList(); break;
       case 'reset-filters':
-        Object.assign(state, { q: '', cat: 'all', openNow: false, freeDel: false, topRated: false, sort: 'recommended' });
+        Object.assign(state, { q: '', cat: 'all', openNow: false, freeDel: false, topRated: false, diets: [], sort: 'recommended' });
         renderHome(); break;
       case 'use-promo': setPromo('WELCOME20'); toast('WELCOME20 will be applied at checkout'); break;
       case 'fav':
@@ -139,9 +161,13 @@ document.addEventListener('click', async e => {
       case 'open-order': openOrderSheet(el.dataset.r); break;
       case 'baskets': toggleBasketsMenu(); break;
       case 'go-checkout': case 'checkout-basket': closeAllModals(); go('checkout', { slug: el.dataset.r }); break;
-      case 'account-btn': if (state.user) go('account'); else openAuth('login'); break;
-      case 'account': go('account'); break;
+      case 'account-btn': if (state.user) go('account', { tab: 'orders' }); else openAuth('login'); break;
+      case 'account': go('account', { tab: 'orders' }); break;
       case 'login': openAuth('login'); break;
+      case 'forgot': openAuth('forgot'); break;
+      case 'print': window.print(); break;
+      case 'help-again': renderHelp(); break;
+      case 'r-info': openInfo(state.params.id); break;
       case 'signup': openAuth('signup'); break;
       case 'addr':
         if (!state.user) openAuth('login', { reason: 'Log in to save delivery addresses.', then: () => { if (!state.user.addresses.length) openAddressForm(); } });
@@ -158,7 +184,7 @@ document.addEventListener('click', async e => {
         updateHeader(); render(true); toast('Address deleted');
         break;
       }
-      case 'acct-tab': state.acctTab = el.dataset.tab; render(true); break;
+      case 'acct-tab': go('account', { tab: el.dataset.tab }); break;
       case 'logout': await api.logOut(); state.user = null; state.orderCount = 0; state.co.addressId = null; updateHeader(); go('home'); toast('You’re logged out'); break;
       case 'track': go('order', { id }); break;
       case 'reorder': await reorder(id); break;
@@ -255,4 +281,5 @@ window.addEventListener('morsel:account-deleted', () => {
   state.view = route.view;
   state.params = route.params;
   render();
+  cookieNotice();
 })();

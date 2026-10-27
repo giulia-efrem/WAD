@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { z } = require('zod');
@@ -8,7 +9,7 @@ const Order = require('../models/Order');
 const Review = require('../models/Review');
 const validate = require('../middleware/validate');
 const { setSession, clearSession, requireUser, disabledError } = require('../middleware/auth');
-const { loginLimiter, signupLimiter } = require('../middleware/rateLimit');
+const { loginLimiter, signupLimiter, resetLimiter } = require('../middleware/rateLimit');
 const { HttpError, conflict, badRequest, forbidden, notFound } = require('../lib/httpError');
 const config = require('../config');
 const staff = require('../../seed/staff');
@@ -112,6 +113,54 @@ router.post('/demo', loginLimiter, validate(demoSchema), async (req, res) => {
   const user = mail ? await User.findOne({ email: mail, seeded: true }) : null;
   if (!user || user.role !== req.body.role) throw new HttpError(404, 'demo_missing', 'This demo account isn’t set up yet. Run npm run seed, then try again.');
   if (user.disabled) throw disabledError();
+  setSession(res, user);
+  res.json({ user: await publicMe(user) });
+});
+
+/* ---------- Forgot password ----------
+   Asking for a reset makes a one-time link that works for 30 minutes. Only a hash of its token is
+   stored. The answer is the same whether or not the email has an account, so the form can't be
+   used to find out who has one. Morsel sends no email: with DEMO_MODE=true the link is returned
+   so the page can show it; otherwise it is only written to the server log for the operator. */
+
+const RESET_MINUTES = 30;
+const hashToken = t => crypto.createHash('sha256').update(t).digest('hex');
+const RESET_SENT = 'If there’s an account with that email, a link to reset its password is on its way. It works for 30 minutes.';
+
+router.post('/forgot', resetLimiter, validate(z.object({ email })), async (req, res) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user || user.disabled) return res.json({ ok: true, message: RESET_SENT });
+  const token = crypto.randomBytes(32).toString('base64url');
+  user.resetTokenHash = hashToken(token);
+  user.resetTokenExpires = new Date(Date.now() + RESET_MINUTES * 60000);
+  await user.save();
+  const link = `/reset-password?token=${token}`;
+  if (config.demoMode) return res.json({ ok: true, message: RESET_SENT, demoLink: link });
+  console.log(`Password reset link for ${user.email} (valid ${RESET_MINUTES} min): ${link}`);
+  res.json({ ok: true, message: RESET_SENT });
+});
+
+const resetToken = z.string({ error: 'This reset link is incomplete.' }).trim().min(20, 'This reset link is incomplete.').max(200);
+const findByToken = async token => {
+  const user = await User.findOne({ resetTokenHash: hashToken(token), resetTokenExpires: { $gt: new Date() } });
+  if (!user || user.disabled) throw badRequest('This reset link has expired or has already been used. Ask for a new one.', 'invalid_token');
+  return user;
+};
+
+/* Lets the page check a link before showing the form. */
+router.post('/reset/check', resetLimiter, validate(z.object({ token: resetToken })), async (req, res) => {
+  const user = await findByToken(req.body.token);
+  res.json({ ok: true, email: user.email });
+});
+
+/* Sets the new password, ends every other session, uses up the link and logs you in. */
+router.post('/reset', resetLimiter, validate(z.object({ token: resetToken, password })), async (req, res) => {
+  const user = await findByToken(req.body.token);
+  user.passwordHash = await bcrypt.hash(req.body.password, BCRYPT_COST);
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
+  user.resetTokenHash = '';
+  user.resetTokenExpires = null;
+  await user.save();
   setSession(res, user);
   res.json({ user: await publicMe(user) });
 });

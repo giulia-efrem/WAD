@@ -37,6 +37,7 @@ export function openAuth(mode = 'login', { reason = '', then } = {}) {
   const m = openModal(`<div id="auth-inner"></div>`, { label: 'auth-title' });
   const w = m.wrap;
   const draw = () => {
+    if (current === 'forgot') { drawForgot(); return; }
     $('#auth-inner', w).innerHTML = `
       <div class="modal-head">
         <h2 id="auth-title">${current === 'login' ? 'Welcome back' : 'Create your account'}</h2>
@@ -51,7 +52,7 @@ export function openAuth(mode = 'login', { reason = '', then } = {}) {
           <p class="form-error" id="auth-error" role="alert"></p>
           ${current === 'signup' ? `<div class="field"><label for="a-name">Full name</label><input class="input" id="a-name" autocomplete="name" placeholder="First and last name" autofocus><p class="err" id="e-name"></p></div>` : ''}
           <div class="field"><label for="a-email">Email</label><input class="input" id="a-email" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" ${current === 'login' ? 'autofocus' : ''}><p class="err" id="e-email"></p></div>
-          <div class="field"><label for="a-pass">Password ${current === 'signup' ? '<small>At least 8 characters</small>' : ''}</label>
+          <div class="field"><div class="label-row"><label for="a-pass">Password ${current === 'signup' ? '<small>At least 8 characters</small>' : ''}</label>${current === 'login' ? '<button class="link-btn forgot-link" type="button" data-mode="forgot">Forgot password?</button>' : ''}</div>
             <div class="pw-wrap"><input class="input" id="a-pass" type="password" autocomplete="${current === 'login' ? 'current-password' : 'new-password'}" placeholder="${current === 'login' ? 'Your password' : 'Choose a password'}"><button class="pw-toggle" type="button" data-pw>Show</button></div>
             <p class="err" id="e-pass"></p></div>
           <button class="btn btn-primary btn-block" type="submit" id="auth-submit">${current === 'login' ? 'Log in' : 'Create account'}</button>
@@ -60,9 +61,44 @@ export function openAuth(mode = 'login', { reason = '', then } = {}) {
         <p class="hint">Your account keeps your addresses, favourites and orders on any device.</p>
       </div>`;
   };
+  /* "Forgot password?": ask for a reset link. Morsel sends no email, so in demo mode the link is shown here. */
+  const drawForgot = () => {
+    const typed = ($('#a-email', w) || {}).value || '';
+    $('#auth-inner', w).innerHTML = `
+      <div class="modal-head"><h2 id="auth-title">Reset your password</h2><p>Enter the email you log in with and we’ll send you a link to choose a new password.</p></div>
+      <div class="modal-body">
+        <form id="forgot-form" novalidate>
+          <p class="form-error" id="fp-error" role="alert"></p>
+          <div class="field"><label for="fp-email">Email</label><input class="input" id="fp-email" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" value="${esc(typed)}" autofocus><p class="err" id="e-fp-email"></p></div>
+          <button class="btn btn-primary btn-block" type="submit" id="fp-send">Send reset link</button>
+        </form>
+        <p class="hint"><button class="link-btn" type="button" data-mode="login">Back to log in</button></p>
+      </div>`;
+    const form = $('#forgot-form', w);
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const input = $('#fp-email', w);
+      const bad = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(input.value.trim()) ? '' : 'Enter an email like name@example.com.';
+      input.closest('.field').classList.toggle('invalid', !!bad);
+      input.setAttribute('aria-invalid', bad ? 'true' : 'false');
+      $('#e-fp-email', w).textContent = bad;
+      if (bad) { input.focus(); return; }
+      const btn = $('#fp-send', w);
+      setBusy(btn, true, 'Sending…');
+      try {
+        const r = await api.forgotPassword(input.value.trim());
+        form.outerHTML = `<div class="fp-sent" role="status"><p>${esc(r.message)}</p>
+          ${r.demoLink ? `<p class="demo-link"><strong>Demo mode:</strong> Morsel doesn’t send email, so here is the link the email would contain. <a href="${esc(r.demoLink)}">Choose a new password</a></p>` : ''}</div>`;
+      } catch (err) {
+        setBusy(btn, false, 'Send reset link');
+        $('#fp-error', w).textContent = err.message;
+      }
+    });
+  };
   let demo = null;
   const drawDemo = () => {
     const box = $('#auth-demo', w);
+    if (!box) return;
     const buttons = demo && demo.enabled ? demoButtons(demo) : '';
     box.innerHTML = buttons ? `<div class="divider">or</div>
       <section class="demo-accts" aria-labelledby="demo-h">
@@ -108,6 +144,8 @@ export function openAuth(mode = 'login', { reason = '', then } = {}) {
     }
   });
   w.addEventListener('submit', async e => {
+    /* The login and signup form only; the forgot-password form handles itself. */
+    if (e.target.id !== 'auth-form') return;
     e.preventDefault();
     const name = $('#a-name', w), email = $('#a-email', w), pass = $('#a-pass', w);
     const errs = {};

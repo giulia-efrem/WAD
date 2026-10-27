@@ -34,6 +34,11 @@ export const api = {
   /* Demo mode only (DEMO_MODE=true on the server): the accounts the login window offers, and a login by role. */
   async demoAccounts() { return request('GET', '/auth/demo'); },
   async demoLogIn(role, restaurant) { return (await request('POST', '/auth/demo', { role, restaurant })).user; },
+  /* Forgot password. In demo mode the answer carries the reset link (demoLink), since no email is sent. */
+  async forgotPassword(email) { return request('POST', '/auth/forgot', { email }); },
+  async checkReset(token) { return request('POST', '/auth/reset/check', { token }); },
+  async resetPassword(token, password) { return (await request('POST', '/auth/reset', { token, password })).user; },
+  async contact(message) { return request('POST', '/contact', message); },
 
   async addAddress(addr) { return request('POST', '/addresses', addr); },
   async setDefaultAddress(id) { return (await request('PATCH', `/addresses/${encodeURIComponent(id)}/default`)).user; },

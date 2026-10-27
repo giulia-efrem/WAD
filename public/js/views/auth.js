@@ -49,10 +49,10 @@ export function openAuth(mode = 'login', { reason = '', then } = {}) {
         </div>
         <form id="auth-form" novalidate>
           <p class="form-error" id="auth-error" role="alert"></p>
-          ${current === 'signup' ? `<div class="field"><label for="a-name">Full name</label><input class="input" id="a-name" autocomplete="name" autofocus><p class="err" id="e-name"></p></div>` : ''}
-          <div class="field"><label for="a-email">Email</label><input class="input" id="a-email" type="email" inputmode="email" autocomplete="email" ${current === 'login' ? 'autofocus' : ''}><p class="err" id="e-email"></p></div>
+          ${current === 'signup' ? `<div class="field"><label for="a-name">Full name</label><input class="input" id="a-name" autocomplete="name" placeholder="First and last name" autofocus><p class="err" id="e-name"></p></div>` : ''}
+          <div class="field"><label for="a-email">Email</label><input class="input" id="a-email" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" ${current === 'login' ? 'autofocus' : ''}><p class="err" id="e-email"></p></div>
           <div class="field"><label for="a-pass">Password ${current === 'signup' ? '<small>At least 8 characters</small>' : ''}</label>
-            <div class="pw-wrap"><input class="input" id="a-pass" type="password" autocomplete="${current === 'login' ? 'current-password' : 'new-password'}"><button class="pw-toggle" type="button" data-pw>Show</button></div>
+            <div class="pw-wrap"><input class="input" id="a-pass" type="password" autocomplete="${current === 'login' ? 'current-password' : 'new-password'}" placeholder="${current === 'login' ? 'Your password' : 'Choose a password'}"><button class="pw-toggle" type="button" data-pw>Show</button></div>
             <p class="err" id="e-pass"></p></div>
           <button class="btn btn-primary btn-block" type="submit" id="auth-submit">${current === 'login' ? 'Log in' : 'Create account'}</button>
         </form>

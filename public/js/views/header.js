@@ -12,7 +12,7 @@ export function updateHeader() {
   const u = state.user;
   const def = u && u.addresses.find(a => a.isDefault);
   /* On phones only the label (Home, Work) shows, rather than an address cut off mid-word. */
-  $('#addr-label').innerHTML = def ? `${esc(def.label)}<span class="addr-street">, ${esc(def.street)}</span>` : 'Add delivery address';
+  $('#addr-label').innerHTML = def ? `${esc(def.label)}<span class="addr-street">, ${esc(def.street)}</span>` : 'Add<span class="addr-street"> delivery</span> address';
   $('#addr-btn').setAttribute('aria-label', def ? `Deliver to ${def.label}, ${def.street}. Change address` : 'Add delivery address');
   $('#addr-btn').setAttribute('aria-label', def ? `Delivering to ${def.label}, ${def.street}. Change address` : 'Add a delivery address');
   const b = $('#acct-btn');

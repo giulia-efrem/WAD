@@ -1053,3 +1053,11 @@ legend.opt-head + * { clear: both; }
 /* On desktop the map stays in view beside the longer order details. */
 @media (min-width: 921px) { .track .map-col { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 92px); } }
 .sum-items li > :last-child { flex: none; }
+
+/* ================= Polish: forms and the login window ================= */
+.input::placeholder, textarea.input::placeholder { color: color-mix(in srgb, var(--muted) 80%, transparent); }
+.field.invalid .input:focus { border-color: var(--danger); box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 16%, transparent); }
+.input:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; }
+.err { margin-top: 2px; }
+.seg button { transition: color .15s, background-color .15s, box-shadow .15s; }
+.seg button:hover:not([aria-selected="true"]) { color: var(--ink); }

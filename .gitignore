@@ -8,3 +8,6 @@ uploads/*
 .DS_Store
 seed/.unsplash-usage.json
 seed/*.tmp
+screenshots/
+undefined/
+logs/

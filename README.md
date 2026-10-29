@@ -26,6 +26,8 @@ Open **http://localhost:3000**. Click **Log in** and, with `DEMO_MODE=true`, pic
 | `DEMO_MODE` | `true` | Adds a "Demo accounts" section to the login window with one-click logins (see below). Off unless set to `true`. Leave it off anywhere public |
 | `UNSPLASH_ACCESS_KEY` | from unsplash.com/developers | Optional. Used only by `npm run photos` and /admin/photos, never sent to the browser |
 
+`MONGODB_URI` and `JWT_SECRET` are required; the rest can stay empty and use their defaults. `.env.example` also lists the optional settings for rate limits, folders, screenshots and tests.
+
 Never commit `.env`. It is listed in `.gitignore`.
 
 ### Scripts
@@ -172,7 +174,7 @@ public/
 scripts/            fetch-photos.js and photo-queries.js (npm run photos), make-admin.js, screenshots.js
 seed/               seed.js, staff.js (demo accounts), history.js (past orders), catalog.js, options.js,
                     menus/ (one file per restaurant), reviews.js, images.json, photo-candidates.json
-screenshots/        the latest npm run screenshots output
+screenshots/        the latest npm run screenshots output (not committed)
 uploads/            admin uploads (not committed)
 reference/          the original single-file app
 ```

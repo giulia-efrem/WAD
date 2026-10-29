@@ -1,6 +1,6 @@
 # Morsel
 
-A food delivery web app: browse 9 restaurants, customise dishes, keep a basket per restaurant, check out with promo codes and tips, track the courier live, and review the order afterwards. It works like a real platform with four kinds of account: customers order, restaurant partners accept and prepare orders, couriers deliver them, and admins run everything from a dashboard. Express and MongoDB on the server, plain HTML, CSS and JavaScript in the browser. The original single-file design lives in `reference/morsel.html`.
+A food delivery web app: browse 9 restaurants, customise dishes, keep a basket per restaurant, check out with promo codes and tips, track the courier live, and review the order afterwards. It works like a real platform with four kinds of account: customers order, restaurant partners accept and prepare orders, couriers deliver them, and admins run everything from a dashboard. Express and MongoDB on the server, plain HTML, CSS and JavaScript in the browser.
 
 ## Setup
 
@@ -176,7 +176,6 @@ seed/               seed.js, staff.js (demo accounts), history.js (past orders),
                     menus/ (one file per restaurant), reviews.js, images.json, photo-candidates.json
 screenshots/        the latest npm run screenshots output (not committed)
 uploads/            admin uploads (not committed)
-reference/          the original single-file app
 ```
 
 ### Screenshots

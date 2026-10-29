@@ -11,3 +11,7 @@ seed/*.tmp
 screenshots/
 undefined/
 logs/
+.claude/
+CONTINUE.md
+MORNING-REPORT.md
+reference/

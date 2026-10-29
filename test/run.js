@@ -3,7 +3,7 @@
 /* npm test            API tests (test/api)
    npm run test:e2e    browser tests with Playwright and Microsoft Edge (test/e2e)
    npm run test:all    both
-   npm run test:sweep  slow: every page and button for every role (test/slow); not finished, see CONTINUE.md
+   npm run test:sweep  slow: every page and button for every role (test/slow); not finished yet
    node test/run.js api test/api/auth.test.js   one file
    node test/run.js serve                       a seeded test server to try things by hand
    Every run empties and seeds the morsel_test database and starts its own server on port 3100,
